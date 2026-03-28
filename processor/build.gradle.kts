@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.library)
+    alias(libs.plugins.hilt)
 }
 
 android {
@@ -31,8 +32,17 @@ android {
 }
 
 dependencies {
-    implementation(libs.appcompat)
-    implementation(libs.material)
+    compileOnly(libs.iflytek.sdk)
+
+    compileOnly(project(":common"))
+    compileOnly(project(":downloader"))
+
+    implementation(libs.hilt)
+    annotationProcessor(libs.hilt.compiler)
+
+    implementation(libs.bundles.rxjava)
+    implementation(libs.timber)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

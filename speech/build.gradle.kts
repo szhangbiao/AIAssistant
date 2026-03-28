@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.library)
+    alias(libs.plugins.hilt)
 }
 
 android {
@@ -18,10 +19,7 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
     compileOptions {
@@ -31,8 +29,20 @@ android {
 }
 
 dependencies {
-    implementation(libs.appcompat)
-    implementation(libs.material)
+    compileOnly(libs.iflytek.sdk)
+
+    compileOnly(project(":common"))
+    compileOnly(project(":processor"))
+    compileOnly(project(":downloader"))
+
+    implementation(libs.hilt)
+    annotationProcessor(libs.hilt.compiler)
+
+    implementation(libs.bundles.rxjava)
+
+    implementation(libs.gson)
+    implementation(libs.timber)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

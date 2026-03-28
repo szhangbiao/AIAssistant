@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!--
+        1、设备根目录
+        api: new File("/")
+        package: /
+    -->
+    <root-path
+        name="root"
+        path="" />
+
+    <!--
+        2、外部sdk根目录
+        api: Environment.getExternalStorageDirectory()
+        package: /storage/emulate/0
+    -->
+    <external-path
+        name="external"
+        path="." />
+    <!--3、内部私有目录：随着用户删除app而删除-->
+    <!--
+       3.1：
+       api: context.getFilesDir()
+       package: /data/data/包名/files
+   -->
+    <files-path
+        name="files"
+        path="." />
+    <!--
+        3.2：
+        api: context.getCacheDir()
+        package: /data/data/包名/cache
+    -->
+    <cache-path
+        name="cache"
+        path="." />
+    <!--4、外部私有目录：随着用户删除app而删除-->
+    <!--
+        4.1：
+        api: ContextCompat.getExternalFilesDirs()
+        package: /storage/emulated/0/Android/data/包名/files
+    -->
+    <external-files-path
+        name="external_file_path"
+        path="." />
+    <!--
+        4.2:
+        api: ContextCompat.getExternalCacheDirs()
+        package: /storage/emulated/0/Android/data/包名/cache
+    -->
+    <external-cache-path
+        name="external_cache_path"
+        path="." />
+</paths>

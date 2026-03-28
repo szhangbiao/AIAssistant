@@ -1,0 +1,70 @@
+{
+  "login": {
+    "appid": "",
+    "key": "",
+    "api_secret": ""
+  },
+  "global": {
+    "scene": "main_box",
+    "clean_dialog_history": "auto",
+    "aiui_ver": "3"
+  },
+  "interact": {
+    "interact_timeout": "-1",
+    "result_timeout": "5000"
+  },
+  "vad": {
+    "vad_enable": "1",
+    "engine_type": "evad",
+    "res_type": "assets",
+    "res_path": "vad/evad_16k.jet",
+    "vad_eos": "1000"
+  },
+  "iat": {
+    "sample_rate": "16000",
+    "data_encoding": "raw"
+  },
+  "audioparams": {
+    "pers_param": "{\"appid\":\"\",\"uid\":\"\"}"
+  },
+  "ivw": {
+    "mic_type": "mic1",
+    "res_type": "path",
+    "res_path": "/sdcard/AIUI/ivw/vtn/vtn.ini"
+  },
+  "recorder": {
+    "channel_count": 1,
+    "channel_filter": "0,-1"
+  },
+  "speech": {
+    "data_source": "sdk",
+    "wakeup_mode": "vtn",
+    "interact_mode": "continuous",
+    "work_mode": "intent",
+    "audio_source": 7
+  },
+  "tts": {
+    "voice_name": "x5_lingxiaoyue_flow",
+    "play_mode": "sdk"
+  },
+  "cbmparams": {
+    "nlp": {
+      "nlp": {
+        "encoding": "utf8",
+        "compress": "raw",
+        "format": "json"
+      },
+      "sub_scene": "cbm_v45"
+    }
+  },
+  "header": {
+    "prot_interact_mode": "oneshot"
+  },
+  "log": {
+    "debug_log": "1",
+    "save_datalog": "0",
+    "datalog_path": "",
+    "datalog_size": 1024,
+    "raw_audio_path": ""
+  }
+}
