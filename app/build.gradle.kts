@@ -20,12 +20,73 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    val nonSystemLabel = "release"
+    val systemLabel = "system"
+    val channelSound = "sound"
+    val channelOtt = "ott"
+    val isDevMode = true
+
+    signingConfigs {
+        // 正式环境非系统签名
+        create(nonSystemLabel) {
+            storeFile = project.file("${project.rootProject.rootDir}/keystore/release.keystore")
+            storePassword = "123456"
+            keyAlias = "booslink"
+            keyPassword = "123456"
+        }
+        // 正式环境系统签名
+        create(systemLabel) {
+            storeFile = project.file("${project.rootProject.rootDir}/keystore/uid.keystore")
+            storePassword = "123456"
+            keyAlias = "booslink"
+            keyPassword = "123456"
+        }
+    }
+
     buildTypes {
-        release {
-            isMinifyEnabled = false
+        getByName(nonSystemLabel) {
+            if (isDevMode) {
+                isDebuggable = true
+                isMinifyEnabled = false
+            } else {
+                isMinifyEnabled = true
+                isShrinkResources = true
+            }
+            signingConfig = signingConfigs.getByName(nonSystemLabel)
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        }
+        create(systemLabel) {
+            if (isDevMode) {
+                isDebuggable = true
+                isMinifyEnabled = false
+            } else {
+                isMinifyEnabled = true
+                isShrinkResources = true
+            }
+            signingConfig = signingConfigs.getByName(systemLabel)
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
+
+    flavorDimensions += "version"
+    productFlavors {
+        create(channelSound) {
+            dimension = "version"
+            manifestPlaceholders["channelValue"] = channelSound
+        }
+        create(channelOtt) {
+            dimension = "version"
+            manifestPlaceholders["channelValue"] = channelOtt
+        }
+    }
+
+    androidComponents.beforeVariants { variantBuilder ->
+        variantBuilder.enable = when (variantBuilder.buildType) {
+            nonSystemLabel, systemLabel -> true
+            else -> false
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11

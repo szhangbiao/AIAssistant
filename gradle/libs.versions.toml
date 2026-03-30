@@ -31,7 +31,7 @@ lifecycle-compiler = { group = "androidx.lifecycle", name = "lifecycle-compiler"
 multidex = { group = "androidx.multidex", name = "multidex", version = "2.0.1" }
 boost-multidex = { group = "com.bytedance.boost_multidex", name = "boost_multidex", version = "1.0.1" }
 
-iflytek-sdk = { group = "local", name = "AIUI", version = "none" }
+iflytek-sdk = { group = "local", name = "AIUI", version = "" }
 
 hilt = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
 hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }

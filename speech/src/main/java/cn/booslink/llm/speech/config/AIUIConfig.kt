@@ -18,7 +18,23 @@ data class AIUIConfig(
     val cbmParams: CbmParamsConfig,
     val header: HeaderConfig,
     val log: LogConfig
-)
+) {
+    fun newLogin(login: LoginConfig): AIUIConfig = AIUIConfig(
+        login,
+        global,
+        interact,
+        vad,
+        iat,
+        audioParams,
+        ivw,
+        recorder,
+        speech,
+        tts,
+        cbmParams,
+        header,
+        log
+    )
+}
 
 data class LoginConfig(
     @SerializedName("appid")
