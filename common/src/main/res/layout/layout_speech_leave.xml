@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="510dp"
+    android:layout_height="206dp"
+    android:orientation="vertical"
+    tools:parentTag="android.widget.FrameLayout">
+
+    <TextView
+        android:id="@+id/tv_leave_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="156dp"
+        android:includeFontPadding="false"
+        android:lineSpacingExtra="4dp"
+        android:textColor="@android:color/white"
+        android:textSize="28sp"
+        tools:text="您不需要我了嘛？我还想再和您聊会天呢～" />
+
+    <Button
+        android:id="@+id/btn_negative"
+        android:layout_width="184dp"
+        android:layout_height="60dp"
+        android:layout_gravity="bottom"
+        android:layout_marginStart="48dp"
+        android:layout_marginBottom="24dp"
+        android:background="@drawable/bg_button_negative"
+        android:textColor="#1D2543"
+        android:textSize="26sp"
+        tools:text="不需要" />
+
+    <Button
+        android:id="@+id/btn_positive"
+        android:layout_width="184dp"
+        android:layout_height="60dp"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="48dp"
+        android:layout_marginBottom="24dp"
+        android:background="@drawable/bg_button_positive"
+        android:textColor="@android:color/white"
+        android:textSize="26sp"
+        tools:text="需要" />
+</merge>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="RoundProgressBar">
+        <!-- 当前进度 -->
+        <attr name="progress" format="integer" />
+        <!-- 最大进度 -->
+        <attr name="max" format="integer" />
+        <!-- 背景颜色 -->
+        <attr name="backgroundColor" format="color" />
+        <!-- 渐变起始颜色 -->
+        <attr name="gradientStartColor" format="color" />
+        <!-- 渐变结束颜色 -->
+        <attr name="gradientEndColor" format="color" />
+        <!-- 圆环宽度 -->
+        <attr name="strokeWidth" format="dimension" />
+    </declare-styleable>
+</resources>

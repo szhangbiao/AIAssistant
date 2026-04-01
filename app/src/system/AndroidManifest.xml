@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:sharedUserId="android.uid.system"
+    android:sharedUserMaxSdkVersion="28"
+    tools:ignore="UnusedAttribute">
 
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.INTERNET" />
@@ -32,10 +35,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <service
-            android:name=".service.VoiceAssistantService"
-            android:foregroundServiceType="mediaPlayback" />
+        <service android:name=".service.VoiceAssistantService" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

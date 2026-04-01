@@ -30,7 +30,7 @@
   "ivw": {
     "mic_type": "mic1",
     "res_type": "path",
-    "res_path": "/sdcard/AIUI/ivw/vtn/vtn.ini"
+    "res_path": "/data/data/cn.booslink.llm/files/ivw/vtn/vtn.ini"
   },
   "recorder": {
     "channel_count": 1,
@@ -58,7 +58,7 @@
     }
   },
   "header": {
-    "prot_interact_mode": "oneshot"
+    "prot_interact_mode": "continuous"
   },
   "log": {
     "debug_log": "1",

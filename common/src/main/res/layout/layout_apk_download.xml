@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="462dp"
+    android:layout_height="110dp"
+    tools:background="@drawable/bg_answer_content"
+    tools:parentTag="android.widget.RelativeLayout">
+
+    <ImageView
+        android:id="@+id/iv_icon"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:layout_centerVertical="true"
+        android:layout_marginStart="20dp"
+        android:contentDescription="@null"
+        tools:background="@android:color/white" />
+
+    <View
+        android:id="@+id/anchor"
+        android:layout_width="86dp"
+        android:layout_height="86dp"
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
+        android:layout_marginEnd="30dp" />
+
+    <TextView
+        android:id="@+id/tv_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@id/iv_icon"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="8dp"
+        android:layout_toStartOf="@id/anchor"
+        android:layout_toEndOf="@id/iv_icon"
+        android:includeFontPadding="false"
+        android:textColor="@android:color/white"
+        android:textSize="22sp"
+        tools:text="腾讯视频" />
+
+    <TextView
+        android:id="@+id/tv_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@id/iv_icon"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="8dp"
+        android:layout_toStartOf="@id/anchor"
+        android:layout_toEndOf="@id/iv_icon"
+        android:includeFontPadding="false"
+        android:textColor="#AEAEAE"
+        android:textSize="20sp"
+        tools:text="正在为您下载..." />
+
+    <ImageView
+        android:id="@+id/iv_download_done"
+        android:layout_width="86dp"
+        android:layout_height="86dp"
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
+        android:layout_marginEnd="30dp"
+        android:contentDescription="@null"
+        android:src="@drawable/ic_download_done"
+        android:visibility="gone" />
+
+    <cn.booslink.llm.common.widget.RoundProgressBar
+        android:id="@+id/pb_progress"
+        android:layout_width="86dp"
+        android:layout_height="86dp"
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
+        android:layout_marginEnd="30dp" />
+
+    <TextView
+        android:id="@+id/tv_progress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignStart="@id/pb_progress"
+        android:layout_alignEnd="@id/pb_progress"
+        android:layout_centerVertical="true"
+        android:gravity="center_horizontal"
+        android:textColor="@android:color/white"
+        android:textSize="24sp"
+        tools:text="50%" />
+</merge>

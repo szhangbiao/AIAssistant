@@ -42,7 +42,7 @@ public class ScreenAdapter {
         }
     }
 
-    private static Resources adaptWidth(Application application, Resources superResources, float width) {
+    public static Resources adaptWidth(Application application, Resources superResources, float width) {
         try {
             DisplayMetrics appDisplayMetrics = ScreenUtils.getWindowMetrics(application.getApplicationContext());
             DisplayMetrics superDisplayMetrics = superResources.getDisplayMetrics();

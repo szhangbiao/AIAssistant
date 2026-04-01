@@ -1,8 +1,11 @@
 package cn.booslink.llm.speech.repository;
 
 import android.content.Context;
+import android.os.Environment;
 
 import com.google.gson.Gson;
+
+import java.io.File;
 
 import javax.inject.Inject;
 
@@ -33,7 +36,10 @@ public class ConfigRepositoryImpl implements IConfigRepository {
             String configJson = FileUtils.readJsonFromAsset(mContext, "cfg/aiui_config.json");
             AIUIConfig config = mGson.fromJson(configJson, AIUIConfig.class);
             LoginConfig loginConfig = new LoginConfig(APP_ID, APP_KEY, API_SECRET);
-            // TODO 更新唤醒配置
+            File vtnFile = new File(config.getIvw().getResPath());
+            if (!vtnFile.exists()) {
+                FileUtils.copyAssetFolder(mContext, "ivw", mContext.getFilesDir().getAbsolutePath() + "/ivw");
+            }
             return config.newLogin(loginConfig);
         });
     }
