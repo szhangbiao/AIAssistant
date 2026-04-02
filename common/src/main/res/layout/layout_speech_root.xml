@@ -11,7 +11,7 @@
         android:id="@+id/v_content"
         android:layout_width="554dp"
         android:layout_height="234dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="4dp"
         android:background="@drawable/bg_content"
         tools:layout_height="234dp" />
 
@@ -30,5 +30,17 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
         android:layout_marginEnd="44dp"
-        tools:layout_height="206dp" />
+        tools:layout_height="206dp">
+
+        <cn.booslink.llm.common.widget.AIInteractionLayout
+            android:id="@+id/ll_interaction"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <cn.booslink.llm.common.widget.AILeaveLayout
+            android:id="@+id/fl_leave"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone" />
+    </FrameLayout>
 </merge>

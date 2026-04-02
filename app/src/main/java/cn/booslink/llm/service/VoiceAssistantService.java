@@ -53,7 +53,7 @@ public class VoiceAssistantService extends Service {
             mSpeechInteraction.attachToWindow();
             keepServiceWithNotification();
         }
-        //mSpeechAgent.createAgent();
+        mSpeechAgent.createAgent();
     }
 
     @Override
@@ -73,6 +73,7 @@ public class VoiceAssistantService extends Service {
         if (ContextUtils.isSystemApp(getApplicationContext())) {
             mSpeechInteraction.detachFromWindow();
         }
+        mSpeechInteraction.destroyView();
     }
 
     @Override
@@ -92,12 +93,12 @@ public class VoiceAssistantService extends Service {
 
     // 供Activity调用的公共方法
     public void attachActivity(Activity activity) {
-        if(ContextUtils.isSystemApp(getApplicationContext())) return;
+        if (ContextUtils.isSystemApp(getApplicationContext())) return;
         mSpeechInteraction.attachToActivity(activity);
     }
 
     public void detachActivity(Activity activity) {
-        if(ContextUtils.isSystemApp(getApplicationContext())) return;
+        if (ContextUtils.isSystemApp(getApplicationContext())) return;
         mSpeechInteraction.detachFromActivity(activity);
     }
 

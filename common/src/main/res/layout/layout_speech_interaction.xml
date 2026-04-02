@@ -25,17 +25,18 @@
         android:layout_marginStart="24dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="136dp"
+        android:text="@string/speech_initial_help"
         android:textColor="#AEAEAE"
         android:textSize="20sp"
-        tools:text="为您找到以下结果：" />
+        tools:text="想问什么尽管问我！" />
 
     <FrameLayout
         android:id="@+id/fl_result"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="24dp"
-        tools:background="@drawable/bg_answer_content"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="24dp"
+        tools:background="@drawable/bg_answer_content"
         tools:minHeight="72dp" />
 </merge>

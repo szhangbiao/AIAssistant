@@ -7,6 +7,8 @@ import com.google.gson.Gson;
 import javax.inject.Singleton;
 
 import cn.booslink.llm.common.model.Device;
+import cn.booslink.llm.common.model.enums.CBMSub;
+import cn.booslink.llm.common.network.adapter.CBMSubAdapter;
 import cn.booslink.llm.common.utils.GsonProvider;
 import dagger.Module;
 import dagger.Provides;
@@ -29,6 +31,8 @@ public class CommonModule {
     @Singleton
     @Provides
     public Gson provideGson() {
-        return GsonProvider.instance();
+        return GsonProvider.builder()
+                .registerTypeAdapter(CBMSub.class, new CBMSubAdapter())
+                .create();
     }
 }

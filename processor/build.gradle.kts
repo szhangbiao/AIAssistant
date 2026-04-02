@@ -48,6 +48,7 @@ dependencies {
 
     implementation(libs.bundles.rxjava)
     implementation(libs.timber)
+    implementation(libs.gson)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

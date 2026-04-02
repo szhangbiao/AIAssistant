@@ -1,6 +1,7 @@
 package cn.booslink.llm.common.widget;
 
 import android.content.Context;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.widget.FrameLayout;
@@ -31,6 +32,11 @@ public class AIInteractionLayout extends LinearLayout {
         setOrientation(LinearLayout.VERTICAL);
         inflateLayout(context);
         initWidgets();
+    }
+
+    public void voiceInput(String voiceTxt) {
+        if (TextUtils.isEmpty(voiceTxt)) return;
+        tvQuestion.setText(voiceTxt);
     }
 
     private void inflateLayout(Context context) {

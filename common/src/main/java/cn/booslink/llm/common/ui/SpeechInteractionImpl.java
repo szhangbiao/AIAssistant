@@ -31,7 +31,8 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
 
     private final Context mContext;
     private final FrameLayout mParentView;
-    private final MutableLiveData<EmoteState> mEmoteState;
+    private final MutableLiveData<EmoteState> mEmoteStateLiveData;
+    private final MutableLiveData<String> mVoiceInputLiveData;
 
     private boolean isAttached = false;
 
@@ -39,7 +40,8 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
     public SpeechInteractionImpl(@ApplicationContext Context context) {
         this.mContext = context;
         this.mParentView = new FrameLayout(context);
-        this.mEmoteState = new MutableLiveData<>(EmoteState.IDLE);
+        this.mEmoteStateLiveData = new MutableLiveData<>(EmoteState.IDLE);
+        this.mVoiceInputLiveData = new MutableLiveData<>("您好，我是Bobo！");
     }
 
     @Override
@@ -176,11 +178,11 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
     }
 
     private void bindData(AIRootLayout rootLayout) {
-        rootLayout.observeData(mEmoteState);
+        rootLayout.observeData(mEmoteStateLiveData, mVoiceInputLiveData);
     }
 
     private void unBindData(AIRootLayout rootLayout) {
         if (rootLayout == null) return;
-        rootLayout.unObserveData(mEmoteState);
+        rootLayout.unObserveData(mEmoteStateLiveData, mVoiceInputLiveData);
     }
 }

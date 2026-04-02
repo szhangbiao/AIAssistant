@@ -15,6 +15,7 @@ import javax.inject.Inject;
 import cn.booslink.llm.common.model.Device;
 import cn.booslink.llm.common.model.enums.AIUIState;
 import cn.booslink.llm.common.utils.RxUtil;
+import cn.booslink.llm.processor.IEventProcessor;
 import cn.booslink.llm.speech.config.AIUIConfig;
 import cn.booslink.llm.speech.repository.IConfigRepository;
 import dagger.hilt.android.qualifiers.ApplicationContext;
@@ -28,6 +29,7 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
 
     private final Gson mGson;
     private final Context mContext;
+    private final IEventProcessor mEventProcessor;
     private final IConfigRepository mConfigRepository;
     private final CompositeDisposable mCompositeDisposable = new CompositeDisposable();
 
@@ -35,9 +37,10 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
     private AIUIAgent mAIUIAgent = null;
 
     @Inject
-    public SpeechAgentImpl(@ApplicationContext Context context, Device device, Gson gson, IConfigRepository configRepository) {
+    public SpeechAgentImpl(@ApplicationContext Context context, Device device, Gson gson, IEventProcessor eventProcessor, IConfigRepository configRepository) {
         this.mGson = gson;
         this.mContext = context;
+        this.mEventProcessor = eventProcessor;
         this.mConfigRepository = configRepository;
         AIUISetting.setSystemInfo(AIUIConstant.KEY_SERIAL_NUM, device.sn);
     }
@@ -55,6 +58,9 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
                     .subscribe(aiuiParams -> {
                         // init aiui agent
                         mAIUIAgent = AIUIAgent.createAgent(mContext, aiuiParams, this);
+                        if (mAIUIAgent != null) {
+                            startRecordAudio();
+                        }
                     });
             addDisposable(disposable);
         }
@@ -78,6 +84,7 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
             case AIUIConstant.EVENT_RESULT: // 结果事件
                 break;
             case AIUIConstant.EVENT_WAKEUP: // 唤醒事件
+                break;
             case AIUIConstant.EVENT_PRE_SLEEP: // 准备休眠事件
             case AIUIConstant.EVENT_SLEEP: // 休眠事件
                 break;
@@ -95,6 +102,7 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
             case AIUIConstant.EVENT_ERROR: // 出错事件
                 break;
         }
+        mEventProcessor.processEvent(event);
     }
 
     @Override
@@ -104,13 +112,26 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
             mAIUIAgent.destroy();
             mAIUIAgent = null;
         }
+        mEventProcessor.release();
     }
 
-    protected void addDisposable(Disposable disposable) {
+    private void addDisposable(Disposable disposable) {
         mCompositeDisposable.add(disposable);
     }
 
-    public void clear() {
+    private void clear() {
         mCompositeDisposable.clear();
+    }
+
+    private void startRecordAudio() {
+        String params = "sample_rate=16000,data_type=audio";
+        AIUIMessage startRecord = new AIUIMessage(AIUIConstant.CMD_START_RECORD, 0, 0, params, null);
+        mAIUIAgent.sendMessage(startRecord);
+    }
+
+    private void stopRecordAudio() {
+        String params = "sample_rate=16000,data_type=audio";
+        AIUIMessage stopRecord = new AIUIMessage(AIUIConstant.CMD_STOP_RECORD, 0, 0, params, null);
+        mAIUIAgent.sendMessage(stopRecord);
     }
 }

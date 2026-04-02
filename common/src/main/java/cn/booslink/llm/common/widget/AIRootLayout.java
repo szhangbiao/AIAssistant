@@ -21,8 +21,11 @@ public class AIRootLayout extends FrameLayout {
 
     private ImageView ivMascot;
     private FrameLayout flContent;
+    private AIInteractionLayout llInteraction;
+    private AILeaveLayout flLeave;
 
     private final Observer<EmoteState> mEmoteStateObserver = this::changeUIWithState;
+    private final Observer<String> mVoiceInputObserver = this::changeUIWithVoiceInput;
 
     @Inject
     public AIRootLayout(@ApplicationContext Context context) {
@@ -48,14 +51,18 @@ public class AIRootLayout extends FrameLayout {
     private void initWidgets() {
         ivMascot = findViewById(R.id.iv_mascot);
         flContent = findViewById(R.id.fl_content);
+        llInteraction = findViewById(R.id.ll_interaction);
+        flLeave = findViewById(R.id.fl_leave);
     }
 
-    public void observeData(LiveData<EmoteState> mEmoteState) {
-        mEmoteState.observeForever(mEmoteStateObserver);
+    public void observeData(LiveData<EmoteState> emoteStateLiveData, LiveData<String> voiceInputLiveData) {
+        emoteStateLiveData.observeForever(mEmoteStateObserver);
+        voiceInputLiveData.observeForever(mVoiceInputObserver);
     }
 
-    public void unObserveData(LiveData<EmoteState> mEmoteState) {
-        mEmoteState.removeObserver(mEmoteStateObserver);
+    public void unObserveData(LiveData<EmoteState> emoteStateLiveData, LiveData<String> voiceInputLiveData) {
+        emoteStateLiveData.removeObserver(mEmoteStateObserver);
+        voiceInputLiveData.removeObserver(mVoiceInputObserver);
     }
 
     private void changeUIWithState(EmoteState emoteState) {
@@ -77,5 +84,9 @@ public class AIRootLayout extends FrameLayout {
             default:
                 break;
         }
+    }
+
+    private void changeUIWithVoiceInput(String voiceInput) {
+        llInteraction.voiceInput(voiceInput);
     }
 }
