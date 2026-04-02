@@ -2,8 +2,6 @@ package cn.booslink.llm.common.ui;
 
 import android.app.Activity;
 
-import javax.annotation.Nullable;
-
 public interface ISpeechInteraction {
 
     void attachToWindow();
@@ -13,4 +11,6 @@ public interface ISpeechInteraction {
     void attachToActivity(Activity activity);
 
     void detachFromActivity(Activity activity);
+
+    void destroyView();
 }

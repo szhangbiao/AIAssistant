@@ -1,5 +1,6 @@
 package cn.booslink.llm.service;
 
+import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -50,9 +51,9 @@ public class VoiceAssistantService extends Service {
         // 把View添加到WindowManager
         if (ContextUtils.isSystemApp(getApplicationContext())) {
             mSpeechInteraction.attachToWindow();
+            keepServiceWithNotification();
         }
-        mSpeechAgent.createAgent();
-        keepServiceWithNotification();
+        //mSpeechAgent.createAgent();
     }
 
     @Override
@@ -90,12 +91,12 @@ public class VoiceAssistantService extends Service {
     }
 
     // 供Activity调用的公共方法
-    public void attachActivity(android.app.Activity activity) {
+    public void attachActivity(Activity activity) {
         if(ContextUtils.isSystemApp(getApplicationContext())) return;
         mSpeechInteraction.attachToActivity(activity);
     }
 
-    public void detachActivity(android.app.Activity activity) {
+    public void detachActivity(Activity activity) {
         if(ContextUtils.isSystemApp(getApplicationContext())) return;
         mSpeechInteraction.detachFromActivity(activity);
     }

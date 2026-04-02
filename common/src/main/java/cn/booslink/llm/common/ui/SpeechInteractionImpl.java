@@ -7,6 +7,7 @@ import android.content.Context;
 import android.graphics.PixelFormat;
 import android.os.Build;
 import android.view.Gravity;
+import android.view.ViewManager;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 
@@ -58,12 +59,13 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
                 params.type = WindowManager.LayoutParams.TYPE_TOAST;
             }
             params.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
-            params.gravity = Gravity.TOP | Gravity.RIGHT;
-            params.height = WindowManager.LayoutParams.WRAP_CONTENT;
-            params.width = WindowManager.LayoutParams.WRAP_CONTENT;
+            params.gravity = Gravity.TOP | Gravity.END;
+            params.height = WindowManager.LayoutParams.MATCH_PARENT;
+            params.width = WindowManager.LayoutParams.MATCH_PARENT;
             params.format = PixelFormat.RGBA_8888;
             setupRootViewParams();
             wm.addView(mParentView, params);
+            Timber.tag(TAG).d("View attached to window");
             isAttached = true;
         } catch (Exception e) {
             Timber.tag(TAG).e(e, "add view to window manager failed!");
@@ -80,9 +82,12 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
         try {
             WindowManager wm = (WindowManager) mContext.getSystemService(WINDOW_SERVICE);
             wm.removeView(mParentView);
+            Timber.tag(TAG).d("View detached from window");
             isAttached = false;
         } catch (Exception e) {
             Timber.tag(TAG).e(e, "remove view from window manager failed!");
+            // 确保失败时状态正确
+            isAttached = false;
         }
     }
 
@@ -99,15 +104,18 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
             params.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
             //params.z = 1000;
             params.token = activity.getWindow().getDecorView().getWindowToken();
-            params.gravity = Gravity.TOP | Gravity.RIGHT;
-            params.height = WindowManager.LayoutParams.WRAP_CONTENT;
-            params.width = WindowManager.LayoutParams.WRAP_CONTENT;
+            params.gravity = Gravity.TOP | Gravity.END;
+            params.height = WindowManager.LayoutParams.MATCH_PARENT;
+            params.width = WindowManager.LayoutParams.MATCH_PARENT;
             params.format = PixelFormat.RGBA_8888;
             setupRootViewParams();
             wm.addView(mParentView, params);
             isAttached = true;
+            Timber.tag(TAG).d("View attached to activity");
         } catch (Exception e) {
             Timber.tag(TAG).e(e, "Add view to activity window failed!");
+            // 确保失败时状态正确
+            isAttached = false;
         }
     }
 
@@ -121,10 +129,21 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
         try {
             WindowManager wm = (WindowManager) activity.getSystemService(WINDOW_SERVICE);
             wm.removeView(mParentView);
+            Timber.tag(TAG).d("View detached from activity");
             isAttached = false;
         } catch (Exception e) {
             Timber.tag(TAG).e(e, "remove view from activity window failed!");
         }
+    }
+
+    @Override
+    public void destroyView() {
+        unBindData(mRootLayoutRef.get());
+        mParentView.removeAllViews();
+        if (mParentView.getParent() != null) {
+            ((ViewManager) mParentView.getParent()).removeView(mParentView);
+        }
+        isAttached = false;
     }
 
     /**
@@ -147,7 +166,7 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
         int width = ContextUtils.dp2px(mContext, 554);
         mParentView.removeAllViews();
         FrameLayout.LayoutParams childParams = new FrameLayout.LayoutParams(width, FrameLayout.LayoutParams.WRAP_CONTENT);
-        childParams.gravity = Gravity.TOP | Gravity.RIGHT;
+        childParams.gravity = Gravity.TOP | Gravity.END;
         childParams.topMargin = ContextUtils.dp2px(mContext, 62);
         AIRootLayout rootLayout = mRootLayoutRef.get();
         if (rootLayout != null) {

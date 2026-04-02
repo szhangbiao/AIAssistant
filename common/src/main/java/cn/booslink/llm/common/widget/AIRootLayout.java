@@ -1,12 +1,14 @@
 package cn.booslink.llm.common.widget;
 
 import android.content.Context;
+import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
 
 import javax.inject.Inject;
@@ -20,11 +22,21 @@ public class AIRootLayout extends FrameLayout {
     private ImageView ivMascot;
     private FrameLayout flContent;
 
-    private Observer<EmoteState> mEmoteStateObserver;
+    private final Observer<EmoteState> mEmoteStateObserver = this::changeUIWithState;
 
     @Inject
     public AIRootLayout(@ApplicationContext Context context) {
-        super(context, null);
+        super(context);
+        inflateLayout(context);
+        initWidgets();
+    }
+
+    public AIRootLayout(@NonNull Context context, @Nullable AttributeSet attrs) {
+        this(context, attrs, 0);
+    }
+
+    public AIRootLayout(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
         inflateLayout(context);
         initWidgets();
     }
@@ -44,5 +56,26 @@ public class AIRootLayout extends FrameLayout {
 
     public void unObserveData(LiveData<EmoteState> mEmoteState) {
         mEmoteState.removeObserver(mEmoteStateObserver);
+    }
+
+    private void changeUIWithState(EmoteState emoteState) {
+        switch (emoteState) {
+            case NORMAL:
+                ivMascot.setImageResource(R.drawable.ic_mascot_normal);
+                break;
+            case CRYING:
+                ivMascot.setImageResource(R.drawable.ic_mascot_crying);
+                break;
+            case LAUGHING:
+                ivMascot.setImageResource(R.drawable.ic_mascot_laughing);
+                break;
+            case WEATHER_FINE:
+                // TODO
+                break;
+            case IDLE:
+                ivMascot.setImageResource(R.drawable.ic_mascot_hello);
+            default:
+                break;
+        }
     }
 }
