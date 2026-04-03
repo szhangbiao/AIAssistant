@@ -37,6 +37,17 @@
         android:layout_marginHorizontal="24dp"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="24dp"
-        tools:background="@drawable/bg_answer_content"
-        tools:minHeight="72dp" />
+        android:background="@drawable/bg_answer_content"
+        tools:minHeight="72dp">
+
+        <TextView
+            android:id="@+id/tv_npl"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="20dp"
+            android:lineSpacingExtra="2dp"
+            android:textColor="@android:color/white"
+            android:textSize="24sp"
+            tools:text="上午好！现在是北京时间2024年7月23日11:46。您所在的地区：苏州市今日小雨转多云，气温10°C，注意天冷加衣哦～" />
+    </FrameLayout>
 </merge>

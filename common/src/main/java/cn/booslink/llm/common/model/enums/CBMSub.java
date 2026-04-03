@@ -27,6 +27,7 @@ public enum CBMSub {
 
     /**
      * 根据字符串值获取对应的枚举
+     *
      * @param subValue 字符串值
      * @return 对应的枚举，如果未匹配到返回UNKNOWN
      */
@@ -34,13 +35,11 @@ public enum CBMSub {
         if (subValue == null) {
             return UNKNOWN;
         }
-        
         for (CBMSub cbmSub : CBMSub.values()) {
             if (cbmSub.getSub().equals(subValue)) {
                 return cbmSub;
             }
         }
-        
         return UNKNOWN;
     }
 }

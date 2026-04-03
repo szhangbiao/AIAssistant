@@ -26,6 +26,7 @@ public class AIRootLayout extends FrameLayout {
 
     private final Observer<EmoteState> mEmoteStateObserver = this::changeUIWithState;
     private final Observer<String> mVoiceInputObserver = this::changeUIWithVoiceInput;
+    private final Observer<String> mNplResponseObserver = this::changeUIWithNplResponse;
 
     @Inject
     public AIRootLayout(@ApplicationContext Context context) {
@@ -55,14 +56,16 @@ public class AIRootLayout extends FrameLayout {
         flLeave = findViewById(R.id.fl_leave);
     }
 
-    public void observeData(LiveData<EmoteState> emoteStateLiveData, LiveData<String> voiceInputLiveData) {
+    public void observeData(LiveData<EmoteState> emoteStateLiveData, LiveData<String> voiceInputLiveData, LiveData<String> nplResponseLiveData) {
         emoteStateLiveData.observeForever(mEmoteStateObserver);
         voiceInputLiveData.observeForever(mVoiceInputObserver);
+        nplResponseLiveData.observeForever(mNplResponseObserver);
     }
 
-    public void unObserveData(LiveData<EmoteState> emoteStateLiveData, LiveData<String> voiceInputLiveData) {
+    public void unObserveData(LiveData<EmoteState> emoteStateLiveData, LiveData<String> voiceInputLiveData, LiveData<String> nplResponseLiveData) {
         emoteStateLiveData.removeObserver(mEmoteStateObserver);
         voiceInputLiveData.removeObserver(mVoiceInputObserver);
+        nplResponseLiveData.removeObserver(mNplResponseObserver);
     }
 
     private void changeUIWithState(EmoteState emoteState) {
@@ -89,4 +92,9 @@ public class AIRootLayout extends FrameLayout {
     private void changeUIWithVoiceInput(String voiceInput) {
         llInteraction.voiceInput(voiceInput);
     }
+
+    private void changeUIWithNplResponse(String nplText) {
+        llInteraction.nplReply(nplText);
+    }
+
 }

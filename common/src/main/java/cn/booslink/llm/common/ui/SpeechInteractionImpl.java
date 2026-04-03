@@ -6,12 +6,15 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.PixelFormat;
 import android.os.Build;
+import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.ViewManager;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 
 import androidx.lifecycle.MutableLiveData;
+
+import org.jetbrains.annotations.Nullable;
 
 import javax.inject.Inject;
 
@@ -33,6 +36,7 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
     private final FrameLayout mParentView;
     private final MutableLiveData<EmoteState> mEmoteStateLiveData;
     private final MutableLiveData<String> mVoiceInputLiveData;
+    private final MutableLiveData<String> nplResponseLiveData;
 
     private boolean isAttached = false;
 
@@ -42,6 +46,7 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
         this.mParentView = new FrameLayout(context);
         this.mEmoteStateLiveData = new MutableLiveData<>(EmoteState.IDLE);
         this.mVoiceInputLiveData = new MutableLiveData<>("您好，我是Bobo！");
+        this.nplResponseLiveData = new MutableLiveData<>("");
     }
 
     @Override
@@ -148,6 +153,23 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
         isAttached = false;
     }
 
+    @Override
+    public void updateQuery(@Nullable String voiceQuery) {
+        if (TextUtils.isEmpty(voiceQuery)) return;
+        mVoiceInputLiveData.postValue(voiceQuery);
+    }
+
+    @Override
+    public void nlpAnswer(String nlpReply) {
+        if (TextUtils.isEmpty(nlpReply)) return;
+        nplResponseLiveData.postValue(nlpReply);
+    }
+
+    @Override
+    public void semanticAnswer(String category, Object answer) {
+
+    }
+
     /**
      * 检查View是否已添加到WindowManager
      */
@@ -178,11 +200,11 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
     }
 
     private void bindData(AIRootLayout rootLayout) {
-        rootLayout.observeData(mEmoteStateLiveData, mVoiceInputLiveData);
+        rootLayout.observeData(mEmoteStateLiveData, mVoiceInputLiveData, nplResponseLiveData);
     }
 
     private void unBindData(AIRootLayout rootLayout) {
         if (rootLayout == null) return;
-        rootLayout.unObserveData(mEmoteStateLiveData, mVoiceInputLiveData);
+        rootLayout.unObserveData(mEmoteStateLiveData, mVoiceInputLiveData, nplResponseLiveData);
     }
 }

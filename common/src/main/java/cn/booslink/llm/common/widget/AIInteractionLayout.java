@@ -19,6 +19,8 @@ public class AIInteractionLayout extends LinearLayout {
     private TextView tvResultTitle;
     private FrameLayout flResult;
 
+    private TextView tvNplReply;
+
     public AIInteractionLayout(@NonNull Context context) {
         this(context, null);
     }
@@ -39,6 +41,11 @@ public class AIInteractionLayout extends LinearLayout {
         tvQuestion.setText(voiceTxt);
     }
 
+    public void nplReply(String nplText) {
+        if (TextUtils.isEmpty(nplText)) return;
+        tvNplReply.setText(nplText);
+    }
+
     private void inflateLayout(Context context) {
         LayoutInflater.from(context).inflate(R.layout.layout_speech_interaction, this, true);
     }
@@ -47,5 +54,6 @@ public class AIInteractionLayout extends LinearLayout {
         tvQuestion = findViewById(R.id.tv_question);
         tvResultTitle = findViewById(R.id.tv_result_title);
         flResult = findViewById(R.id.fl_result);
+        tvNplReply = findViewById(R.id.tv_npl);
     }
 }

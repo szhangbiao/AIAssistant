@@ -1,24 +1,20 @@
 package cn.booslink.llm.processor;
 
-import android.os.Bundle;
 import android.text.TextUtils;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonParseException;
+import com.google.gson.JsonSyntaxException;
 import com.iflytek.aiui.AIUIConstant;
 import com.iflytek.aiui.AIUIEvent;
-
-import org.jetbrains.annotations.Nullable;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.nio.charset.StandardCharsets;
 
 import javax.inject.Inject;
 
+import cn.booslink.llm.common.model.EventData;
 import cn.booslink.llm.common.model.EventInfo;
 import cn.booslink.llm.common.model.enums.CBMSub;
+import cn.booslink.llm.common.ui.ISpeechInteraction;
 import cn.booslink.llm.common.utils.RxUtil;
 import io.reactivex.rxjava3.core.BackpressureStrategy;
 import io.reactivex.rxjava3.core.Flowable;
@@ -31,6 +27,8 @@ public class EventProcessorImpl implements IEventProcessor {
     private final static String TAG = "EventProcessor";
 
     private final Gson mGson;
+    private final ISpeechInteraction mSpeechInteraction;
+    private final StringBuilder mNplBuilder = new StringBuilder();
 
     private Disposable mEventDisposable;
     private FlowableEmitter<AIUIEvent> mEventEmitter;
@@ -38,8 +36,9 @@ public class EventProcessorImpl implements IEventProcessor {
     private volatile boolean isDestroyed = false;
 
     @Inject
-    public EventProcessorImpl(Gson gson) {
+    public EventProcessorImpl(Gson gson, ISpeechInteraction speechInteraction) {
         this.mGson = gson;
+        this.mSpeechInteraction = speechInteraction;
         createEventEmitter();
     }
 
@@ -114,18 +113,59 @@ public class EventProcessorImpl implements IEventProcessor {
                 .subscribe(this::populateEventResult, this::parseOrPopulateEventFailed);
     }
 
-    private AIUIEvent parseEventData(AIUIEvent event) {
-        Timber.tag(TAG).d("parseEventData");
+    private EventData parseEventData(AIUIEvent event) {
         EventInfo eventInfo = mGson.fromJson(event.info, EventInfo.class);
         CBMSub sub = eventInfo.getSub();
-        if (sub == CBMSub.IAT) {
-            populateIATStream(eventInfo.getCntId(), event.data);
+        String cntId = eventInfo.getCntId();
+        if (sub == null || TextUtils.isEmpty(cntId)) return EventData.Companion.empty();
+        //Timber.tag(TAG).d("parseEventData, sub = %s", sub);
+        try {
+            byte[] bytes = event.data.getByteArray(cntId);
+            String cntJsonRaw = new String(bytes, StandardCharsets.UTF_8);
+            EventData data = mGson.fromJson(cntJsonRaw, EventData.class);
+            data.setSub(sub);
+            return data;
+        } catch (JsonSyntaxException e) {
+            Timber.tag(TAG).e(e, "Parse iat result failed");
         }
-        return event;
+        return EventData.Companion.empty();
     }
 
-    private void populateEventResult(AIUIEvent aiuiEvent) {
-        // TODO 事件分发
+    private void populateEventResult(EventData data) {
+        CBMSub sub = data.getSub();
+        if (sub == null) return;
+        if (sub == CBMSub.IAT) {
+            if (data.getText() == null) return;
+            Timber.tag(TAG).d("iat result = %s", data.getText().getIATVoice());
+            mSpeechInteraction.updateQuery(data.getText().getIATVoice());
+        } else if (sub == CBMSub.NLP) {
+            if (data.getNlp() == null) return;
+            int status = data.getNlp().getStatus() != null ? data.getNlp().getStatus() : -1;
+            switch (status) {
+                case 0:
+                    mNplBuilder.delete(0, mNplBuilder.length());
+                    break;
+                case 1:
+                    mNplBuilder.append(data.getNlp().getText());
+                    mSpeechInteraction.nlpAnswer(mNplBuilder.toString());
+                    break;
+                case 2:
+                    Timber.tag(TAG).d("nlp, content = %s", mNplBuilder.toString());
+                    mSpeechInteraction.nlpAnswer(mNplBuilder.toString());
+                    break;
+            }
+        } else if (sub == CBMSub.CBM_TIDY) {
+            if (data.getCbmTidy() == null || data.getCbmTidy().getText() == null) return;
+            Timber.tag(TAG).d("cbm tidy, query = %s", data.getCbmTidy().getText().getQuery());
+            mSpeechInteraction.updateQuery(data.getCbmTidy().getText().getQuery());
+        } else if (sub == CBMSub.CBM_SEMANTIC) {
+            if (data.getCbmSemantic() == null) return;
+            Timber.tag(TAG).d("cbm semantic content= %s", data.getCbmSemantic().getText());
+            mSpeechInteraction.semanticAnswer("", null);
+        } else if (sub == CBMSub.CBM_TOOL_PK) {
+            if (data.getCbmToolPK() == null || data.getCbmToolPK().getText() == null) return;
+            Timber.tag(TAG).d("cbm tool pk = %s", data.getCbmToolPK().getText().getPkType());
+        }
     }
 
     private void safeEmitEvent(AIUIEvent event) {
@@ -151,7 +191,6 @@ public class EventProcessorImpl implements IEventProcessor {
         mEventDisposable = null;
         mEventEmitter = null;
         isSubscriptionActive = false;
-        // 创建新订阅
         createEventEmitter();
     }
 
@@ -160,72 +199,6 @@ public class EventProcessorImpl implements IEventProcessor {
         isSubscriptionActive = false;
         if (!isDestroyed) {
             recreateSubscription();
-        }
-    }
-
-    private void populateIATStream(@Nullable String cntId, Bundle data) {
-        byte[] bytes = data.getByteArray(cntId);
-        try {
-            String cntJsonRaw = new String(bytes, StandardCharsets.UTF_8);
-            Timber.tag(TAG).d("populateIATStream, json = %s", cntJsonRaw);
-            JSONObject cntJson = new JSONObject(cntJsonRaw);
-            JSONObject result = cntJson.optJSONObject("text");
-            if (result.length() >= 2) {
-                updateIATPGS(cntJson);
-            }
-        } catch (JSONException e) {
-            Timber.tag(TAG).e(e, "populateIATStream");
-        }
-    }
-
-    // 处理听写PGS的队列
-    private String[] mIATPGSStack = new String[50];
-
-    private void updateIATPGS(JSONObject cntJson) {
-        JSONObject text = cntJson.optJSONObject("text");
-        // 解析拼接此次听写结果
-        StringBuilder iatText = new StringBuilder();
-        JSONArray words = text.optJSONArray("ws");
-        boolean lastResult = text.optBoolean("ls");
-        for (int index = 0; index < words.length(); index++) {
-            JSONArray charWord = words.optJSONObject(index).optJSONArray("cw");
-            for (int cIndex = 0; cIndex < charWord.length(); cIndex++) {
-                iatText.append(charWord.optJSONObject(cIndex).opt("w"));
-            }
-        }
-        String voiceIAT;
-        String pgsMode = text.optString("pgs");
-        if (TextUtils.isEmpty(pgsMode)) {
-        } else {
-            int serialNumber = text.optInt("sn");
-            mIATPGSStack[serialNumber] = iatText.toString();
-            //pgs结果两种模式rpl和apd模式（替换和追加模式）
-            if ("rpl".equals(pgsMode)) {
-                //根据replace指定的range，清空stack中对应位置值
-                JSONArray replaceRange = text.optJSONArray("rg");
-                try {
-                    int start = replaceRange.getInt(0);
-                    int end = replaceRange.getInt(1);
-                    for (int index = start; index <= end; index++) {
-                        mIATPGSStack[index] = null;
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-            StringBuilder PGSResult = new StringBuilder();
-            //汇总stack经过操作后的剩余的有效结果信息
-            for (int index = 0; index < mIATPGSStack.length; index++) {
-                if (TextUtils.isEmpty(mIATPGSStack[index])) continue;
-                if (!TextUtils.isEmpty(PGSResult.toString())) PGSResult.append("\n");
-                PGSResult.append(mIATPGSStack[index]);
-                //如果是最后一条听写结果，则清空stack便于下次使用
-                if (lastResult) {
-                    mIATPGSStack[index] = null;
-                }
-            }
-            voiceIAT = PGSResult.toString();
-            Timber.tag(TAG).d("IAT voice = %s", voiceIAT);
         }
     }
 }

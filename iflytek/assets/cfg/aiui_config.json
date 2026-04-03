@@ -5,7 +5,7 @@
     "api_secret": ""
   },
   "global": {
-    "scene": "main_box",
+    "scene": "test",
     "clean_dialog_history": "auto",
     "aiui_ver": "3"
   },
@@ -58,7 +58,7 @@
     }
   },
   "header": {
-    "prot_interact_mode": "continuous"
+    "prot_interact_mode": "oneshot"
   },
   "log": {
     "debug_log": "1",

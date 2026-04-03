@@ -78,8 +78,8 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
         switch (event.eventType) {
             case AIUIConstant.EVENT_STATE: // 服务状态事件
                 int state = event.arg1;
-                AIUIState aiuiState = state < AIUIState.values().length - 1 ? AIUIState.values()[state] : AIUIState.UNKNOWN;
-                Timber.tag(TAG).d("onEvent, state = %s", aiuiState);
+                AIUIState aiuiState = state < AIUIState.values().length ? AIUIState.values()[state] : AIUIState.UNKNOWN;
+                Timber.tag(TAG).d("Event, state = %s, value = %d", aiuiState, state);
                 break;
             case AIUIConstant.EVENT_RESULT: // 结果事件
                 break;
