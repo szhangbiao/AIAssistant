@@ -27,7 +27,10 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        flatDir { dirs("iflytek/libs") }
+        flatDir {
+            dirs("iflytek/libs")
+            dirs("downloader/libs")
+        }
         maven { url = uri("https://jitpack.io") }
         // google() 国内阿里云替代
         maven { url = uri("https://maven.aliyun.com/repository/google") }

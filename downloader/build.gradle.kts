@@ -39,6 +39,11 @@ android {
 
 dependencies {
 
+    // 本地jar包依赖
+    compileOnly(libs.classes.source)
+
+    compileOnly(project(":common"))
+
     implementation(libs.hilt)
     annotationProcessor(libs.hilt.compiler)
 

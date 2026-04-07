@@ -3,14 +3,20 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
 
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+
+    <!-- 自定义权限：控制对WakeUpService的访问 -->
+    <permission
+        android:name="cn.booslink.llm.permission.WAKE_UP_SERVICE"
+        android:protectionLevel="signature" />
 
     <application
         android:name=".AIApplication"
@@ -39,6 +45,15 @@
         <service
             android:name=".service.VoiceAssistantService"
             android:foregroundServiceType="mediaPlayback" />
+
+        <service
+            android:name=".service.WakeUpService"
+            android:exported="true"
+            android:permission="cn.booslink.llm.permission.WAKE_UP_SERVICE">
+            <intent-filter>
+                <action android:name="cn.booslink.llm.WakeUpService" />
+            </intent-filter>
+        </service>
 
         <provider
             android:name="androidx.core.content.FileProvider"

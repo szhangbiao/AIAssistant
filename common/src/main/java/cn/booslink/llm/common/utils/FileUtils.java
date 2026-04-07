@@ -2,12 +2,17 @@ package cn.booslink.llm.common.utils;
 
 import android.content.Context;
 
+import androidx.annotation.NonNull;
+
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 public class FileUtils {
     public static String readJsonFromAsset(Context context, String fileName) {
@@ -83,5 +88,43 @@ public class FileUtils {
             e.printStackTrace();
             return false;
         }
+    }
+
+    public static void deleteFile(File file) {
+        if (file.exists()) {
+            file.delete();
+        }
+    }
+
+    public static String getFileMD5(String path) {
+        try {
+            FileInputStream fis = new FileInputStream(path);
+            MessageDigest digest = MessageDigest.getInstance("MD5");
+            byte[] buffer = new byte[1024];
+            int len;
+            while ((len = fis.read(buffer)) != -1) {
+                digest.update(buffer, 0, len);
+            }
+            fis.close();
+            return bytesToHex1(digest.digest());
+        } catch (NoSuchAlgorithmException | IOException e) {
+            e.printStackTrace();
+        }
+        return "";
+    }
+
+    @NonNull
+    private static String bytesToHex1(byte[] md5Array) {
+        StringBuilder strBuilder = new StringBuilder();
+        for (byte b : md5Array) {
+            int temp = 0xff & b;
+            String hexString = Integer.toHexString(temp);
+            if (hexString.length() == 1) {//如果是十六进制的0f，默认只显示f，此时要补上0
+                strBuilder.append("0").append(hexString);
+            } else {
+                strBuilder.append(hexString);
+            }
+        }
+        return strBuilder.toString();
     }
 }
