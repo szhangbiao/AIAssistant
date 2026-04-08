@@ -11,7 +11,8 @@ public enum ApkStatus {
     INSTALL_GOING(6),
     INSTALL_SUCCESS(7),
     INSTALL_FAIL(8),
-    INSTALL_RE_PADDING(9);
+    INSTALL_RE_PADDING(9),
+    INSTALL_RANDOM(10);
 
     private final int status;
 

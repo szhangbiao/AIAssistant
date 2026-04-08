@@ -10,5 +10,9 @@ public interface IAppManager {
 
     void install(ApkInfo apkInfo);
 
+    boolean isPkgDownloading();
+
+    boolean isPkgInstalling();
+
     void onAppInstalled(InstallState state, String packageName);
 }

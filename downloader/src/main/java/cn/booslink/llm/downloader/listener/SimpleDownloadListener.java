@@ -1,5 +1,7 @@
 package cn.booslink.llm.downloader.listener;
 
+import static cn.booslink.llm.downloader.AppManagerImpl.TASK_TAG_REPADDING;
+
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
@@ -117,7 +119,9 @@ public class SimpleDownloadListener extends DownloadListener4WithSpeed {
                 validDownloadFile(task);
                 break;
             case CANCELED:
-                if (mDownloadItem.isDownloadComplete()) {
+                if (task.getTag().equals(TASK_TAG_REPADDING)) {
+                    mDownloadItem.setStatus(ApkStatus.DOWNLOAD_PADDING);
+                } else if (mDownloadItem.isDownloadComplete()) {
                     validDownloadFile(task);
                     break;
                 }

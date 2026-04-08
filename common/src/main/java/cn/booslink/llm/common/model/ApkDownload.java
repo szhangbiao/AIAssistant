@@ -47,11 +47,6 @@ public class ApkDownload {
         download.setVersionCode(pkgInfo.getVersionCode());
         download.setStatus(ApkStatus.DOWNLOAD_PADDING);
         download.setRetryCount(0);
-//        boolean isUpdate = pkgInfo instanceof PkgWithUpdate;
-//        if (pkgInfo instanceof PkgDetails) {
-//            isUpdate = ((PkgDetails) pkgInfo).isAppUpdate();
-//        }
-//        download.setAppUpdate(isUpdate);
         return download;
     }
 
@@ -250,21 +245,17 @@ public class ApkDownload {
         this.progress = 0;
         this.speed = "下载失败，请稍后再试！";
         this.retryCount = FLAG_APK_FAIL;
-        //this.updateTime = DateTime.now();
-        //this.isDeleted = true;
     }
 
     public void downloadPauseWithNoSpace() {
         this.status = ApkStatus.DOWNLOAD_PAUSE_WITH_ERROR;
         this.failedReason = "设备存储空间不足，下载失败";
-        //this.updateTime = DateTime.now();
     }
 
     public void retry() {
         this.status = ApkStatus.DOWNLOAD_FAIL;
         this.progress = 0;
         this.speed = "Apk校验失败，自动重新下载";
-        //this.updateTime = DateTime.now();
     }
 
     public void retryFail() {
@@ -272,13 +263,6 @@ public class ApkDownload {
         this.progress = 0;
         this.speed = "Apk校验失败，请联系管理员";
         this.retryCount = FLAG_APK_FAIL;
-        //this.updateTime = DateTime.now();
-        //this.isDeleted = true;
-    }
-
-    public void installFail() {
-        this.status = ApkStatus.INSTALL_FAIL;
-        //this.updateTime = DateTime.now();
     }
 
     public void installRePadding() {
@@ -286,8 +270,6 @@ public class ApkDownload {
             this.status = ApkStatus.INSTALL_RE_PADDING;
         }
         this.retryCount = 0;
-        //this.updateTime = DateTime.now();
-        //this.isDeleted = false;
     }
 
     public void installResult(boolean isSuccess, boolean shouldRetryInstall) {
@@ -299,8 +281,10 @@ public class ApkDownload {
         }
         // 目前是存储空间不足不重试安装
         this.failedReason = !shouldRetryInstall ? "设备存储空间不足，安装失败" : "";
-        //this.updateTime = DateTime.now();
-        //this.isDeleted = true;
+    }
+
+    public void installRandom() {
+        this.status = ApkStatus.INSTALL_RANDOM;
     }
 
     public boolean isEmpty() {
@@ -317,7 +301,6 @@ public class ApkDownload {
         this.status = ApkStatus.INSTALL_PADDING;
         this.retryCount = 0;
         this.progress = 100;
-        //this.updateTime = DateTime.now();
     }
 
     public void updateDownloadInfo(ApkDownload otherDownload) {
@@ -326,20 +309,10 @@ public class ApkDownload {
         this.progress = otherDownload.getProgress();
         this.speed = otherDownload.getSpeed();
         this.failedReason = otherDownload.getFailedReason();
-        //this.isPauseWithDisconnect = otherDownloadDTO.isPauseWithDisconnect();
-        //this.updateTime = otherDownload.getUpdateTime();
     }
 
     public boolean isDownloadInstalling() {
         return status == ApkStatus.INSTALL_GOING || (status == ApkStatus.INSTALL_FAIL && retryCount > 0);
-    }
-
-    public boolean isProgressBarShow() {
-        return status.getStatus() <= ApkStatus.DOWNLOAD_FAIL.getStatus() || (status == ApkStatus.INSTALL_FAIL && retryCount == 0);
-    }
-
-    public boolean isProgressTextShow() {
-        return progress != 0 && (status.getStatus() <= ApkStatus.DOWNLOAD_FAIL.getStatus() || status == ApkStatus.INSTALL_FAIL && retryCount == 0);
     }
 
     public boolean shouldRemoveFromInstallList() {
@@ -350,11 +323,11 @@ public class ApkDownload {
         return status == ApkStatus.INSTALL_FAIL && retryCount == FLAG_APK_FAIL;
     }
 
-    public boolean isDownloadComplete() {
-        return progress == 100;
+    public boolean isDownloadFail() {
+        return (status == ApkStatus.DOWNLOAD_FAIL || status == ApkStatus.DOWNLOAD_PAUSE_WITH_ERROR) && retryCount == FLAG_APK_FAIL;
     }
 
-    public boolean isNotNeedDownload() {
-        return status == ApkStatus.DOWNLOAD_PADDING || status == ApkStatus.DOWNLOAD_PROGRESS;
+    public boolean isDownloadComplete() {
+        return progress == 100;
     }
 }
