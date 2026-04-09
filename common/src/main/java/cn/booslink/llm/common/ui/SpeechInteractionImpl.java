@@ -18,6 +18,7 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.inject.Inject;
 
+import cn.booslink.llm.common.model.ApkDownload;
 import cn.booslink.llm.common.model.enums.EmoteState;
 import cn.booslink.llm.common.utils.ContextUtils;
 import cn.booslink.llm.common.widget.AIRootLayout;
@@ -36,7 +37,8 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
     private final FrameLayout mParentView;
     private final MutableLiveData<EmoteState> mEmoteStateLiveData;
     private final MutableLiveData<String> mVoiceInputLiveData;
-    private final MutableLiveData<String> nplResponseLiveData;
+    private final MutableLiveData<String> mNplResponseLiveData;
+    private final MutableLiveData<ApkDownload> mApkDownloadLiveData;
 
     private boolean isAttached = false;
 
@@ -46,7 +48,8 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
         this.mParentView = new FrameLayout(context);
         this.mEmoteStateLiveData = new MutableLiveData<>(EmoteState.IDLE);
         this.mVoiceInputLiveData = new MutableLiveData<>("您好，我是Bobo！");
-        this.nplResponseLiveData = new MutableLiveData<>("");
+        this.mNplResponseLiveData = new MutableLiveData<>("");
+        this.mApkDownloadLiveData = new MutableLiveData<>(ApkDownload.empty());
     }
 
     @Override
@@ -162,12 +165,18 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
     @Override
     public void nlpAnswer(String nlpReply) {
         if (TextUtils.isEmpty(nlpReply)) return;
-        nplResponseLiveData.postValue(nlpReply);
+        mNplResponseLiveData.postValue(nlpReply);
     }
 
     @Override
     public void semanticAnswer(String category, Object answer) {
 
+    }
+
+    @Override
+    public void downloadUpdate(ApkDownload download) {
+        if (download == null) return;
+        mApkDownloadLiveData.postValue(download);
     }
 
     /**
@@ -191,8 +200,9 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
         mParentView.removeAllViews();
         FrameLayout.LayoutParams childParams = new FrameLayout.LayoutParams(width, FrameLayout.LayoutParams.WRAP_CONTENT);
         childParams.gravity = Gravity.TOP | Gravity.END;
-        childParams.topMargin = ContextUtils.dp2px(mContext, 62);
+        childParams.topMargin = ContextUtils.dp2px(mContext, 32);
         AIRootLayout rootLayout = mRootLayoutRef.get();
+        //mParentView.setBackgroundColor(Color.BLUE);
         if (rootLayout != null) {
             bindData(rootLayout);
             mParentView.addView(rootLayout, childParams);
@@ -200,11 +210,11 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
     }
 
     private void bindData(AIRootLayout rootLayout) {
-        rootLayout.observeData(mEmoteStateLiveData, mVoiceInputLiveData, nplResponseLiveData);
+        rootLayout.observeData(mEmoteStateLiveData, mVoiceInputLiveData, mNplResponseLiveData, mApkDownloadLiveData);
     }
 
     private void unBindData(AIRootLayout rootLayout) {
         if (rootLayout == null) return;
-        rootLayout.unObserveData(mEmoteStateLiveData, mVoiceInputLiveData, nplResponseLiveData);
+        rootLayout.unObserveData(mEmoteStateLiveData, mVoiceInputLiveData, mNplResponseLiveData, mApkDownloadLiveData);
     }
 }

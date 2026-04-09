@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="554dp"
+    android:layout_height="wrap_content"
+    tools:layout_gravity="end"
+    tools:layout_marginTop="32dp"
+    tools:parentTag="android.widget.FrameLayout">
+
+    <View
+        android:id="@+id/v_content"
+        android:layout_width="510dp"
+        android:layout_height="234dp"
+        android:layout_gravity="end"
+        android:layout_marginTop="62dp"
+        android:layout_marginEnd="44dp"
+        android:background="@drawable/bg_root_content"
+        tools:layout_height="234dp" />
+
+    <View
+        android:layout_width="220dp"
+        android:layout_height="220dp"
+        android:layout_gravity="end"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="44dp"
+        android:background="@drawable/bg_mascot_light" />
+
+    <org.libpag.PAGImageView
+        android:id="@+id/pag_animation"
+        android:layout_width="230dp"
+        android:layout_height="230dp"
+        android:layout_gravity="end"
+        android:layout_marginEnd="8dp" />
+
+    <FrameLayout
+        android:id="@+id/fl_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="62dp"
+        android:layout_marginEnd="44dp"
+        tools:layout_height="206dp">
+
+        <cn.booslink.llm.common.widget.AIInteractionLayout
+            android:id="@+id/ll_interaction"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <cn.booslink.llm.common.widget.AILeaveLayout
+            android:id="@+id/fl_leave"
+            android:layout_width="match_parent"
+            android:layout_height="206dp"
+            android:visibility="gone" />
+    </FrameLayout>
+</merge>

@@ -16,20 +16,31 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.os.IBinder;
+import android.view.WindowManager;
+import android.widget.Button;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import javax.inject.Inject;
+
 import cn.booslink.llm.R;
+import cn.booslink.llm.common.model.PkgInfo;
 import cn.booslink.llm.common.utils.ContextUtils;
+import cn.booslink.llm.common.utils.FileUtils;
+import cn.booslink.llm.common.utils.GsonProvider;
 import cn.booslink.llm.common.utils.ScreenAdapter;
 import cn.booslink.llm.common.utils.ScreenUtils;
+import cn.booslink.llm.downloader.IAppManager;
 import cn.booslink.llm.service.VoiceAssistantService;
 import dagger.hilt.android.AndroidEntryPoint;
 import timber.log.Timber;
 
 @AndroidEntryPoint
 public class MainActivity extends AppCompatActivity {
+
+    @Inject
+    IAppManager mAppManager;
 
     private static final String TAG = "MainActivity";
     private static final int REQUEST_RECORD_AUDIO_PERMISSION = 100;
@@ -67,11 +78,13 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Timber.tag(TAG).d("onCreate");
-        super.onCreate(savedInstanceState);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         ScreenUtils.setupFullScreen(getWindow());
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         checkAndRequestPermissions();
+        testDownload();
     }
 
     @Override
@@ -185,5 +198,14 @@ public class MainActivity extends AppCompatActivity {
     private void bindVoiceAssistantService() {
         Intent intent = new Intent(this, VoiceAssistantService.class);
         bindService(intent, connection, BIND_AUTO_CREATE);
+    }
+
+    private void testDownload() {
+        Button button = findViewById(R.id.btn_download);
+        button.setOnClickListener(v -> {
+            String pkgJson = FileUtils.readJsonFromAsset(this, "test_pkg_details.json");
+            PkgInfo pkgInfo = GsonProvider.instance().fromJson(pkgJson, PkgInfo.class);
+            mAppManager.startDownloadPkg(pkgInfo);
+        });
     }
 }

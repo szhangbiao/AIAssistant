@@ -26,6 +26,7 @@ import cn.booslink.llm.common.model.PkgInfo;
 import cn.booslink.llm.common.model.enums.ApkStatus;
 import cn.booslink.llm.common.utils.ContextUtils;
 import cn.booslink.llm.common.utils.FileUtils;
+import cn.booslink.llm.downloader.bus.IRxApkBus;
 import cn.booslink.llm.downloader.listener.OnApkDownloadListener;
 import cn.booslink.llm.downloader.listener.SimpleDownloadListener;
 import cn.booslink.llm.downloader.model.InstallState;
@@ -52,6 +53,7 @@ public class AppManagerImpl implements IAppManager {
     private final static int DELAY_DOWNLOAD_RETRY = 200;
 
     private final Context mContext;
+    private final IRxApkBus mRxApkBus;
     private final CompositeDisposable mCompositeDisposable;
     private final ConcurrentHashMap<String, ApkDownload> mApkDownloadMap;
     private final PkgInstallBroadcastReceiver mPkgInstallBroadcastReceiver;
@@ -60,8 +62,9 @@ public class AppManagerImpl implements IAppManager {
     private volatile String currentPackageName = null;
 
     @Inject
-    public AppManagerImpl(@ApplicationContext Context context, PkgInstallBroadcastReceiver receiver) {
+    public AppManagerImpl(@ApplicationContext Context context, IRxApkBus rxApkBus, PkgInstallBroadcastReceiver receiver) {
         this.mContext = context;
+        this.mRxApkBus = rxApkBus;
         this.mPkgInstallBroadcastReceiver = receiver;
         this.mApkDownloadMap = new ConcurrentHashMap<>();
         this.mCompositeDisposable = new CompositeDisposable();
@@ -76,6 +79,7 @@ public class AppManagerImpl implements IAppManager {
         if (currentDownload != null) return;
         ApkDownload download = ApkDownload.createFromPkgInfo(pkgInfo);
         startDownloadApkIfNeed(download);
+        mRxApkBus.post(download);
     }
 
     @Override
@@ -118,7 +122,7 @@ public class AppManagerImpl implements IAppManager {
                 .subscribe(installedApk -> {
                     handlePaddingInstallList(installedApk);
                     currentPackageName = null;
-                    // TODO notify download success
+                    //mRxApkBus.post(installedApk);
                 });
         addDisposable(disposable);
     }
@@ -180,8 +184,9 @@ public class AppManagerImpl implements IAppManager {
                 if (downloadItem.getStatus() == ApkStatus.INSTALL_PADDING) {
                     install(downloadItem);
                 } else if (downloadItem.isDownloadFail()) {
-                    // TODO Toast
+                    // TODO mToast.get().showMessage(downloadItem.getFailedReason(), 10);
                 }
+                mRxApkBus.post(downloadItem);
             }
 
             @Override
@@ -191,7 +196,8 @@ public class AppManagerImpl implements IAppManager {
 
             @Override
             public void onDownloadFailed(ApkDownload downloadItem) {
-                // TODO Toast
+                mRxApkBus.post(downloadItem);
+                // TODO mToast.get().showMessage(downloadItem.getFailedReason(), 10);
             }
         };
     }
@@ -199,21 +205,32 @@ public class AppManagerImpl implements IAppManager {
     private void cancelCurrentAndStartNewDownload(ApkDownload download, boolean isRetryDownload) {
         boolean haveDownloadTask = mDownloadingTask != null && OkDownload.with().downloadDispatcher().isRunning(mDownloadingTask);
         Disposable disposable = Single.just(download)
-                .map(apkDownloadDTO -> {
+                .map(apkDownload -> {
                     String downloadPkg = mDownloadingTask != null ? mDownloadingTask.getTag().toString() : "";
                     cancelDownloadingIfRunning(downloadPkg, TASK_TAG_REPADDING);
-                    return apkDownloadDTO;
+                    return apkDownload;
                 })
                 .delay(haveDownloadTask ? DELAY_DOWNLOAD_RETRY : 0, TimeUnit.MILLISECONDS)
-                .subscribe(apkDownloadDTO -> {
+                .subscribe(apkDownload -> {
                     // 在Delay期间可能start其他的下载
                     String downloadPkg = mDownloadingTask != null ? mDownloadingTask.getTag().toString() : "";
-                    // 在Delay期间可能会被移除下载队列或者正常的开始下载
-                    boolean retryDownloadStillExist = isRetryDownload && mApkDownloadMap.containsKey(apkDownloadDTO.getPkgName());
-                    if (!isRetryDownload || retryDownloadStillExist) {
-                        buildTaskAndDownloadApk(apkDownloadDTO);
+                    ApkDownload downloadingApk = mApkDownloadMap.get(downloadPkg);
+                    boolean haveDownloadRunning = mDownloadingTask != null && downloadingApk != null && downloadingApk.getStatus() == ApkStatus.DOWNLOAD_PROGRESS;
+                    Timber.tag(TAG).d("pauseCurrentAndStartNewDownload, pkgName: %s,current running: %s", downloadPkg, haveDownloadRunning ? "true" : "false");
+                    if (haveDownloadRunning) {
+                        // 快速点击造成下载盒子有两个item的status为download progress
+                        if (apkDownload.getStatus() == ApkStatus.DOWNLOAD_PROGRESS) {
+                            apkDownload.setStatus(ApkStatus.DOWNLOAD_PADDING);
+                            mRxApkBus.post(apkDownload);
+                        }
+                        return;
                     }
-                    Timber.tag(TAG).d("pauseCurrentAndStartNewDownload, pkgName: %s, exist: %s, retry count: %d", apkDownloadDTO.getPkgName(), retryDownloadStillExist ? "true" : "false", apkDownloadDTO.getRetryCount());
+                    // 在Delay期间可能会被移除下载队列或者正常的开始下载
+                    boolean retryDownloadStillExist = isRetryDownload && mApkDownloadMap.containsKey(apkDownload.getPkgName());
+                    if (!isRetryDownload || retryDownloadStillExist) {
+                        buildTaskAndDownloadApk(apkDownload);
+                    }
+                    Timber.tag(TAG).d("pauseCurrentAndStartNewDownload, pkgName: %s, exist: %s, retry count: %d", apkDownload.getPkgName(), retryDownloadStillExist ? "true" : "false", apkDownload.getRetryCount());
                 });
         addDisposable(disposable);
     }
@@ -238,6 +255,7 @@ public class AppManagerImpl implements IAppManager {
         ApkDownload apkDownload = mApkDownloadMap.get(installPkgName);
         if (apkDownload != null && apkDownload.shouldRemoveFromInstallList()) {
             apkDownload.installResult(isInstallSuccess, state != InstallState.INSUFFICIENT_STORAGE);
+            mRxApkBus.post(apkDownload);
         }
         Timber.tag(TAG).d("update apk install success, and download is %s", apkDownload == null ? "null" : "not null");
         return apkDownload == null || !apkDownload.shouldRemoveFromInstallList() ? ApkDownload.empty() : apkDownload;
@@ -258,7 +276,6 @@ public class AppManagerImpl implements IAppManager {
         }
     }
 
-
     private void install(ApkDownload downloadApk) {
         ApkDownload paddingDownload = mApkDownloadMap.get(downloadApk.getPkgName());
         if (paddingDownload == null) {
@@ -272,12 +289,14 @@ public class AppManagerImpl implements IAppManager {
             currentPackageName = null;
             installRandomApk(downloadApk);
         }
+        mRxApkBus.post(downloadApk);
     }
 
     private void installDownloadApk(ApkDownload downloadItem) {
         Disposable disposable = Single.just(downloadItem)
                 .map(apkDownload -> {
                     apkDownload.setStatus(ApkStatus.INSTALL_GOING);
+                    mRxApkBus.post(apkDownload);
                     return apkDownload;
                 })
                 .delay(500, TimeUnit.MILLISECONDS)

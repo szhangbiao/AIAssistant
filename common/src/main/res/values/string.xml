@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="speech_initial_help">想问什么尽管问我！</string>
+    <string name="downloading">正在为您下载…</string>
+    <string name="download_done">恭喜您下载完成！</string>
 </resources>

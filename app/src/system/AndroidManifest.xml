@@ -5,6 +5,7 @@
     android:sharedUserMaxSdkVersion="28"
     tools:ignore="UnusedAttribute">
 
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
 

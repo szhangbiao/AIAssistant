@@ -17,7 +17,7 @@
         android:lineSpacingExtra="4dp"
         android:textColor="@android:color/white"
         android:textSize="28sp"
-        tools:text="您不需要我了嘛？我还想再和您聊会天呢～" />
+        android:text="您不需要我了嘛？我还想再和您聊会天呢～" />
 
     <Button
         android:id="@+id/btn_negative"
@@ -29,7 +29,7 @@
         android:background="@drawable/bg_button_negative"
         android:textColor="#1D2543"
         android:textSize="26sp"
-        tools:text="不需要" />
+        android:text="不需要" />
 
     <Button
         android:id="@+id/btn_positive"
@@ -41,5 +41,5 @@
         android:background="@drawable/bg_button_positive"
         android:textColor="@android:color/white"
         android:textSize="26sp"
-        tools:text="需要" />
+        android:text="需要" />
 </merge>

@@ -4,23 +4,33 @@
     android:layout_width="554dp"
     android:layout_height="wrap_content"
     tools:layout_gravity="end"
-    tools:layout_marginTop="62dp"
+    tools:layout_marginTop="32dp"
     tools:parentTag="android.widget.FrameLayout">
 
     <View
         android:id="@+id/v_content"
-        android:layout_width="554dp"
-        android:layout_height="234dp"
-        android:layout_marginTop="4dp"
-        android:background="@drawable/bg_content"
-        tools:layout_height="234dp" />
+        android:layout_width="510dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:layout_marginTop="62dp"
+        android:layout_marginEnd="44dp"
+        android:background="@drawable/bg_root_content"
+        tools:layout_height="334dp" />
+
+    <View
+        android:layout_width="220dp"
+        android:layout_height="220dp"
+        android:layout_gravity="end"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="44dp"
+        android:background="@drawable/bg_mascot_light" />
 
     <ImageView
         android:id="@+id/iv_mascot"
-        android:layout_width="112dp"
-        android:layout_height="174dp"
+        android:layout_width="230dp"
+        android:layout_height="230dp"
         android:layout_gravity="end"
-        android:layout_marginEnd="68dp"
+        android:layout_marginEnd="8dp"
         android:contentDescription="@null"
         android:src="@drawable/ic_mascot_hello" />
 
@@ -28,9 +38,9 @@
         android:id="@+id/fl_content"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
-        android:layout_marginEnd="44dp"
-        tools:layout_height="206dp">
+        android:layout_gravity="end"
+        android:layout_marginTop="62dp"
+        android:layout_marginEnd="44dp">
 
         <cn.booslink.llm.common.widget.AIInteractionLayout
             android:id="@+id/ll_interaction"
@@ -40,7 +50,7 @@
         <cn.booslink.llm.common.widget.AILeaveLayout
             android:id="@+id/fl_leave"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="206dp"
             android:visibility="gone" />
     </FrameLayout>
 </merge>

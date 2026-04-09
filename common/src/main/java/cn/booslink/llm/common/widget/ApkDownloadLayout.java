@@ -7,7 +7,12 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+
+import java.util.Locale;
+
 import cn.booslink.llm.common.R;
+import cn.booslink.llm.common.model.ApkDownload;
 
 public class ApkDownloadLayout extends RelativeLayout {
 
@@ -43,5 +48,38 @@ public class ApkDownloadLayout extends RelativeLayout {
         ivDone = findViewById(R.id.iv_download_done);
         pbProgress = findViewById(R.id.pb_progress);
         tvProgress = findViewById(R.id.tv_progress);
+    }
+
+    public void updateDownloadView(ApkDownload download) {
+        if (download.isEmpty()) {
+            resetViews();
+            return;
+        }
+        if (download.getProgress() == 0) {
+            Glide.with(getContext())
+                    .load(download.getIcon())
+                    .into(ivIcon);
+        }
+        tvName.setText(download.getName());
+        ivDone.setVisibility(download.isDownloadComplete() ? VISIBLE : GONE);
+        pbProgress.setVisibility(download.isDownloadComplete() ? GONE : VISIBLE);
+        tvProgress.setVisibility(download.isDownloadComplete() ? GONE : VISIBLE);
+        if (download.isDownloadComplete()) {
+            tvStatus.setText(R.string.download_done);
+        } else {
+            tvStatus.setText(R.string.downloading);
+            pbProgress.setProgress(download.getProgress());
+            tvProgress.setText(String.format(Locale.getDefault(), "%d%%", download.getProgress()));
+        }
+    }
+
+    private void resetViews() {
+        tvName.setText("");
+        ivDone.setVisibility(GONE);
+        pbProgress.setVisibility(VISIBLE);
+        tvProgress.setVisibility(VISIBLE);
+        tvProgress.setText("0%");
+        tvStatus.setText(R.string.downloading);
+        ivIcon.setImageBitmap(null);
     }
 }

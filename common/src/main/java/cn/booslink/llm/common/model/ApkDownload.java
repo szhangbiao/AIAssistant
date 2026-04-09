@@ -3,9 +3,11 @@ package cn.booslink.llm.common.model;
 import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
 
+import androidx.annotation.NonNull;
+
 import cn.booslink.llm.common.model.enums.ApkStatus;
 
-public class ApkDownload {
+public class ApkDownload implements Cloneable {
 
     public static final int FLAG_APK_FAIL = 101;
 
@@ -62,6 +64,16 @@ public class ApkDownload {
         dto.setApkIcon(apkInfo.getIcon());
         dto.setAppUpdate(isAppUpdate);
         return dto;
+    }
+
+    @NonNull
+    @Override
+    public ApkDownload clone() {
+        try {
+            return (ApkDownload) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError("ApkDownload clone failed", e);
+        }
     }
 
     public int getApkId() {
@@ -243,7 +255,7 @@ public class ApkDownload {
     public void downloadFail() {
         this.status = ApkStatus.DOWNLOAD_FAIL;
         this.progress = 0;
-        this.speed = "下载失败，请稍后再试！";
+        this.failedReason = "下载失败，请稍后再试！";
         this.retryCount = FLAG_APK_FAIL;
     }
 
@@ -255,13 +267,13 @@ public class ApkDownload {
     public void retry() {
         this.status = ApkStatus.DOWNLOAD_FAIL;
         this.progress = 0;
-        this.speed = "Apk校验失败，自动重新下载";
+        this.failedReason = "Apk校验失败，自动重新下载";
     }
 
     public void retryFail() {
         this.status = ApkStatus.DOWNLOAD_FAIL;
         this.progress = 0;
-        this.speed = "Apk校验失败，请联系管理员";
+        this.failedReason = "Apk校验失败，请联系管理员";
         this.retryCount = FLAG_APK_FAIL;
     }
 
@@ -325,6 +337,10 @@ public class ApkDownload {
 
     public boolean isDownloadFail() {
         return (status == ApkStatus.DOWNLOAD_FAIL || status == ApkStatus.DOWNLOAD_PAUSE_WITH_ERROR) && retryCount == FLAG_APK_FAIL;
+    }
+
+    public boolean isInstallFinish() {
+        return status == ApkStatus.INSTALL_RANDOM || status == ApkStatus.INSTALL_SUCCESS;
     }
 
     public boolean isDownloadComplete() {

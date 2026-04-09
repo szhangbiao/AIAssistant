@@ -4,6 +4,8 @@ import android.app.Activity;
 
 import org.jetbrains.annotations.Nullable;
 
+import cn.booslink.llm.common.model.ApkDownload;
+
 public interface ISpeechInteraction {
 
     void attachToWindow();
@@ -21,4 +23,6 @@ public interface ISpeechInteraction {
     void nlpAnswer(String nlpReply);
 
     void semanticAnswer(String category, Object answer);
+
+    void downloadUpdate(ApkDownload download);
 }
