@@ -14,6 +14,7 @@ import javax.inject.Inject;
 
 import cn.booslink.llm.common.model.Device;
 import cn.booslink.llm.common.model.enums.AIUIState;
+import cn.booslink.llm.common.model.enums.EventType;
 import cn.booslink.llm.common.utils.RxUtil;
 import cn.booslink.llm.processor.IEventProcessor;
 import cn.booslink.llm.speech.config.AIUIConfig;
@@ -74,7 +75,7 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
 
     @Override
     public void onEvent(AIUIEvent event) {
-        Timber.tag(TAG).d("onEvent, type = %d", event.eventType);
+        Timber.tag(TAG).d("onEvent, type = %s", EventType.fromType(event.eventType));
         switch (event.eventType) {
             case AIUIConstant.EVENT_STATE: // 服务状态事件
                 int state = event.arg1;

@@ -1,15 +1,17 @@
 package cn.booslink.llm.common.model
 
 import cn.booslink.llm.common.model.enums.CBMSub
+import cn.booslink.llm.common.model.enums.Category
 import com.google.gson.annotations.SerializedName
 
 data class EventData(
     val text: IATText?,
     @SerializedName("cbm_tidy") val cbmTidy: SdkResponse<CBMTidy>?,
-    @SerializedName("cbm_semantic") val cbmSemantic: SdkResponse<String>?,
+    @SerializedName("cbm_semantic") val cbmSemantic: SdkResponse<CBMSemantic>?,
     @SerializedName("cbm_tool_pk") val cbmToolPK: SdkResponse<CBMToolPK>?,
     val nlp: SdkResponse<String>?,
-    var sub: CBMSub? = null
+    var sub: CBMSub? = null,
+    var response: UIResponse? = null
 ) {
     companion object {
         fun empty() = EventData(null, null, null, null, null)
@@ -56,5 +58,14 @@ data class CBMToolPK(
 )
 
 data class PKSource(val domain: String?)
+
+data class UIResponse(
+    val category: Category,
+    val weathers: List<Weather>?
+) {
+    companion object {
+        fun weatherData(category: Category, weathers: List<Weather>?) = UIResponse(category, weathers)
+    }
+}
 
 

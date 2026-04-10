@@ -19,6 +19,7 @@ import org.jetbrains.annotations.Nullable;
 import javax.inject.Inject;
 
 import cn.booslink.llm.common.model.ApkDownload;
+import cn.booslink.llm.common.model.UIResponse;
 import cn.booslink.llm.common.model.enums.EmoteState;
 import cn.booslink.llm.common.utils.ContextUtils;
 import cn.booslink.llm.common.widget.AIRootLayout;
@@ -172,7 +173,7 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
     }
 
     @Override
-    public void semanticAnswer(String category, Object answer) {
+    public void semanticAnswer(UIResponse response) {
 
     }
 

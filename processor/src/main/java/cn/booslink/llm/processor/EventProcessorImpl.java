@@ -4,16 +4,23 @@ import android.text.TextUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
+import com.google.gson.reflect.TypeToken;
 import com.iflytek.aiui.AIUIConstant;
 import com.iflytek.aiui.AIUIEvent;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
 
 import javax.inject.Inject;
 
+import cn.booslink.llm.common.model.CBMSemantic;
 import cn.booslink.llm.common.model.EventData;
 import cn.booslink.llm.common.model.EventInfo;
+import cn.booslink.llm.common.model.UIResponse;
+import cn.booslink.llm.common.model.Weather;
 import cn.booslink.llm.common.model.enums.CBMSub;
+import cn.booslink.llm.common.model.enums.Category;
 import cn.booslink.llm.common.ui.ISpeechInteraction;
 import cn.booslink.llm.common.utils.RxUtil;
 import io.reactivex.rxjava3.core.BackpressureStrategy;
@@ -109,6 +116,7 @@ public class EventProcessorImpl implements IEventProcessor {
                     isSubscriptionActive = true;
                 }, BackpressureStrategy.LATEST)
                 .map(this::parseEventData)
+                .map(this::processSemanticData)
                 .compose(RxUtil.flowableOnMain())
                 .subscribe(this::populateEventResult, this::parseOrPopulateEventFailed);
     }
@@ -118,7 +126,7 @@ public class EventProcessorImpl implements IEventProcessor {
         CBMSub sub = eventInfo.getSub();
         String cntId = eventInfo.getCntId();
         if (sub == null || TextUtils.isEmpty(cntId)) return EventData.Companion.empty();
-        //Timber.tag(TAG).d("parseEventData, sub = %s", sub);
+        Timber.tag(TAG).d("parseEventData, sub = %s", sub);
         try {
             byte[] bytes = event.data.getByteArray(cntId);
             String cntJsonRaw = new String(bytes, StandardCharsets.UTF_8);
@@ -129,6 +137,20 @@ public class EventProcessorImpl implements IEventProcessor {
             Timber.tag(TAG).e(e, "Parse iat result failed");
         }
         return EventData.Companion.empty();
+    }
+
+    private EventData processSemanticData(EventData eventData) {
+        if (CBMSub.CBM_SEMANTIC == eventData.getSub() && eventData.getCbmSemantic() != null) {
+            CBMSemantic cbmSemantic = eventData.getCbmSemantic().getText();
+            if (cbmSemantic == null) return eventData;
+            try {
+                UIResponse response = cbmSemantic.getResponse(mGson);
+                eventData.setResponse(response);
+            } catch (JsonSyntaxException e) {
+                Timber.tag(TAG).e(e, "Parse semantic result failed");
+            }
+        }
+        return eventData;
     }
 
     private void populateEventResult(EventData data) {
@@ -159,9 +181,9 @@ public class EventProcessorImpl implements IEventProcessor {
             Timber.tag(TAG).d("cbm tidy, query = %s", data.getCbmTidy().getText().getQuery());
             mSpeechInteraction.updateQuery(data.getCbmTidy().getText().getQuery());
         } else if (sub == CBMSub.CBM_SEMANTIC) {
-            if (data.getCbmSemantic() == null) return;
-            Timber.tag(TAG).d("cbm semantic content= %s", data.getCbmSemantic().getText());
-            mSpeechInteraction.semanticAnswer("", null);
+            if (data.getResponse() == null) return;
+            Timber.tag(TAG).d("cbm semantic content= %s", mGson.toJson(data.getResponse()));
+            mSpeechInteraction.semanticAnswer(data.getResponse());
         } else if (sub == CBMSub.CBM_TOOL_PK) {
             if (data.getCbmToolPK() == null || data.getCbmToolPK().getText() == null) return;
             Timber.tag(TAG).d("cbm tool pk = %s", data.getCbmToolPK().getText().getPkType());
