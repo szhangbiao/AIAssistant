@@ -59,6 +59,7 @@ public class AIInteractionLayout extends LinearLayout {
         tvResultTitle = findViewById(R.id.tv_result_title);
         flResult = findViewById(R.id.fl_result);
         tvNplReply = findViewById(R.id.tv_npl);
+        apkDownloadLayout = findViewById(R.id.fl_download_layout);
     }
 
     public void showDownloadProcess(ApkDownload apkDownload) {

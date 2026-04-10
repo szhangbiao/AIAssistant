@@ -68,10 +68,12 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
             } else {
                 params.type = WindowManager.LayoutParams.TYPE_TOAST;
             }
-            params.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
+            params.flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL;
+            //params.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
             params.gravity = Gravity.TOP | Gravity.END;
-            params.height = WindowManager.LayoutParams.MATCH_PARENT;
-            params.width = WindowManager.LayoutParams.MATCH_PARENT;
+            int width = ContextUtils.dp2px(mContext, 554);
+            params.height = WindowManager.LayoutParams.WRAP_CONTENT;
+            params.width = width;
             params.format = PixelFormat.RGBA_8888;
             setupRootViewParams();
             wm.addView(mParentView, params);
@@ -111,12 +113,13 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
             WindowManager wm = (WindowManager) activity.getSystemService(WINDOW_SERVICE);
             WindowManager.LayoutParams params = new WindowManager.LayoutParams();
             params.type = WindowManager.LayoutParams.TYPE_APPLICATION_SUB_PANEL;
-            params.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
+            params.flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL;
             //params.z = 1000;
             params.token = activity.getWindow().getDecorView().getWindowToken();
             params.gravity = Gravity.TOP | Gravity.END;
-            params.height = WindowManager.LayoutParams.MATCH_PARENT;
-            params.width = WindowManager.LayoutParams.MATCH_PARENT;
+            int width = ContextUtils.dp2px(mContext, 554);
+            params.height = WindowManager.LayoutParams.WRAP_CONTENT;
+            params.width = width;
             params.format = PixelFormat.RGBA_8888;
             setupRootViewParams();
             wm.addView(mParentView, params);

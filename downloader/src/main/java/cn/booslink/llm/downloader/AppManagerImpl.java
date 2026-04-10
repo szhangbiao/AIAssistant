@@ -186,6 +186,7 @@ public class AppManagerImpl implements IAppManager {
                 } else if (downloadItem.isDownloadFail()) {
                     // TODO mToast.get().showMessage(downloadItem.getFailedReason(), 10);
                 }
+                mDownloadingTask = null;
                 mRxApkBus.post(downloadItem);
             }
 
@@ -346,7 +347,7 @@ public class AppManagerImpl implements IAppManager {
 
     private void installRandomApk(ApkDownload downloadApk) {
         downloadApk.installRandom();
-        if (shouldRandomInstallApp()) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || checkInstallPermission()) {
             // 如果是本地安装，则延迟800毫秒
             Disposable disposable = Single.just(downloadApk)
                     .delay(downloadApk.isLocalApkInstall() ? 800 : 0, TimeUnit.MILLISECONDS)
@@ -356,14 +357,6 @@ public class AppManagerImpl implements IAppManager {
                     });
             addDisposable(disposable);
         }
-    }
-
-    private boolean shouldRandomInstallApp() {
-        if (!checkInstallPermission()) {
-            return false;
-        }
-        // return Build.VERSION.SDK_INT < Build.VERSION_CODES.M || mDevice.isAppActive();
-        return Build.VERSION.SDK_INT < Build.VERSION_CODES.M;
     }
 
     private boolean checkInstallPermission() {

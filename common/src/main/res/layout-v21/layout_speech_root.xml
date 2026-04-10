@@ -1,36 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="554dp"
     android:layout_height="wrap_content"
     tools:layout_gravity="end"
     tools:layout_marginTop="32dp"
-    tools:parentTag="android.widget.FrameLayout">
+    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout">
 
     <View
         android:id="@+id/v_content"
         android:layout_width="510dp"
-        android:layout_height="234dp"
-        android:layout_gravity="end"
+        android:layout_height="@dimen/match_constraint"
         android:layout_marginTop="62dp"
         android:layout_marginEnd="44dp"
         android:background="@drawable/bg_root_content"
-        tools:layout_height="234dp" />
+        app:layout_constraintBottom_toBottomOf="@id/fl_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <View
         android:layout_width="220dp"
         android:layout_height="220dp"
-        android:layout_gravity="end"
         android:layout_marginTop="32dp"
         android:layout_marginEnd="44dp"
-        android:background="@drawable/bg_mascot_light" />
+        android:background="@drawable/bg_mascot_light"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <org.libpag.PAGImageView
         android:id="@+id/pag_animation"
         android:layout_width="230dp"
         android:layout_height="230dp"
-        android:layout_gravity="end"
-        android:layout_marginEnd="8dp" />
+        android:layout_marginEnd="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <FrameLayout
         android:id="@+id/fl_content"
@@ -38,7 +42,8 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="62dp"
         android:layout_marginEnd="44dp"
-        tools:layout_height="206dp">
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
         <cn.booslink.llm.common.widget.AIInteractionLayout
             android:id="@+id/ll_interaction"

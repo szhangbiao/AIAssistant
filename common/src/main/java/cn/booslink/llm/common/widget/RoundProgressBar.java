@@ -52,7 +52,6 @@ public class RoundProgressBar extends View {
     
     private void initAttributes(Context context, AttributeSet attrs) {
         if (attrs == null) return;
-        
         try (TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.RoundProgressBar)) {
             mProgress = a.getInt(R.styleable.RoundProgressBar_progress, 0);
             mMaxProgress = a.getInt(R.styleable.RoundProgressBar_max, 100);
@@ -62,11 +61,6 @@ public class RoundProgressBar extends View {
             mGradientStartColor = a.getColor(R.styleable.RoundProgressBar_gradientStartColor, GRADIENT_START_COLOR);
             mGradientEndColor = a.getColor(R.styleable.RoundProgressBar_gradientEndColor, GRADIENT_END_COLOR);
             mStrokeWidth = a.getDimension(R.styleable.RoundProgressBar_strokeWidth, STROKE_WIDTH);
-            
-            // 更新画笔配置
-            mBackgroundPaint.setColor(mBackgroundColor);
-            mProgressPaint.setStrokeWidth(mStrokeWidth);
-            mBackgroundPaint.setStrokeWidth(mStrokeWidth);
         }
     }
     

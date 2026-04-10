@@ -13,7 +13,7 @@
         android:layout_marginStart="24dp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="136dp"
-        android:includeFontPadding="false"
+        android:includeFontPadding="true"
         android:textColor="@android:color/white"
         android:textSize="26sp"
         tools:text="您好，我是Bobo！" />
@@ -25,7 +25,7 @@
         android:layout_marginStart="24dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="136dp"
-        android:includeFontPadding="false"
+        android:includeFontPadding="true"
         android:text="@string/speech_initial_help"
         android:textColor="#AEAEAE"
         android:textSize="20sp"
@@ -42,7 +42,8 @@
         tools:minHeight="72dp">
 
         <cn.booslink.llm.common.widget.ApkDownloadLayout
-            android:layout_width="462dp"
+            android:id="@+id/fl_download_layout"
+            android:layout_width="match_parent"
             android:layout_height="110dp" />
 
         <TextView

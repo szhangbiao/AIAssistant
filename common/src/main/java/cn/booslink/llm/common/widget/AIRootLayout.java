@@ -10,6 +10,7 @@ import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
 
@@ -21,8 +22,9 @@ import cn.booslink.llm.common.R;
 import cn.booslink.llm.common.model.ApkDownload;
 import cn.booslink.llm.common.model.enums.EmoteState;
 import dagger.hilt.android.qualifiers.ApplicationContext;
+import timber.log.Timber;
 
-public class AIRootLayout extends FrameLayout {
+public class AIRootLayout extends ConstraintLayout {
 
     private ImageView ivMascot;
     private PAGImageView pagAnimation;
@@ -42,8 +44,6 @@ public class AIRootLayout extends FrameLayout {
         super(context);
         inflateLayout(context);
         initWidgets();
-        // 监听fl_content高度变化，同步更新v_content高度
-        setupContentHeightSync();
     }
 
     public AIRootLayout(@NonNull Context context, @Nullable AttributeSet attrs) {
@@ -54,8 +54,6 @@ public class AIRootLayout extends FrameLayout {
         super(context, attrs, defStyleAttr);
         inflateLayout(context);
         initWidgets();
-        // 监听fl_content高度变化，同步更新v_content高度
-        setupContentHeightSync();
         setKeepScreenOn(true);
     }
 
@@ -84,22 +82,6 @@ public class AIRootLayout extends FrameLayout {
         voiceInputLiveData.removeObserver(mVoiceInputObserver);
         nplResponseLiveData.removeObserver(mNplResponseObserver);
         apkDownloadLiveData.removeObserver(mApkDownloadObserver);
-    }
-
-    /**
-     * 设置fl_content高度变化时同步更新v_content高度
-     */
-    private void setupContentHeightSync() {
-        flContent.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
-            // 获取fl_content的实际高度
-            int contentHeight = flContent.getHeight();
-            if (contentHeight > 0) {
-                // 更新v_content的高度
-                LayoutParams params = (LayoutParams) vContent.getLayoutParams();
-                params.height = contentHeight;
-                vContent.setLayoutParams(params);
-            }
-        });
     }
 
     private void changeUIWithState(EmoteState emoteState) {
