@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="510dp"
     android:layout_height="wrap_content"
@@ -31,30 +32,58 @@
         android:textSize="20sp"
         tools:text="想问什么尽管问我！" />
 
-    <FrameLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/fl_result"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="24dp"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="24dp"
-        android:background="@drawable/bg_answer_content"
         tools:minHeight="72dp">
 
-        <cn.booslink.llm.common.widget.ApkDownloadLayout
-            android:id="@+id/fl_download_layout"
+        <eightbitlab.com.blurview.BlurTarget
+            android:id="@+id/blurTarget"
             android:layout_width="match_parent"
-            android:layout_height="110dp" />
+            android:layout_height="@dimen/match_constraint"
+            app:layout_constraintBottom_toBottomOf="@id/blurView"
+            app:layout_constraintTop_toTopOf="parent">
 
-        <TextView
-            android:id="@+id/tv_npl"
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_answer_content" />
+
+        </eightbitlab.com.blurview.BlurTarget>
+
+        <eightbitlab.com.blurview.BlurView
+            android:id="@+id/blurView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="20dp"
-            android:lineSpacingExtra="2dp"
-            android:textColor="@android:color/white"
-            android:textSize="24sp"
-            tools:text="上午好！现在是北京时间2024年7月23日11:46。您所在的地区：苏州市今日小雨转多云，气温10°C，注意天冷加衣哦～"
-            tools:visibility="gone" />
-    </FrameLayout>
+            android:background="@drawable/bg_content_transparent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <cn.booslink.llm.common.widget.ApkDownloadLayout
+                android:id="@+id/fl_download_layout"
+                android:layout_width="match_parent"
+                android:layout_height="110dp" />
+
+            <TextView
+                android:id="@+id/tv_npl"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="20dp"
+                android:lineSpacingExtra="2dp"
+                android:textColor="@android:color/white"
+                android:textSize="24sp"
+                tools:text="上午好！现在是北京时间2024年7月23日11:46。您所在的地区：苏州市今日小雨转多云，气温10°C，注意天冷加衣哦～"
+                tools:visibility="gone" />
+
+            <cn.booslink.llm.common.widget.WeatherListLayout
+                android:id="@+id/cl_weather_list"
+                android:layout_width="match_parent"
+                android:layout_height="385dp"
+                android:visibility="gone" />
+
+        </eightbitlab.com.blurview.BlurView>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </merge>

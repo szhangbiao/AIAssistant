@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="462dp"
+    android:layout_height="385dp"
+    tools:background="@drawable/bg_answer_content"
+    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout">
+
+    <TextView
+        android:id="@+id/tv_date"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="20dp"
+        android:includeFontPadding="true"
+        android:textColor="#F2F2F2"
+        android:textSize="22sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="今天" />
+
+    <TextView
+        android:id="@+id/tv_location"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:layout_marginEnd="20dp"
+        android:includeFontPadding="true"
+        android:textColor="#F2F2F2"
+        android:textSize="22sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="苏州市" />
+
+    <ImageView
+        android:layout_width="16dp"
+        android:layout_height="20dp"
+        android:layout_marginTop="2dp"
+        android:layout_marginEnd="6dp"
+        android:contentDescription="@null"
+        android:src="@drawable/ic_location"
+        app:layout_constraintBottom_toBottomOf="@id/tv_location"
+        app:layout_constraintEnd_toStartOf="@id/tv_location"
+        app:layout_constraintTop_toTopOf="@id/tv_location" />
+
+    <TextView
+        android:id="@+id/tv_weather_title"
+        android:layout_width="@dimen/match_constraint"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="15dp"
+        android:ellipsize="end"
+        android:includeFontPadding="true"
+        android:maxLines="1"
+        android:textColor="#F2F2F2"
+        android:textSize="22sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_date"
+        tools:text="苏州市今日天气晴，气温28" />
+
+    <ImageView
+        android:id="@+id/iv_weather_icon"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_marginStart="74dp"
+        android:layout_marginTop="16dp"
+        android:contentDescription="@null"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_weather_title" />
+
+    <TextView
+        android:id="@+id/tv_weather_desc"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:includeFontPadding="true"
+        android:textColor="#F2F2F2"
+        android:textSize="22sp"
+        app:layout_constraintBottom_toTopOf="@id/tv_temp_high"
+        app:layout_constraintStart_toEndOf="@id/iv_weather_icon"
+        app:layout_constraintTop_toTopOf="@id/iv_weather_icon"
+        app:layout_constraintVertical_chainStyle="packed"
+        tools:text="小雨" />
+
+    <TextView
+        android:id="@+id/tv_temp_high"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="8dp"
+        android:includeFontPadding="true"
+        android:textColor="#F2F2F2"
+        android:textSize="22sp"
+        app:layout_constraintBottom_toBottomOf="@id/iv_weather_icon"
+        app:layout_constraintStart_toEndOf="@id/iv_weather_icon"
+        app:layout_constraintTop_toBottomOf="@id/tv_weather_desc"
+        tools:text="最高28°C" />
+
+    <View
+        android:layout_width="1dp"
+        android:layout_height="24dp"
+        android:layout_marginStart="10dp"
+        android:background="@color/white_10"
+        app:layout_constraintBottom_toBottomOf="@id/tv_temp_high"
+        app:layout_constraintStart_toEndOf="@id/tv_temp_high"
+        app:layout_constraintTop_toTopOf="@id/tv_temp_high" />
+
+    <TextView
+        android:id="@+id/tv_temp_low"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="21dp"
+        android:includeFontPadding="true"
+        android:textColor="#F2F2F2"
+        android:textSize="22sp"
+        app:layout_constraintBottom_toBottomOf="@id/tv_temp_high"
+        app:layout_constraintStart_toEndOf="@id/tv_temp_high"
+        app:layout_constraintTop_toTopOf="@id/tv_temp_high"
+        tools:text="最低18°C" />
+
+    <View
+        android:id="@+id/divider_left_bottom"
+        android:layout_width="1dp"
+        android:layout_height="62dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginBottom="20dp"
+        android:background="@drawable/bg_line_bottom"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/divider_middle_bottom"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <View
+        android:id="@+id/divider_middle_bottom"
+        android:layout_width="1dp"
+        android:layout_height="62dp"
+        android:layout_marginBottom="20dp"
+        android:background="@drawable/bg_line_bottom"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/divider_right_bottom"
+        app:layout_constraintStart_toEndOf="@id/divider_left_bottom" />
+
+    <View
+        android:id="@+id/divider_right_bottom"
+        android:layout_width="1dp"
+        android:layout_height="62dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="20dp"
+        android:background="@drawable/bg_line_bottom"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/divider_middle_bottom" />
+
+    <View
+        android:id="@+id/divider_left_top"
+        android:layout_width="1dp"
+        android:layout_height="62dp"
+        android:layout_marginStart="16dp"
+        android:background="@drawable/bg_line_top"
+        app:layout_constraintBottom_toTopOf="@id/divider_left_bottom"
+        app:layout_constraintEnd_toStartOf="@id/divider_middle_top"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <View
+        android:id="@+id/divider_middle_top"
+        android:layout_width="1dp"
+        android:layout_height="62dp"
+        android:background="@drawable/bg_line_top"
+        app:layout_constraintBottom_toTopOf="@id/divider_middle_bottom"
+        app:layout_constraintEnd_toStartOf="@id/divider_right_top"
+        app:layout_constraintStart_toEndOf="@id/divider_left_top" />
+
+    <View
+        android:id="@+id/divider_right_top"
+        android:layout_width="1dp"
+        android:layout_height="62dp"
+        android:layout_marginEnd="16dp"
+        android:background="@drawable/bg_line_top"
+        app:layout_constraintBottom_toTopOf="@id/divider_right_bottom"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/divider_middle_top" />
+
+    <TextView
+        android:id="@+id/tv_date_1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:includeFontPadding="true"
+        android:textColor="#F2F2F2"
+        android:textSize="22sp"
+        app:layout_constraintBottom_toTopOf="@id/iv_icon_1"
+        app:layout_constraintEnd_toEndOf="@id/divider_left_top"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/divider_left_top"
+        app:layout_constraintVertical_chainStyle="packed"
+        tools:text="明日" />
+
+    <ImageView
+        android:id="@+id/iv_icon_1"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:contentDescription="@null"
+        app:layout_constraintBottom_toTopOf="@id/tv_temp_1"
+        app:layout_constraintEnd_toEndOf="@id/divider_left_top"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_date_1" />
+
+    <TextView
+        android:id="@+id/tv_temp_1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:includeFontPadding="true"
+        android:textColor="#F2F2F2"
+        android:textSize="22sp"
+        app:layout_constraintBottom_toBottomOf="@id/divider_left_bottom"
+        app:layout_constraintEnd_toEndOf="@id/divider_left_top"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/iv_icon_1"
+        tools:text="6/12°C" />
+
+    <TextView
+        android:id="@+id/tv_date_2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:includeFontPadding="true"
+        android:textColor="#F2F2F2"
+        android:textSize="22sp"
+        app:layout_constraintBottom_toTopOf="@id/iv_icon_2"
+        app:layout_constraintEnd_toStartOf="@id/divider_middle_top"
+        app:layout_constraintStart_toEndOf="@id/divider_left_bottom"
+        app:layout_constraintTop_toTopOf="@id/divider_left_top"
+        app:layout_constraintVertical_chainStyle="packed"
+        tools:text="周六" />
+
+    <ImageView
+        android:id="@+id/iv_icon_2"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="8dp"
+        android:contentDescription="@null"
+        app:layout_constraintBottom_toTopOf="@id/tv_temp_2"
+        app:layout_constraintEnd_toStartOf="@id/divider_middle_top"
+        app:layout_constraintStart_toEndOf="@id/divider_left_bottom"
+        app:layout_constraintTop_toBottomOf="@id/tv_date_2" />
+
+    <TextView
+        android:id="@+id/tv_temp_2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:includeFontPadding="true"
+        android:textColor="#F2F2F2"
+        android:textSize="22sp"
+        app:layout_constraintBottom_toBottomOf="@id/divider_left_bottom"
+        app:layout_constraintEnd_toStartOf="@id/divider_middle_top"
+        app:layout_constraintStart_toEndOf="@id/divider_left_bottom"
+        app:layout_constraintTop_toBottomOf="@id/iv_icon_2"
+        tools:text="17/12°C" />
+
+    <TextView
+        android:id="@+id/tv_date_3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:includeFontPadding="true"
+        android:textColor="#F2F2F2"
+        android:textSize="22sp"
+        app:layout_constraintBottom_toTopOf="@id/iv_icon_3"
+        app:layout_constraintEnd_toStartOf="@id/divider_right_top"
+        app:layout_constraintStart_toEndOf="@id/divider_middle_top"
+        app:layout_constraintTop_toTopOf="@id/divider_middle_top"
+        app:layout_constraintVertical_chainStyle="packed"
+        tools:text="周日" />
+
+    <ImageView
+        android:id="@+id/iv_icon_3"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="8dp"
+        android:contentDescription="@null"
+        app:layout_constraintBottom_toTopOf="@id/tv_temp_3"
+        app:layout_constraintEnd_toStartOf="@id/divider_right_top"
+        app:layout_constraintStart_toEndOf="@id/divider_middle_top"
+        app:layout_constraintTop_toBottomOf="@id/tv_date_3" />
+
+    <TextView
+        android:id="@+id/tv_temp_3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:includeFontPadding="true"
+        android:textColor="#F2F2F2"
+        android:textSize="22sp"
+        app:layout_constraintBottom_toBottomOf="@id/divider_left_bottom"
+        app:layout_constraintEnd_toStartOf="@id/divider_right_top"
+        app:layout_constraintStart_toEndOf="@id/divider_middle_top"
+        app:layout_constraintTop_toBottomOf="@id/iv_icon_3"
+        tools:text="6/12°C" />
+
+    <TextView
+        android:id="@+id/tv_date_4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:includeFontPadding="true"
+        android:textColor="#F2F2F2"
+        android:textSize="22sp"
+        app:layout_constraintBottom_toTopOf="@id/iv_icon_4"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/divider_right_top"
+        app:layout_constraintTop_toTopOf="@id/divider_right_top"
+        app:layout_constraintVertical_chainStyle="packed"
+        tools:text="周一" />
+
+    <ImageView
+        android:id="@+id/iv_icon_4"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
+        android:contentDescription="@null"
+        app:layout_constraintBottom_toTopOf="@id/tv_temp_4"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/divider_right_top"
+        app:layout_constraintTop_toBottomOf="@id/tv_date_4" />
+
+    <TextView
+        android:id="@+id/tv_temp_4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
+        android:includeFontPadding="true"
+        android:textColor="#F2F2F2"
+        android:textSize="22sp"
+        app:layout_constraintBottom_toBottomOf="@id/divider_left_bottom"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/divider_right_top"
+        app:layout_constraintTop_toBottomOf="@id/iv_icon_4"
+        tools:text="6/12°C" />
+</merge>

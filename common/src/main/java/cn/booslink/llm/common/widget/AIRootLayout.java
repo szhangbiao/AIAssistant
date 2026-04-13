@@ -20,9 +20,10 @@ import javax.inject.Inject;
 
 import cn.booslink.llm.common.R;
 import cn.booslink.llm.common.model.ApkDownload;
+import cn.booslink.llm.common.model.UIResponse;
+import cn.booslink.llm.common.model.WeatherUI;
 import cn.booslink.llm.common.model.enums.EmoteState;
 import dagger.hilt.android.qualifiers.ApplicationContext;
-import timber.log.Timber;
 
 public class AIRootLayout extends ConstraintLayout {
 
@@ -37,6 +38,7 @@ public class AIRootLayout extends ConstraintLayout {
     private final Observer<String> mVoiceInputObserver = this::changeUIWithVoiceInput;
     private final Observer<String> mNplResponseObserver = this::changeUIWithNplResponse;
     private final Observer<ApkDownload> mApkDownloadObserver = this::changeUIWithApkDownload;
+    private final Observer<UIResponse> mUIResponseObserver = this::changeUIWithUIResponse;
 
 
     @Inject
@@ -70,18 +72,20 @@ public class AIRootLayout extends ConstraintLayout {
         flLeave = findViewById(R.id.fl_leave);
     }
 
-    public void observeData(LiveData<EmoteState> emoteStateLiveData, LiveData<String> voiceInputLiveData, LiveData<String> nplResponseLiveData, LiveData<ApkDownload> apkDownloadLiveData) {
+    public void observeData(LiveData<EmoteState> emoteStateLiveData, LiveData<String> voiceInputLiveData, LiveData<String> nplResponseLiveData, LiveData<ApkDownload> apkDownloadLiveData, LiveData<UIResponse> uiResponseLiveData) {
         emoteStateLiveData.observeForever(mEmoteStateObserver);
         voiceInputLiveData.observeForever(mVoiceInputObserver);
         nplResponseLiveData.observeForever(mNplResponseObserver);
         apkDownloadLiveData.observeForever(mApkDownloadObserver);
+        uiResponseLiveData.observeForever(mUIResponseObserver);
     }
 
-    public void unObserveData(LiveData<EmoteState> emoteStateLiveData, LiveData<String> voiceInputLiveData, LiveData<String> nplResponseLiveData, LiveData<ApkDownload> apkDownloadLiveData) {
+    public void unObserveData(LiveData<EmoteState> emoteStateLiveData, LiveData<String> voiceInputLiveData, LiveData<String> nplResponseLiveData, LiveData<ApkDownload> apkDownloadLiveData, LiveData<UIResponse> uiResponseLiveData) {
         emoteStateLiveData.removeObserver(mEmoteStateObserver);
         voiceInputLiveData.removeObserver(mVoiceInputObserver);
         nplResponseLiveData.removeObserver(mNplResponseObserver);
         apkDownloadLiveData.removeObserver(mApkDownloadObserver);
+        uiResponseLiveData.removeObserver(mUIResponseObserver);
     }
 
     private void changeUIWithState(EmoteState emoteState) {
@@ -102,6 +106,18 @@ public class AIRootLayout extends ConstraintLayout {
 
     private void changeUIWithApkDownload(ApkDownload apkDownload) {
         llInteraction.showDownloadProcess(apkDownload);
+    }
+
+    private void changeUIWithUIResponse(UIResponse response) {
+        switch (response.getCategory()) {
+            case WEATHER:
+                if (response.getWeathers() == null) return;
+                WeatherUI weatherUI = WeatherUI.Companion.fromWeatherList(response.getWeathers());
+                llInteraction.showWeatherList(weatherUI);
+                break;
+            default:
+                break;
+        }
     }
 
     private void populateMascotAnimation(EmoteState emoteState) {

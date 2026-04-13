@@ -1,6 +1,7 @@
 package cn.booslink.llm.common.widget;
 
 import android.content.Context;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.widget.ImageView;
@@ -12,7 +13,10 @@ import com.bumptech.glide.Glide;
 import java.util.Locale;
 
 import cn.booslink.llm.common.R;
+import cn.booslink.llm.common.di.CommonEntryPoint;
+import cn.booslink.llm.common.image.ImageLoader;
 import cn.booslink.llm.common.model.ApkDownload;
+import dagger.hilt.android.EntryPointAccessors;
 
 public class ApkDownloadLayout extends RelativeLayout {
 
@@ -55,10 +59,10 @@ public class ApkDownloadLayout extends RelativeLayout {
             resetViews();
             return;
         }
-        if (download.getProgress() == 0) {
-            Glide.with(getContext())
-                    .load(download.getIcon())
-                    .into(ivIcon);
+        if (download.getProgress() == 0 && !TextUtils.isEmpty(download.getIcon())) {
+            CommonEntryPoint hiltEntryPoint = EntryPointAccessors.fromApplication(getContext().getApplicationContext(), CommonEntryPoint.class);
+            ImageLoader imageLoader = hiltEntryPoint.imageLoader();
+            imageLoader.loadImage(ivIcon, download.getIcon());
         }
         tvName.setText(download.getName());
         ivDone.setVisibility(download.isDownloadComplete() ? VISIBLE : GONE);

@@ -4,6 +4,9 @@ import android.content.Context;
 
 import com.google.gson.Gson;
 
+import java.util.concurrent.TimeUnit;
+
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 import cn.booslink.llm.common.model.CBMSemantic;
@@ -17,11 +20,16 @@ import cn.booslink.llm.common.network.adapter.CBMSubAdapter;
 import cn.booslink.llm.common.network.adapter.CBMTidyAdapter;
 import cn.booslink.llm.common.network.adapter.CBMToolPKAdapter;
 import cn.booslink.llm.common.utils.GsonProvider;
+import cn.booslink.llm.common.utils.HttpEngine;
 import dagger.Module;
 import dagger.Provides;
 import dagger.hilt.InstallIn;
 import dagger.hilt.android.qualifiers.ApplicationContext;
 import dagger.hilt.components.SingletonComponent;
+import okhttp3.ConnectionPool;
+import okhttp3.OkHttpClient;
+import okhttp3.logging.HttpLoggingInterceptor;
+import timber.log.Timber;
 
 @Module
 @InstallIn(SingletonComponent.class)
@@ -44,5 +52,17 @@ public class CommonModule {
                 .registerTypeAdapter(CBMToolPK.class, new CBMToolPKAdapter())
                 .registerTypeAdapter(CBMSemantic.class, new CBMSemanticAdapter())
                 .create();
+    }
+
+    @Singleton
+    @Provides
+    public OkHttpClient provideApiOkHttpClient() {
+        final OkHttpClient.Builder builder = HttpEngine.createClientBuilder(false, 10 * 1000, 10 * 1000);
+        HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor(message -> Timber.tag("OkHttp").d(message));
+        interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+        builder.addInterceptor(interceptor);
+        builder.retryOnConnectionFailure(true);
+        builder.connectionPool(new ConnectionPool(5, 2, TimeUnit.MINUTES));
+        return builder.build();
     }
 }

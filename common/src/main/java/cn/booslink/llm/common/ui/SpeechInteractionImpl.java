@@ -40,6 +40,7 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
     private final MutableLiveData<String> mVoiceInputLiveData;
     private final MutableLiveData<String> mNplResponseLiveData;
     private final MutableLiveData<ApkDownload> mApkDownloadLiveData;
+    private final MutableLiveData<UIResponse> mUIResponseLiveData;
 
     private boolean isAttached = false;
 
@@ -51,6 +52,7 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
         this.mVoiceInputLiveData = new MutableLiveData<>("您好，我是Bobo！");
         this.mNplResponseLiveData = new MutableLiveData<>("");
         this.mApkDownloadLiveData = new MutableLiveData<>(ApkDownload.empty());
+        this.mUIResponseLiveData = new MutableLiveData<>(UIResponse.Companion.empty());
     }
 
     @Override
@@ -169,12 +171,14 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
     @Override
     public void nlpAnswer(String nlpReply) {
         if (TextUtils.isEmpty(nlpReply)) return;
+        UIResponse response = mUIResponseLiveData.getValue();
+        if (response != null && !response.isEmpty()) return;
         mNplResponseLiveData.postValue(nlpReply);
     }
 
     @Override
     public void semanticAnswer(UIResponse response) {
-
+        mUIResponseLiveData.postValue(response);
     }
 
     @Override
@@ -214,11 +218,11 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
     }
 
     private void bindData(AIRootLayout rootLayout) {
-        rootLayout.observeData(mEmoteStateLiveData, mVoiceInputLiveData, mNplResponseLiveData, mApkDownloadLiveData);
+        rootLayout.observeData(mEmoteStateLiveData, mVoiceInputLiveData, mNplResponseLiveData, mApkDownloadLiveData, mUIResponseLiveData);
     }
 
     private void unBindData(AIRootLayout rootLayout) {
         if (rootLayout == null) return;
-        rootLayout.unObserveData(mEmoteStateLiveData, mVoiceInputLiveData, mNplResponseLiveData, mApkDownloadLiveData);
+        rootLayout.unObserveData(mEmoteStateLiveData, mVoiceInputLiveData, mNplResponseLiveData, mApkDownloadLiveData, mUIResponseLiveData);
     }
 }

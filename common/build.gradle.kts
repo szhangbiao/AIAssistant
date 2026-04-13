@@ -56,6 +56,7 @@ dependencies {
     implementation(libs.timber)
     implementation(libs.utils.view)
     implementation(libs.libpag)
+    implementation(libs.blur.view)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

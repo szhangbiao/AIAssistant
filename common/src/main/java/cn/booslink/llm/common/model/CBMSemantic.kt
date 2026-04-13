@@ -22,7 +22,7 @@ data class CBMSemantic(
     val uuid: String?,
     val version: String?
 ) {
-    fun getResponse(gson: Gson): UIResponse? {
+    fun getResponse(gson: Gson): UIResponse {
         val result = data?.get("result")
         return result?.let {
             val resultJson = gson.toJson(it)
@@ -32,9 +32,9 @@ data class CBMSemantic(
                     UIResponse.weatherData(categoryEnum, weatherList)
                 }
 
-                else -> null
+                else -> UIResponse.empty()
             }
-        }
+        } ?: UIResponse.empty()
     }
 }
 

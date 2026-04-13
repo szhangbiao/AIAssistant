@@ -64,7 +64,13 @@ data class UIResponse(
     val weathers: List<Weather>?
 ) {
     companion object {
+
+        fun empty() = UIResponse(Category.UNKNOWN, null)
         fun weatherData(category: Category, weathers: List<Weather>?) = UIResponse(category, weathers)
+    }
+
+    fun isEmpty(): Boolean {
+        return category == Category.UNKNOWN
     }
 }
 

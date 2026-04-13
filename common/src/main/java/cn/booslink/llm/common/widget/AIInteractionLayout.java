@@ -1,11 +1,13 @@
 package cn.booslink.llm.common.widget;
 
 import android.content.Context;
+import android.os.Build;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.FrameLayout;
+import android.view.ViewGroup;
+import android.view.ViewOutlineProvider;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -14,13 +16,17 @@ import androidx.annotation.Nullable;
 
 import cn.booslink.llm.common.R;
 import cn.booslink.llm.common.model.ApkDownload;
+import cn.booslink.llm.common.model.WeatherUI;
+import eightbitlab.com.blurview.BlurTarget;
+import eightbitlab.com.blurview.BlurView;
 
 public class AIInteractionLayout extends LinearLayout {
 
     private TextView tvQuestion;
     private TextView tvResultTitle;
-    private FrameLayout flResult;
+    private ViewGroup flResult;
     private ApkDownloadLayout apkDownloadLayout;
+    private WeatherListLayout weatherListLayout;
 
     private TextView tvNplReply;
 
@@ -37,6 +43,7 @@ public class AIInteractionLayout extends LinearLayout {
         setOrientation(LinearLayout.VERTICAL);
         inflateLayout(context);
         initWidgets();
+        setupBlurView();
     }
 
     public void voiceInput(String voiceTxt) {
@@ -47,7 +54,24 @@ public class AIInteractionLayout extends LinearLayout {
     public void nplReply(String nplText) {
         if (TextUtils.isEmpty(nplText)) return;
         tvNplReply.setVisibility(View.VISIBLE);
+        weatherListLayout.setVisibility(View.GONE);
+        apkDownloadLayout.setVisibility(View.GONE);
         tvNplReply.setText(nplText);
+    }
+
+    public void showDownloadProcess(ApkDownload apkDownload) {
+        boolean shouldHideDownloadLayout = apkDownload.isEmpty() || apkDownload.isDownloadFail() || apkDownload.isInstallFail() || apkDownload.isInstallFinish();
+        weatherListLayout.setVisibility(GONE);
+        tvNplReply.setVisibility(shouldHideDownloadLayout ? VISIBLE : GONE);
+        apkDownloadLayout.setVisibility(shouldHideDownloadLayout ? GONE : VISIBLE);
+        apkDownloadLayout.updateDownloadView(apkDownload);
+    }
+
+    public void showWeatherList(WeatherUI weatherData) {
+        tvNplReply.setVisibility(GONE);
+        apkDownloadLayout.setVisibility(GONE);
+        weatherListLayout.setVisibility(VISIBLE);
+        weatherListLayout.updateWeatherUI(weatherData);
     }
 
     private void inflateLayout(Context context) {
@@ -60,12 +84,19 @@ public class AIInteractionLayout extends LinearLayout {
         flResult = findViewById(R.id.fl_result);
         tvNplReply = findViewById(R.id.tv_npl);
         apkDownloadLayout = findViewById(R.id.fl_download_layout);
+        weatherListLayout = findViewById(R.id.cl_weather_list);
     }
 
-    public void showDownloadProcess(ApkDownload apkDownload) {
-        boolean shouldHideDownloadLayout = apkDownload.isEmpty() || apkDownload.isDownloadFail() || apkDownload.isInstallFail() || apkDownload.isInstallFinish();
-        tvNplReply.setVisibility(shouldHideDownloadLayout ? VISIBLE : GONE);
-        apkDownloadLayout.setVisibility(shouldHideDownloadLayout ? GONE : VISIBLE);
-        apkDownloadLayout.updateDownloadView(apkDownload);
+    private void setupBlurView() {
+        BlurView blurView = findViewById(R.id.blurView);
+        BlurTarget blurTarget = findViewById(R.id.blurTarget);
+        float radius = 20f; // 15f gives good medium blur effect
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT_WATCH) {
+            blurView.setOutlineProvider(ViewOutlineProvider.BACKGROUND);
+            blurView.setClipToOutline(true);
+        }
+        blurView.setupWith(blurTarget)
+                //.setFrameClearDrawable(windowBackground) // Optional. Useful when your root has a lot of transparent background, which results in semi-transparent blurred content. This will make the background opaque
+                .setBlurRadius(radius);
     }
 }
