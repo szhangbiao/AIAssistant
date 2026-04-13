@@ -4,9 +4,10 @@ import android.content.Context;
 
 import com.google.gson.Gson;
 
+import org.joda.time.DateTime;
+
 import java.util.concurrent.TimeUnit;
 
-import javax.inject.Named;
 import javax.inject.Singleton;
 
 import cn.booslink.llm.common.model.CBMSemantic;
@@ -14,11 +15,11 @@ import cn.booslink.llm.common.model.CBMTidy;
 import cn.booslink.llm.common.model.CBMToolPK;
 import cn.booslink.llm.common.model.Device;
 import cn.booslink.llm.common.model.enums.CBMSub;
-import cn.booslink.llm.common.model.enums.Category;
 import cn.booslink.llm.common.network.adapter.CBMSemanticAdapter;
 import cn.booslink.llm.common.network.adapter.CBMSubAdapter;
 import cn.booslink.llm.common.network.adapter.CBMTidyAdapter;
 import cn.booslink.llm.common.network.adapter.CBMToolPKAdapter;
+import cn.booslink.llm.common.network.adapter.DateTimeAdapter;
 import cn.booslink.llm.common.utils.GsonProvider;
 import cn.booslink.llm.common.utils.HttpEngine;
 import dagger.Module;
@@ -49,6 +50,7 @@ public class CommonModule {
         return GsonProvider.builder()
                 .registerTypeAdapter(CBMSub.class, new CBMSubAdapter())
                 .registerTypeAdapter(CBMTidy.class, new CBMTidyAdapter())
+                .registerTypeAdapter(DateTime.class, new DateTimeAdapter())
                 .registerTypeAdapter(CBMToolPK.class, new CBMToolPKAdapter())
                 .registerTypeAdapter(CBMSemantic.class, new CBMSemanticAdapter())
                 .create();

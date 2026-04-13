@@ -56,6 +56,7 @@ rxandroid = { group = "io.reactivex.rxjava3", name = "rxandroid", version = "3.0
 glide = { group = "com.github.bumptech.glide", name = "glide", version.ref = "glide" }
 glide-okhttp = { group = "com.github.bumptech.glide", name = "okhttp3-integration", version.ref = "glide" }
 glide-compiler = { group = "com.github.bumptech.glide", name = "compiler", version.ref = "glide" }
+datetime = { group = "net.danlew", name = "android.joda", version = "2.13.0" }
 
 utils-view = { group = "cn.booslink", name = "android-utils-view", version = "1.0.2" }
 libpag = { group = "com.tencent.tav", name = "libpag", version.ref = "libpag" }

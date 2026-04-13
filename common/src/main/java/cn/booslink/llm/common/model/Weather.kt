@@ -1,6 +1,8 @@
 package cn.booslink.llm.common.model
 
 import com.google.gson.annotations.SerializedName
+import org.joda.time.DateTime
+import java.util.Locale
 
 /**
  * {
@@ -37,7 +39,7 @@ import com.google.gson.annotations.SerializedName
 data class Weather(
     val airData: Int = 0,
     val city: String = "",
-    val date: String = "",
+    val date: DateTime?,
     val dateLong: Long = 0,
     @SerializedName("date_for_voice")
     val dateForVoice: String = "",
@@ -77,7 +79,36 @@ data class Weather(
     val wind: String = "",
     @SerializedName("windLevel")
     val windLevel: Int = 0
-)
+) {
+
+    fun getTemperatureRange(): String {
+        if (tempLow.isEmpty() || tempHigh.isEmpty()) {
+            return ""
+        }
+        return String.format(Locale.getDefault(), "%s/%s", tempLow.replace("℃", ""), tempHigh)
+    }
+
+    fun getWeekDay(): String {
+        return date?.let {
+            val today = DateTime()
+            val tomorrow = today.plusDays(1)
+            if (it.toLocalDate().isEqual(tomorrow.toLocalDate())) {
+                return@let "明天"
+            }
+            // Otherwise return Chinese day names
+            when (it.dayOfWeek) {
+                1 -> "周一"
+                2 -> "周二"
+                3 -> "周三"
+                4 -> "周四"
+                5 -> "周五"
+                6 -> "周六"
+                7 -> "周日"
+                else -> ""
+            }
+        } ?: ""
+    }
+}
 
 data class WeatherUI(val current: Weather?, val day1: Weather?, val day2: Weather?, val day3: Weather?, val day4: Weather?) {
     companion object {

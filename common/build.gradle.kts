@@ -57,6 +57,7 @@ dependencies {
     implementation(libs.utils.view)
     implementation(libs.libpag)
     implementation(libs.blur.view)
+    implementation(libs.datetime)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

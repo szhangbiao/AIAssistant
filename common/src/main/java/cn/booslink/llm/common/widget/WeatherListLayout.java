@@ -100,29 +100,29 @@ public class WeatherListLayout extends ConstraintLayout {
             }
         }
         if (weatherData.getDay1() != null) {
-            tvDate1.setText(weatherData.getDay1().getDateForVoice());
-            tvTemp1.setText(String.format(Locale.getDefault(), "%s/%s", weatherData.getDay1().getTempLow(), weatherData.getDay1().getTempHigh()));
+            tvDate1.setText(weatherData.getDay1().getWeekDay());
+            tvTemp1.setText(weatherData.getDay1().getTemperatureRange());
             if (!TextUtils.isEmpty(weatherData.getDay1().getImg())) {
                 imageLoader.loadImage(ivIcon1, weatherData.getDay1().getImg());
             }
         }
         if (weatherData.getDay2() != null) {
-            tvDate2.setText(weatherData.getDay2().getDateForVoice());
-            tvTemp2.setText(String.format(Locale.getDefault(), "%s/%s", weatherData.getDay2().getTempLow(), weatherData.getDay2().getTempHigh()));
+            tvDate2.setText(weatherData.getDay2().getWeekDay());
+            tvTemp2.setText(weatherData.getDay2().getTemperatureRange());
             if (!TextUtils.isEmpty(weatherData.getDay2().getImg())) {
                 imageLoader.loadImage(ivIcon2, weatherData.getDay2().getImg());
             }
         }
         if (weatherData.getDay3() != null) {
-            tvDate3.setText(weatherData.getDay3().getDateForVoice());
-            tvTemp3.setText(String.format(Locale.getDefault(), "%s/%s", weatherData.getDay3().getTempLow(), weatherData.getDay3().getTempHigh()));
+            tvDate3.setText(weatherData.getDay3().getWeekDay());
+            tvTemp3.setText(weatherData.getDay3().getTemperatureRange());
             if (!TextUtils.isEmpty(weatherData.getDay3().getImg())) {
                 imageLoader.loadImage(ivIcon3, weatherData.getDay3().getImg());
             }
         }
         if (weatherData.getDay4() != null) {
-            tvDate4.setText(weatherData.getDay4().getDateForVoice());
-            tvTemp4.setText(String.format(Locale.getDefault(), "%s/%s", weatherData.getDay4().getTempLow(), weatherData.getDay4().getTempHigh()));
+            tvDate4.setText(weatherData.getDay4().getWeekDay());
+            tvTemp4.setText(weatherData.getDay4().getTemperatureRange());
             if (!TextUtils.isEmpty(weatherData.getDay4().getImg())) {
                 imageLoader.loadImage(ivIcon4, weatherData.getDay4().getImg());
             }
