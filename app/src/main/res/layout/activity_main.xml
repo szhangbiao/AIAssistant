@@ -5,6 +5,25 @@
     android:background="@android:color/white">
 
     <Button
+        android:id="@+id/btn_show"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="20dp"
+        android:paddingVertical="10dp"
+        android:text="显示"
+        android:textSize="24sp" />
+
+    <Button
+        android:id="@+id/btn_hide"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="100dp"
+        android:paddingHorizontal="20dp"
+        android:paddingVertical="10dp"
+        android:text="隐藏"
+        android:textSize="24sp" />
+
+    <Button
         android:id="@+id/btn_download"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -13,7 +32,6 @@
         android:focusable="true"
         android:paddingHorizontal="20dp"
         android:paddingVertical="10dp"
-        android:text="Test Download"
-        android:textColor="@android:color/black"
-        android:textSize="26sp" />
+        android:text="Download"
+        android:textSize="24sp" />
 </FrameLayout>

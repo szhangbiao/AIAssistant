@@ -1,5 +1,7 @@
 package cn.booslink.llm.processor;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.text.TextUtils;
 
 import com.google.gson.Gson;
@@ -32,8 +34,9 @@ public class EventProcessorImpl implements IEventProcessor {
     private final static String TAG = "EventProcessor";
 
     private final Gson mGson;
+    private final Handler mHandler;
+    private final StringBuilder mNplBuilder;
     private final ISpeechInteraction mSpeechInteraction;
-    private final StringBuilder mNplBuilder = new StringBuilder();
 
     private Disposable mEventDisposable;
     private FlowableEmitter<AIUIEvent> mEventEmitter;
@@ -43,7 +46,9 @@ public class EventProcessorImpl implements IEventProcessor {
     @Inject
     public EventProcessorImpl(Gson gson, ISpeechInteraction speechInteraction) {
         this.mGson = gson;
+        this.mNplBuilder = new StringBuilder();
         this.mSpeechInteraction = speechInteraction;
+        this.mHandler = new Handler(Looper.getMainLooper());
         createEventEmitter();
     }
 
@@ -57,17 +62,19 @@ public class EventProcessorImpl implements IEventProcessor {
                 safeEmitEvent(event);
                 break;
             case AIUIConstant.EVENT_WAKEUP: // 唤醒事件
+                Timber.tag(TAG).d("wakeup");
+                mHandler.post(mSpeechInteraction::UIWakeup);
                 int type = event.arg1; // 0 （语音唤醒）, 1 （发送CMD_WAKEUP手动唤醒）
                 if (type == 0) {
                     mSpeechInteraction.updateQuery(new VoiceQuery("bobo在听，有什么可以帮您~", QueryState.WAKE_UP));
                 }
-                Timber.tag(TAG).d("wakeup");
                 break;
             case AIUIConstant.EVENT_PRE_SLEEP: // 准备休眠事件
                 Timber.tag(TAG).d("prepare sleep");
                 break;
             case AIUIConstant.EVENT_SLEEP: // 休眠事件
                 Timber.tag(TAG).d("sleep");
+                mHandler.post(mSpeechInteraction::UISleep);
                 break;
             case AIUIConstant.EVENT_VAD: // VAD事件
                 int vadState = event.arg1;
@@ -104,6 +111,8 @@ public class EventProcessorImpl implements IEventProcessor {
     @Override
     public void release() {
         isDestroyed = true;
+        mNplBuilder.delete(0, mNplBuilder.length());
+        mHandler.removeCallbacksAndMessages(null);
         if (mEventDisposable != null) {
             mEventDisposable.dispose();
         }

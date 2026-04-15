@@ -1,11 +1,19 @@
 package cn.booslink.llm.common.widget;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.TimeInterpolator;
 import android.content.Context;
 import android.os.Build;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.BounceInterpolator;
+import android.view.animation.DecelerateInterpolator;
+import android.view.animation.LinearInterpolator;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
@@ -33,10 +41,12 @@ public class AIRootLayout extends ConstraintLayout {
     private static final String TAG = "RootLayout";
 
     private ImageView ivMascot;
+    private View vContent;
     private PAGImageView pagAnimation;
     private PAGImageView pagLoading;
     private AIInteractionLayout llInteraction;
     private AILeaveLayout flLeave;
+    private FrameLayout flContent;
 
     private final Observer<EmoteState> mEmoteStateObserver = this::changeUIWithState;
     private final Observer<VoiceQuery> mVoiceInputObserver = this::changeUIWithVoiceInput;
@@ -71,10 +81,12 @@ public class AIRootLayout extends ConstraintLayout {
 
     private void initWidgets() {
         ivMascot = findViewById(R.id.iv_mascot);
+        vContent = findViewById(R.id.v_content);
         pagAnimation = findViewById(R.id.pag_animation);
         pagLoading = findViewById(R.id.pag_loading);
         llInteraction = findViewById(R.id.ll_interaction);
         flLeave = findViewById(R.id.fl_leave);
+        flContent = findViewById(R.id.fl_content);
     }
 
     public void observeData(LiveData<EmoteState> emoteStateLiveData, LiveData<VoiceQuery> voiceInputLiveData, LiveData<String> nplResponseLiveData, LiveData<ApkDownload> apkDownloadLiveData, LiveData<UIResponse> uiResponseLiveData) {
@@ -91,6 +103,26 @@ public class AIRootLayout extends ConstraintLayout {
         nplResponseLiveData.removeObserver(mNplResponseObserver);
         apkDownloadLiveData.removeObserver(mApkDownloadObserver);
         uiResponseLiveData.removeObserver(mUIResponseObserver);
+    }
+
+    public void startWakeupAnimation() {
+        View mascotView = Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ? pagAnimation : ivMascot;
+        // mascotView: scale 0.5 -> 1.0, duration 500ms
+        startScaleAnim(mascotView, 0.3f, 1.0f, 400);
+        // flContent: alpha 0.6 -> 1.0, duration 300ms, delay 200ms
+        startAlphaAnim(flContent, 0.6f, 1.0f, 300, 100, null);
+        // vContent: alpha 0.6 -> 1.0, duration 300ms, delay 200ms
+        startAlphaAnim(vContent, 0.6f, 1.0f, 300, 100, null);
+    }
+
+    public void startHideAnimation(Runnable runnable) {
+        View mascotView = Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ? pagAnimation : ivMascot;
+        // mascotView: scale 1.0 -> 0.4, duration 300ms
+        startScaleAnim(mascotView, 1.0f, 0.3f, 300);
+        // flContent: alpha 1.0 -> 0.6, duration 300ms
+        startAlphaAnim(flContent, 1.0f, 0.6f, 300, 0, null);
+        // vContent: alpha 1.0 -> 0.6, duration 300ms
+        startAlphaAnim(vContent, 1.0f, 0.6f, 300, 0, runnable);
     }
 
     private void changeUIWithState(EmoteState emoteState) {
@@ -267,5 +299,36 @@ public class AIRootLayout extends ConstraintLayout {
                 pagLoading.pause();
             }
         }
+    }
+
+    private void startScaleAnim(View animView, float startScale, float endScale, long duration) {
+        animView.setScaleX(startScale);
+        animView.setScaleY(startScale);
+        TimeInterpolator interpolator = startScale < endScale ? new AccelerateInterpolator() : new DecelerateInterpolator();
+        animView.animate()
+                .scaleX(endScale)
+                .scaleY(endScale)
+                .setDuration(duration)
+                .setInterpolator(interpolator)
+                .start();
+    }
+
+    private void startAlphaAnim(View animView, float startAlpha, float endAlpha, long duration, long delay, Runnable runnable) {
+        animView.setAlpha(startAlpha);
+        animView.animate()
+                .alpha(endAlpha)
+                .setDuration(duration)
+                .setStartDelay(delay)
+                .setListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        super.onAnimationEnd(animation);
+                        if (runnable != null) {
+                            runnable.run();
+                        }
+                    }
+                })
+                .setInterpolator(new LinearInterpolator())
+                .start();
     }
 }

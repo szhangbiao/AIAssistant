@@ -26,6 +26,7 @@ import javax.inject.Inject;
 
 import cn.booslink.llm.R;
 import cn.booslink.llm.common.model.PkgInfo;
+import cn.booslink.llm.common.ui.ISpeechInteraction;
 import cn.booslink.llm.common.utils.ContextUtils;
 import cn.booslink.llm.common.utils.FileUtils;
 import cn.booslink.llm.common.utils.GsonProvider;
@@ -41,6 +42,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Inject
     IAppManager mAppManager;
+    @Inject
+    ISpeechInteraction mSpeechInteraction;
 
     private static final String TAG = "MainActivity";
     private static final int REQUEST_RECORD_AUDIO_PERMISSION = 100;
@@ -206,6 +209,14 @@ public class MainActivity extends AppCompatActivity {
             String pkgJson = FileUtils.readJsonFromAsset(this, "test_pkg_details.json");
             PkgInfo pkgInfo = GsonProvider.instance().fromJson(pkgJson, PkgInfo.class);
             mAppManager.startDownloadPkg(pkgInfo);
+        });
+        Button btnShow = findViewById(R.id.btn_show);
+        btnShow.setOnClickListener(v -> {
+            mSpeechInteraction.UIWakeup();
+        });
+        Button btnHide = findViewById(R.id.btn_hide);
+        btnHide.setOnClickListener(v -> {
+            mSpeechInteraction.UISleep();
         });
     }
 }

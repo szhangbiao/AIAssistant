@@ -8,6 +8,7 @@ import android.graphics.PixelFormat;
 import android.os.Build;
 import android.text.TextUtils;
 import android.view.Gravity;
+import android.view.View;
 import android.view.ViewManager;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
@@ -16,6 +17,7 @@ import androidx.lifecycle.MutableLiveData;
 
 import javax.inject.Inject;
 
+import cn.booslink.llm.common.R;
 import cn.booslink.llm.common.model.ApkDownload;
 import cn.booslink.llm.common.model.UIResponse;
 import cn.booslink.llm.common.model.VoiceQuery;
@@ -46,6 +48,7 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
     private final MutableLiveData<UIResponse> mUIResponseLiveData;
 
     private boolean isAttached = false;
+    private boolean isActive = false;
 
     @Inject
     public SpeechInteractionImpl(@ApplicationContext Context context) {
@@ -74,12 +77,13 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
             } else {
                 params.type = WindowManager.LayoutParams.TYPE_TOAST;
             }
-            params.flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL;
-            //params.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
+            // 允许触摸事件，但不获取焦点，不影响下方应用操作
+            params.flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
+            // 如果需要完全透明且不拦截触摸，可以使用下面的配置
+            // params.flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
             params.gravity = Gravity.TOP | Gravity.END;
-            int width = ContextUtils.dp2px(mContext, 554);
-            params.height = WindowManager.LayoutParams.WRAP_CONTENT;
-            params.width = width;
+            params.height = WindowManager.LayoutParams.MATCH_PARENT;
+            params.width = WindowManager.LayoutParams.MATCH_PARENT;
             params.format = PixelFormat.RGBA_8888;
             setupRootViewParams();
             wm.addView(mParentView, params);
@@ -119,13 +123,14 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
             WindowManager wm = (WindowManager) activity.getSystemService(WINDOW_SERVICE);
             WindowManager.LayoutParams params = new WindowManager.LayoutParams();
             params.type = WindowManager.LayoutParams.TYPE_APPLICATION_SUB_PANEL;
-            params.flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL;
-            //params.z = 1000;
+            // 允许触摸事件，但不获取焦点，不影响下方应用操作
+            // params.flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
+            // 如果需要完全透明且不拦截触摸，可以使用下面的配置
+            params.flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
             params.token = activity.getWindow().getDecorView().getWindowToken();
             params.gravity = Gravity.TOP | Gravity.END;
-            int width = ContextUtils.dp2px(mContext, 554);
-            params.height = WindowManager.LayoutParams.WRAP_CONTENT;
-            params.width = width;
+            params.height = WindowManager.LayoutParams.MATCH_PARENT;
+            params.width = WindowManager.LayoutParams.MATCH_PARENT;
             params.format = PixelFormat.RGBA_8888;
             setupRootViewParams();
             wm.addView(mParentView, params);
@@ -222,12 +227,23 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
 
     @Override
     public void UIWakeup() {
-
+        if (!isAttached || isActive) return;
+        AIRootLayout rootLayout = mRootLayoutRef.get();
+        if (rootLayout != null) {
+            rootLayout.startWakeupAnimation();
+        }
+        mParentView.setVisibility(View.VISIBLE);
+        isActive = true;
     }
 
     @Override
     public void UISleep() {
-
+        if (!isAttached || !isActive) return;
+        AIRootLayout rootLayout = mRootLayoutRef.get();
+        if (rootLayout != null) {
+            rootLayout.startHideAnimation(() -> mParentView.setVisibility(View.GONE));
+        }
+        isActive = false;
     }
 
     /**
@@ -253,7 +269,8 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
         childParams.gravity = Gravity.TOP | Gravity.END;
         childParams.topMargin = ContextUtils.dp2px(mContext, 32);
         AIRootLayout rootLayout = mRootLayoutRef.get();
-        //mParentView.setBackgroundColor(Color.BLUE);
+        mParentView.setBackgroundResource(R.drawable.bg_full_screen);
+        mParentView.setVisibility(View.GONE);
         if (rootLayout != null) {
             bindData(rootLayout);
             mParentView.addView(rootLayout, childParams);
