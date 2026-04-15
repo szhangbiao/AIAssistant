@@ -4,13 +4,10 @@ import android.text.TextUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
-import com.google.gson.reflect.TypeToken;
 import com.iflytek.aiui.AIUIConstant;
 import com.iflytek.aiui.AIUIEvent;
 
 import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Map;
 
 import javax.inject.Inject;
 
@@ -18,9 +15,10 @@ import cn.booslink.llm.common.model.CBMSemantic;
 import cn.booslink.llm.common.model.EventData;
 import cn.booslink.llm.common.model.EventInfo;
 import cn.booslink.llm.common.model.UIResponse;
-import cn.booslink.llm.common.model.Weather;
+import cn.booslink.llm.common.model.VoiceQuery;
+import cn.booslink.llm.common.model.enums.AIUITag;
 import cn.booslink.llm.common.model.enums.CBMSub;
-import cn.booslink.llm.common.model.enums.Category;
+import cn.booslink.llm.common.model.enums.QueryState;
 import cn.booslink.llm.common.ui.ISpeechInteraction;
 import cn.booslink.llm.common.utils.RxUtil;
 import io.reactivex.rxjava3.core.BackpressureStrategy;
@@ -59,7 +57,10 @@ public class EventProcessorImpl implements IEventProcessor {
                 safeEmitEvent(event);
                 break;
             case AIUIConstant.EVENT_WAKEUP: // 唤醒事件
-                safeEmitEvent(event);
+                int type = event.arg1; // 0 （语音唤醒）, 1 （发送CMD_WAKEUP手动唤醒）
+                if (type == 0) {
+                    mSpeechInteraction.updateQuery(new VoiceQuery("bobo在听，有什么可以帮您~", QueryState.WAKE_UP));
+                }
                 Timber.tag(TAG).d("wakeup");
                 break;
             case AIUIConstant.EVENT_PRE_SLEEP: // 准备休眠事件
@@ -94,6 +95,7 @@ public class EventProcessorImpl implements IEventProcessor {
                 Timber.tag(TAG).d("disconnect to server");
                 break;
             case AIUIConstant.EVENT_ERROR: // 出错事件
+                mSpeechInteraction.updateQuery(new VoiceQuery(null, QueryState.ERROR));
                 Timber.tag(TAG).d("error = %s", event.info);
                 break;
         }
@@ -122,15 +124,18 @@ public class EventProcessorImpl implements IEventProcessor {
     }
 
     private EventData parseEventData(AIUIEvent event) {
+        if (TextUtils.isEmpty(event.info)) return EventData.Companion.empty();
         EventInfo eventInfo = mGson.fromJson(event.info, EventInfo.class);
         CBMSub sub = eventInfo.getSub();
         String cntId = eventInfo.getCntId();
         if (sub == null || TextUtils.isEmpty(cntId)) return EventData.Companion.empty();
+        String tag = event.data.getString("tag");
         Timber.tag(TAG).d("parseEventData, sub = %s", sub);
         try {
             byte[] bytes = event.data.getByteArray(cntId);
             String cntJsonRaw = new String(bytes, StandardCharsets.UTF_8);
             EventData data = mGson.fromJson(cntJsonRaw, EventData.class);
+            data.setTag(AIUITag.fromTag(tag));
             data.setSub(sub);
             return data;
         } catch (JsonSyntaxException e) {
@@ -157,9 +162,9 @@ public class EventProcessorImpl implements IEventProcessor {
         CBMSub sub = data.getSub();
         if (sub == null) return;
         if (sub == CBMSub.IAT) {
-            if (data.getText() == null) return;
+            if (data.getText() == null || data.getTag() == AIUITag.LAUNCH) return;
             Timber.tag(TAG).d("iat result = %s", data.getText().getIATVoice());
-            mSpeechInteraction.updateQuery(data.getText().getIATVoice());
+            mSpeechInteraction.updateQuery(new VoiceQuery(data.getText().getIATVoice(), QueryState.QUERYING));
         } else if (sub == CBMSub.NLP) {
             if (data.getNlp() == null) return;
             int status = data.getNlp().getStatus() != null ? data.getNlp().getStatus() : -1;
@@ -170,19 +175,24 @@ public class EventProcessorImpl implements IEventProcessor {
                 case 1:
                     mNplBuilder.append(data.getNlp().getText());
                     mSpeechInteraction.nlpAnswer(mNplBuilder.toString());
+                    if (data.getTag() == AIUITag.LAUNCH) return;
+                    mSpeechInteraction.updateQuery(new VoiceQuery(null, QueryState.DONE));
                     break;
                 case 2:
                     Timber.tag(TAG).d("nlp, content = %s", mNplBuilder.toString());
                     mSpeechInteraction.nlpAnswer(mNplBuilder.toString());
+                    if (data.getTag() == AIUITag.LAUNCH) return;
+                    mSpeechInteraction.updateQuery(new VoiceQuery(null, QueryState.DONE));
                     break;
             }
         } else if (sub == CBMSub.CBM_TIDY) {
-            if (data.getCbmTidy() == null || data.getCbmTidy().getText() == null) return;
+            if (data.getCbmTidy() == null || data.getCbmTidy().getText() == null || data.getTag() == AIUITag.LAUNCH) return;
             Timber.tag(TAG).d("cbm tidy, query = %s", data.getCbmTidy().getText().getQuery());
-            mSpeechInteraction.updateQuery(data.getCbmTidy().getText().getQuery());
+            mSpeechInteraction.updateQuery(new VoiceQuery(data.getCbmTidy().getText().getQuery(), QueryState.QUERYING));
         } else if (sub == CBMSub.CBM_SEMANTIC) {
-            if (data.getResponse() == null) return;
+            if (data.getResponse() == null || data.getTag() == AIUITag.LAUNCH) return;
             Timber.tag(TAG).d("cbm semantic content= %s", mGson.toJson(data.getResponse()));
+            mSpeechInteraction.updateQuery(new VoiceQuery(null, QueryState.DONE));
             mSpeechInteraction.semanticAnswer(data.getResponse());
         } else if (sub == CBMSub.CBM_TOOL_PK) {
             if (data.getCbmToolPK() == null || data.getCbmToolPK().getText() == null) return;

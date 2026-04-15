@@ -1,6 +1,7 @@
 package cn.booslink.llm.speech;
 
 import android.content.Context;
+import android.text.TextUtils;
 
 import com.google.gson.Gson;
 import com.iflytek.aiui.AIUIAgent;
@@ -14,7 +15,7 @@ import javax.inject.Inject;
 
 import cn.booslink.llm.common.model.Device;
 import cn.booslink.llm.common.model.enums.AIUIState;
-import cn.booslink.llm.common.model.enums.EventType;
+import cn.booslink.llm.common.model.enums.AIUITag;
 import cn.booslink.llm.common.utils.RxUtil;
 import cn.booslink.llm.processor.IEventProcessor;
 import cn.booslink.llm.speech.config.AIUIConfig;
@@ -36,6 +37,8 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
 
     private AIUIConfig mAIUIConfig = null;
     private AIUIAgent mAIUIAgent = null;
+
+    private volatile boolean mIsFirstStartup = true;
 
     @Inject
     public SpeechAgentImpl(@ApplicationContext Context context, Device device, Gson gson, IEventProcessor eventProcessor, IConfigRepository configRepository) {
@@ -75,16 +78,24 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
 
     @Override
     public void onEvent(AIUIEvent event) {
-        Timber.tag(TAG).d("onEvent, type = %s", EventType.fromType(event.eventType));
+        //Timber.tag(TAG).d("onEvent, type = %s", EventType.fromType(event.eventType));
         switch (event.eventType) {
             case AIUIConstant.EVENT_STATE: // 服务状态事件
                 int state = event.arg1;
                 AIUIState aiuiState = state < AIUIState.values().length ? AIUIState.values()[state] : AIUIState.UNKNOWN;
                 Timber.tag(TAG).d("Event, state = %s, value = %d", aiuiState, state);
+                if (mIsFirstStartup && aiuiState == AIUIState.READ) {
+                    autoWakeUpAdkWhenFirst();
+                }
                 break;
             case AIUIConstant.EVENT_RESULT: // 结果事件
                 break;
             case AIUIConstant.EVENT_WAKEUP: // 唤醒事件
+                int type = event.arg1; // 0 （语音唤醒）, 1 （发送CMD_WAKEUP手动唤醒）
+                if (type == 1 && mIsFirstStartup) {
+                    sendMessageAfterInit();
+                    mIsFirstStartup = false;
+                }
                 break;
             case AIUIConstant.EVENT_PRE_SLEEP: // 准备休眠事件
             case AIUIConstant.EVENT_SLEEP: // 休眠事件
@@ -122,6 +133,19 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
 
     private void clear() {
         mCompositeDisposable.clear();
+    }
+
+    private void autoWakeUpAdkWhenFirst() {
+        sendMessage(new AIUIMessage(AIUIConstant.CMD_WAKEUP, 0, 0, null, null));
+    }
+
+    private void sendMessageAfterInit() {
+        // 第一步：获取需要请求的文本，转成字节流
+        byte[] content = "今天天气怎么样".getBytes();
+        // 第二步：构建CMD_WRITE事件，直接发送。
+        String params = "data_type=text,tag=" + AIUITag.LAUNCH.getTag();
+        AIUIMessage msg = new AIUIMessage(AIUIConstant.CMD_WRITE, 0, 0, params, content);
+        sendMessage(msg);
     }
 
     private void startRecordAudio() {

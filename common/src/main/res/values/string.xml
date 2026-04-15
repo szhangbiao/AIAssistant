@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="speech_initial_help">想问什么尽管问我！</string>
+    <string name="speech_voice_result">为您找到以下结果：</string>
+    <string name="speech_voice_querying">正在加载中…</string>
+    <string name="speech_voice_listening">正在倾听中…</string>
+    <string name="speech_voice_sorry">很抱歉</string>
     <string name="downloading">正在为您下载…</string>
     <string name="download_done">恭喜您下载完成！</string>
 </resources>

@@ -51,6 +51,11 @@ public class AIInteractionLayout extends LinearLayout {
         tvQuestion.setText(voiceTxt);
     }
 
+    public void updateTipTitle(String tipTitle) {
+        if (TextUtils.isEmpty(tipTitle)) return;
+        tvResultTitle.setText(tipTitle);
+    }
+
     public void nplReply(String nplText) {
         if (TextUtils.isEmpty(nplText)) return;
         tvNplReply.setVisibility(View.VISIBLE);

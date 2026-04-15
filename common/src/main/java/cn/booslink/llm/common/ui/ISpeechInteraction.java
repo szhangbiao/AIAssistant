@@ -6,6 +6,7 @@ import org.jetbrains.annotations.Nullable;
 
 import cn.booslink.llm.common.model.ApkDownload;
 import cn.booslink.llm.common.model.UIResponse;
+import cn.booslink.llm.common.model.VoiceQuery;
 
 public interface ISpeechInteraction {
 
@@ -19,7 +20,7 @@ public interface ISpeechInteraction {
 
     void destroyView();
 
-    void updateQuery(@Nullable String voiceQuery);
+    void updateQuery(VoiceQuery query);
 
     void nlpAnswer(String nlpReply);
 

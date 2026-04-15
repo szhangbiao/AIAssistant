@@ -2,10 +2,10 @@ package cn.booslink.llm.common.widget;
 
 import android.content.Context;
 import android.os.Build;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
@@ -21,24 +21,31 @@ import javax.inject.Inject;
 import cn.booslink.llm.common.R;
 import cn.booslink.llm.common.model.ApkDownload;
 import cn.booslink.llm.common.model.UIResponse;
+import cn.booslink.llm.common.model.VoiceQuery;
 import cn.booslink.llm.common.model.WeatherUI;
 import cn.booslink.llm.common.model.enums.EmoteState;
+import cn.booslink.llm.common.model.enums.QueryState;
 import dagger.hilt.android.qualifiers.ApplicationContext;
+import timber.log.Timber;
 
 public class AIRootLayout extends ConstraintLayout {
 
+    private static final String TAG = "RootLayout";
+
     private ImageView ivMascot;
     private PAGImageView pagAnimation;
-    private View vContent;
-    private FrameLayout flContent;
+    private PAGImageView pagLoading;
     private AIInteractionLayout llInteraction;
     private AILeaveLayout flLeave;
 
     private final Observer<EmoteState> mEmoteStateObserver = this::changeUIWithState;
-    private final Observer<String> mVoiceInputObserver = this::changeUIWithVoiceInput;
+    private final Observer<VoiceQuery> mVoiceInputObserver = this::changeUIWithVoiceInput;
     private final Observer<String> mNplResponseObserver = this::changeUIWithNplResponse;
     private final Observer<ApkDownload> mApkDownloadObserver = this::changeUIWithApkDownload;
     private final Observer<UIResponse> mUIResponseObserver = this::changeUIWithUIResponse;
+
+    private EmoteState mCurrentEmoteState = null;
+    private QueryState mCurrentQueryState = null;
 
 
     @Inject
@@ -66,13 +73,12 @@ public class AIRootLayout extends ConstraintLayout {
     private void initWidgets() {
         ivMascot = findViewById(R.id.iv_mascot);
         pagAnimation = findViewById(R.id.pag_animation);
-        vContent = findViewById(R.id.v_content);
-        flContent = findViewById(R.id.fl_content);
+        pagLoading = findViewById(R.id.pag_loading);
         llInteraction = findViewById(R.id.ll_interaction);
         flLeave = findViewById(R.id.fl_leave);
     }
 
-    public void observeData(LiveData<EmoteState> emoteStateLiveData, LiveData<String> voiceInputLiveData, LiveData<String> nplResponseLiveData, LiveData<ApkDownload> apkDownloadLiveData, LiveData<UIResponse> uiResponseLiveData) {
+    public void observeData(LiveData<EmoteState> emoteStateLiveData, LiveData<VoiceQuery> voiceInputLiveData, LiveData<String> nplResponseLiveData, LiveData<ApkDownload> apkDownloadLiveData, LiveData<UIResponse> uiResponseLiveData) {
         emoteStateLiveData.observeForever(mEmoteStateObserver);
         voiceInputLiveData.observeForever(mVoiceInputObserver);
         nplResponseLiveData.observeForever(mNplResponseObserver);
@@ -80,7 +86,7 @@ public class AIRootLayout extends ConstraintLayout {
         uiResponseLiveData.observeForever(mUIResponseObserver);
     }
 
-    public void unObserveData(LiveData<EmoteState> emoteStateLiveData, LiveData<String> voiceInputLiveData, LiveData<String> nplResponseLiveData, LiveData<ApkDownload> apkDownloadLiveData, LiveData<UIResponse> uiResponseLiveData) {
+    public void unObserveData(LiveData<EmoteState> emoteStateLiveData, LiveData<VoiceQuery> voiceInputLiveData, LiveData<String> nplResponseLiveData, LiveData<ApkDownload> apkDownloadLiveData, LiveData<UIResponse> uiResponseLiveData) {
         emoteStateLiveData.removeObserver(mEmoteStateObserver);
         voiceInputLiveData.removeObserver(mVoiceInputObserver);
         nplResponseLiveData.removeObserver(mNplResponseObserver);
@@ -89,6 +95,9 @@ public class AIRootLayout extends ConstraintLayout {
     }
 
     private void changeUIWithState(EmoteState emoteState) {
+        if (mCurrentEmoteState != null && mCurrentEmoteState == emoteState) return;
+        mCurrentEmoteState = emoteState;
+        Timber.tag(TAG).d("changeUIWithState, state = %s", emoteState);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             populateMascotAnimation(emoteState);
         } else {
@@ -96,8 +105,46 @@ public class AIRootLayout extends ConstraintLayout {
         }
     }
 
-    private void changeUIWithVoiceInput(String voiceInput) {
+    private void changeUIWithVoiceInput(VoiceQuery query) {
+        String voiceInput = query.getQuery();
+        if (TextUtils.isEmpty(voiceInput)) return;
         llInteraction.voiceInput(voiceInput);
+        if (mCurrentQueryState != null && mCurrentQueryState == query.getState()) return;
+        mCurrentQueryState = query.getState();
+        Timber.tag(TAG).d("changeUIWithVoiceInput, state = %s", mCurrentQueryState);
+        switch (query.getState()) {
+            case IDLE:
+                llInteraction.updateTipTitle(getContext().getString(R.string.speech_initial_help));
+                break;
+            case WAKE_UP:
+                llInteraction.updateTipTitle(getContext().getString(R.string.speech_voice_listening));
+                break;
+            case QUERYING:
+                llInteraction.updateTipTitle(getContext().getString(R.string.speech_voice_querying));
+                break;
+            case EMPTY:
+            case DOWNLOADING:
+            case DONE:
+                llInteraction.updateTipTitle(getContext().getString(R.string.speech_voice_result));
+                break;
+            case FAILED:
+            case ERROR:
+                llInteraction.updateTipTitle(getContext().getString(R.string.speech_voice_sorry));
+                break;
+            default:
+                break;
+        }
+        if (pagLoading != null) {
+            //pagLoading.setVisibility(mCurrentQueryState == QueryState.QUERYING ? View.VISIBLE : View.GONE);
+            pagLoading.setVisibility(View.VISIBLE);
+            if (mCurrentQueryState == QueryState.QUERYING) {
+                pagLoading.setPath("assets://pag_loading.pag");
+                pagLoading.setRepeatCount(-1);
+                pagLoading.play();
+            } else {
+                //pagLoading.pause();
+            }
+        }
     }
 
     private void changeUIWithNplResponse(String nplText) {

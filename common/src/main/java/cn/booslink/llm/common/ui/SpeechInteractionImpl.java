@@ -14,14 +14,17 @@ import android.widget.FrameLayout;
 
 import androidx.lifecycle.MutableLiveData;
 
-import org.jetbrains.annotations.Nullable;
-
 import javax.inject.Inject;
 
 import cn.booslink.llm.common.model.ApkDownload;
 import cn.booslink.llm.common.model.UIResponse;
+import cn.booslink.llm.common.model.VoiceQuery;
+import cn.booslink.llm.common.model.Weather;
+import cn.booslink.llm.common.model.enums.Category;
 import cn.booslink.llm.common.model.enums.EmoteState;
+import cn.booslink.llm.common.model.enums.QueryState;
 import cn.booslink.llm.common.utils.ContextUtils;
+import cn.booslink.llm.common.utils.WeatherExtKt;
 import cn.booslink.llm.common.widget.AIRootLayout;
 import dagger.Lazy;
 import dagger.hilt.android.qualifiers.ApplicationContext;
@@ -37,7 +40,7 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
     private final Context mContext;
     private final FrameLayout mParentView;
     private final MutableLiveData<EmoteState> mEmoteStateLiveData;
-    private final MutableLiveData<String> mVoiceInputLiveData;
+    private final MutableLiveData<VoiceQuery> mVoiceInputLiveData;
     private final MutableLiveData<String> mNplResponseLiveData;
     private final MutableLiveData<ApkDownload> mApkDownloadLiveData;
     private final MutableLiveData<UIResponse> mUIResponseLiveData;
@@ -49,7 +52,7 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
         this.mContext = context;
         this.mParentView = new FrameLayout(context);
         this.mEmoteStateLiveData = new MutableLiveData<>(EmoteState.IDLE);
-        this.mVoiceInputLiveData = new MutableLiveData<>("您好，我是Bobo！");
+        this.mVoiceInputLiveData = new MutableLiveData<>(VoiceQuery.Companion.startup());
         this.mNplResponseLiveData = new MutableLiveData<>("");
         this.mApkDownloadLiveData = new MutableLiveData<>(ApkDownload.empty());
         this.mUIResponseLiveData = new MutableLiveData<>(UIResponse.Companion.empty());
@@ -163,9 +166,34 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
     }
 
     @Override
-    public void updateQuery(@Nullable String voiceQuery) {
-        if (TextUtils.isEmpty(voiceQuery)) return;
-        mVoiceInputLiveData.postValue(voiceQuery);
+    public void updateQuery(VoiceQuery query) {
+        mVoiceInputLiveData.postValue(query);
+        QueryState state = query.getState();
+        Timber.tag(TAG).d("updateQuery, state = %s", state);
+        switch (state) {
+            case IDLE:
+                mEmoteStateLiveData.postValue(EmoteState.IDLE);
+                break;
+            case QUERYING:
+                mEmoteStateLiveData.postValue(EmoteState.THINKING);
+                break;
+            case DOWNLOADING:
+                mEmoteStateLiveData.postValue(EmoteState.NORMAL);
+                break;
+            case DONE:
+                UIResponse response = mUIResponseLiveData.getValue();
+                if (response != null && !response.isEmpty()) return;
+                mEmoteStateLiveData.postValue(EmoteState.LAUGHING);
+                break;
+            case FAILED:
+            case EMPTY:
+            case ERROR:
+                mEmoteStateLiveData.postValue(EmoteState.CRYING);
+            case WAKE_UP:
+            default:
+                mEmoteStateLiveData.postValue(EmoteState.NORMAL);
+                break;
+        }
     }
 
     @Override
@@ -179,6 +207,11 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
     @Override
     public void semanticAnswer(UIResponse response) {
         mUIResponseLiveData.postValue(response);
+        if (response.getCategory() == Category.WEATHER) {
+            if (response.getWeathers() == null || response.getWeathers().isEmpty()) return;
+            Weather weather = response.getWeathers().get(0);
+            mEmoteStateLiveData.postValue(WeatherExtKt.getEmoteState(weather));
+        }
     }
 
     @Override

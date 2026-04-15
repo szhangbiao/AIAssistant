@@ -17,6 +17,7 @@ import cn.booslink.llm.common.R;
 import cn.booslink.llm.common.di.CommonEntryPoint;
 import cn.booslink.llm.common.image.ImageLoader;
 import cn.booslink.llm.common.model.WeatherUI;
+import cn.booslink.llm.common.utils.WeatherExtKt;
 import dagger.hilt.android.EntryPointAccessors;
 
 public class WeatherListLayout extends ConstraintLayout {
@@ -95,35 +96,50 @@ public class WeatherListLayout extends ConstraintLayout {
             tvWeatherDesc.setText(weatherData.getCurrent().getWeather());
             tvTempHigh.setText(String.format(Locale.getDefault(), "最高%s", weatherData.getCurrent().getTempHigh()));
             tvTempLow.setText(String.format(Locale.getDefault(), "最低%s", weatherData.getCurrent().getTempLow()));
-            if (!TextUtils.isEmpty(weatherData.getCurrent().getImg())) {
+            int weatherRes = WeatherExtKt.getBigIcon(weatherData.getCurrent());
+            if (weatherRes != -1) {
+                ivWeatherIcon.setImageResource(weatherRes);
+            } else if (!TextUtils.isEmpty(weatherData.getCurrent().getImg())) {
                 imageLoader.loadImage(ivWeatherIcon, weatherData.getCurrent().getImg());
             }
         }
         if (weatherData.getDay1() != null) {
             tvDate1.setText(weatherData.getDay1().getWeekDay());
             tvTemp1.setText(weatherData.getDay1().getTemperatureRange());
-            if (!TextUtils.isEmpty(weatherData.getDay1().getImg())) {
+            int res1 = WeatherExtKt.getSmallIcon(weatherData.getDay1());
+            if (res1 != -1) {
+                ivIcon1.setImageResource(res1);
+            } else if (!TextUtils.isEmpty(weatherData.getDay1().getImg())) {
                 imageLoader.loadImage(ivIcon1, weatherData.getDay1().getImg());
             }
         }
         if (weatherData.getDay2() != null) {
             tvDate2.setText(weatherData.getDay2().getWeekDay());
             tvTemp2.setText(weatherData.getDay2().getTemperatureRange());
-            if (!TextUtils.isEmpty(weatherData.getDay2().getImg())) {
+            int res2 = WeatherExtKt.getSmallIcon(weatherData.getDay2());
+            if (res2 != -1) {
+                ivIcon2.setImageResource(res2);
+            } else if (!TextUtils.isEmpty(weatherData.getDay2().getImg())) {
                 imageLoader.loadImage(ivIcon2, weatherData.getDay2().getImg());
             }
         }
         if (weatherData.getDay3() != null) {
             tvDate3.setText(weatherData.getDay3().getWeekDay());
             tvTemp3.setText(weatherData.getDay3().getTemperatureRange());
-            if (!TextUtils.isEmpty(weatherData.getDay3().getImg())) {
+            int res3 = WeatherExtKt.getSmallIcon(weatherData.getDay3());
+            if (res3 != -1) {
+                ivIcon3.setImageResource(res3);
+            } else if (!TextUtils.isEmpty(weatherData.getDay3().getImg())) {
                 imageLoader.loadImage(ivIcon3, weatherData.getDay3().getImg());
             }
         }
         if (weatherData.getDay4() != null) {
             tvDate4.setText(weatherData.getDay4().getWeekDay());
             tvTemp4.setText(weatherData.getDay4().getTemperatureRange());
-            if (!TextUtils.isEmpty(weatherData.getDay4().getImg())) {
+            int res4 = WeatherExtKt.getSmallIcon(weatherData.getDay4());
+            if (res4 != -1) {
+                ivIcon4.setImageResource(res4);
+            } else if (!TextUtils.isEmpty(weatherData.getDay4().getImg())) {
                 imageLoader.loadImage(ivIcon4, weatherData.getDay4().getImg());
             }
         }

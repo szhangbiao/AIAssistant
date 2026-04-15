@@ -1,5 +1,6 @@
 package cn.booslink.llm.common.model
 
+import cn.booslink.llm.common.model.enums.AIUITag
 import cn.booslink.llm.common.model.enums.CBMSub
 import cn.booslink.llm.common.model.enums.Category
 import com.google.gson.annotations.SerializedName
@@ -11,6 +12,7 @@ data class EventData(
     @SerializedName("cbm_tool_pk") val cbmToolPK: SdkResponse<CBMToolPK>?,
     val nlp: SdkResponse<String>?,
     var sub: CBMSub? = null,
+    var tag: AIUITag? = null,
     var response: UIResponse? = null
 ) {
     companion object {
