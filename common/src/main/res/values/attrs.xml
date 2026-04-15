@@ -14,4 +14,13 @@
         <!-- 圆环宽度 -->
         <attr name="strokeWidth" format="dimension" />
     </declare-styleable>
+
+    <declare-styleable name="LoadingView">
+        <attr name="dotRadius" format="dimension" />
+        <attr name="dotSpacing" format="dimension" />
+        <attr name="normalColor" format="color" />
+        <attr name="enlargedColor" format="color" />
+        <attr name="enlargedRadiusScale" format="float" />
+        <attr name="animationDuration" format="integer" />
+    </declare-styleable>
 </resources>

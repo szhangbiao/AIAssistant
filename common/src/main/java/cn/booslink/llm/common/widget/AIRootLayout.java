@@ -47,7 +47,6 @@ public class AIRootLayout extends ConstraintLayout {
     private EmoteState mCurrentEmoteState = null;
     private QueryState mCurrentQueryState = null;
 
-
     @Inject
     public AIRootLayout(@ApplicationContext Context context) {
         super(context);
@@ -98,6 +97,7 @@ public class AIRootLayout extends ConstraintLayout {
         if (mCurrentEmoteState != null && mCurrentEmoteState == emoteState) return;
         mCurrentEmoteState = emoteState;
         Timber.tag(TAG).d("changeUIWithState, state = %s", emoteState);
+        //processLoadingState(false);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             populateMascotAnimation(emoteState);
         } else {
@@ -107,11 +107,12 @@ public class AIRootLayout extends ConstraintLayout {
 
     private void changeUIWithVoiceInput(VoiceQuery query) {
         String voiceInput = query.getQuery();
-        if (TextUtils.isEmpty(voiceInput)) return;
-        llInteraction.voiceInput(voiceInput);
+        if (!TextUtils.isEmpty(voiceInput)) {
+            llInteraction.voiceInput(voiceInput);
+        }
         if (mCurrentQueryState != null && mCurrentQueryState == query.getState()) return;
         mCurrentQueryState = query.getState();
-        Timber.tag(TAG).d("changeUIWithVoiceInput, state = %s", mCurrentQueryState);
+        Timber.tag(TAG).d("changeUIWithVoiceInput, state = %s", query);
         switch (query.getState()) {
             case IDLE:
                 llInteraction.updateTipTitle(getContext().getString(R.string.speech_initial_help));
@@ -134,17 +135,7 @@ public class AIRootLayout extends ConstraintLayout {
             default:
                 break;
         }
-        if (pagLoading != null) {
-            //pagLoading.setVisibility(mCurrentQueryState == QueryState.QUERYING ? View.VISIBLE : View.GONE);
-            pagLoading.setVisibility(View.VISIBLE);
-            if (mCurrentQueryState == QueryState.QUERYING) {
-                pagLoading.setPath("assets://pag_loading.pag");
-                pagLoading.setRepeatCount(-1);
-                pagLoading.play();
-            } else {
-                //pagLoading.pause();
-            }
-        }
+        processLoadingState(mCurrentQueryState == QueryState.QUERYING);
     }
 
     private void changeUIWithNplResponse(String nplText) {
@@ -260,6 +251,20 @@ public class AIRootLayout extends ConstraintLayout {
                 ivMascot.setImageResource(R.drawable.ic_mascot_hello);
             default:
                 break;
+        }
+    }
+
+    private void processLoadingState(boolean isLoading) {
+        llInteraction.showLoading(isLoading);
+        if (pagLoading != null) {
+            pagLoading.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+            if (isLoading) {
+                pagLoading.setPath("assets://pag_loading.pag");
+                pagLoading.setRepeatCount(-1);
+                pagLoading.play();
+            } else {
+                pagLoading.pause();
+            }
         }
     }
 }

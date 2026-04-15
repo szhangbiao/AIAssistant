@@ -62,10 +62,23 @@
             android:background="@drawable/bg_content_transparent"
             app:layout_constraintTop_toTopOf="parent">
 
+            <cn.booslink.llm.common.widget.LoadingView
+                android:id="@+id/loadingView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                app:animationDuration="500"
+                app:dotRadius="6dp"
+                app:dotSpacing="20dp"
+                app:enlargedColor="#FFFFFF"
+                app:enlargedRadiusScale="1.5"
+                app:normalColor="#CCCCCC" />
+
             <cn.booslink.llm.common.widget.ApkDownloadLayout
                 android:id="@+id/fl_download_layout"
                 android:layout_width="match_parent"
-                android:layout_height="110dp" />
+                android:layout_height="110dp"
+                android:visibility="gone" />
 
             <TextView
                 android:id="@+id/tv_npl"

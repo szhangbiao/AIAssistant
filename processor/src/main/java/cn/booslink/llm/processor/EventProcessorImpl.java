@@ -95,7 +95,7 @@ public class EventProcessorImpl implements IEventProcessor {
                 Timber.tag(TAG).d("disconnect to server");
                 break;
             case AIUIConstant.EVENT_ERROR: // 出错事件
-                mSpeechInteraction.updateQuery(new VoiceQuery(null, QueryState.ERROR));
+                //mSpeechInteraction.updateQuery(new VoiceQuery(null, QueryState.ERROR));
                 Timber.tag(TAG).d("error = %s", event.info);
                 break;
         }

@@ -25,9 +25,9 @@ public class AIInteractionLayout extends LinearLayout {
     private TextView tvQuestion;
     private TextView tvResultTitle;
     private ViewGroup flResult;
+    private LoadingView loadingView;
     private ApkDownloadLayout apkDownloadLayout;
     private WeatherListLayout weatherListLayout;
-
     private TextView tvNplReply;
 
     public AIInteractionLayout(@NonNull Context context) {
@@ -58,14 +58,16 @@ public class AIInteractionLayout extends LinearLayout {
 
     public void nplReply(String nplText) {
         if (TextUtils.isEmpty(nplText)) return;
-        tvNplReply.setVisibility(View.VISIBLE);
+        showLoading(false);
         weatherListLayout.setVisibility(View.GONE);
         apkDownloadLayout.setVisibility(View.GONE);
+        tvNplReply.setVisibility(View.VISIBLE);
         tvNplReply.setText(nplText);
     }
 
     public void showDownloadProcess(ApkDownload apkDownload) {
         boolean shouldHideDownloadLayout = apkDownload.isEmpty() || apkDownload.isDownloadFail() || apkDownload.isInstallFail() || apkDownload.isInstallFinish();
+        showLoading(false);
         weatherListLayout.setVisibility(GONE);
         tvNplReply.setVisibility(shouldHideDownloadLayout ? VISIBLE : GONE);
         apkDownloadLayout.setVisibility(shouldHideDownloadLayout ? GONE : VISIBLE);
@@ -73,10 +75,24 @@ public class AIInteractionLayout extends LinearLayout {
     }
 
     public void showWeatherList(WeatherUI weatherData) {
+        showLoading(false);
         tvNplReply.setVisibility(GONE);
         apkDownloadLayout.setVisibility(GONE);
         weatherListLayout.setVisibility(VISIBLE);
         weatherListLayout.updateWeatherUI(weatherData);
+    }
+
+    public void showLoading(boolean isShow) {
+        loadingView.setVisibility(isShow ? VISIBLE : GONE);
+        if (isShow) {
+            tvNplReply.setText("");
+            tvNplReply.setVisibility(View.VISIBLE);
+            apkDownloadLayout.setVisibility(GONE);
+            weatherListLayout.setVisibility(GONE);
+            loadingView.play();
+        } else {
+            loadingView.stop();
+        }
     }
 
     private void inflateLayout(Context context) {
@@ -90,6 +106,7 @@ public class AIInteractionLayout extends LinearLayout {
         tvNplReply = findViewById(R.id.tv_npl);
         apkDownloadLayout = findViewById(R.id.fl_download_layout);
         weatherListLayout = findViewById(R.id.cl_weather_list);
+        loadingView = findViewById(R.id.loadingView);
     }
 
     private void setupBlurView() {
