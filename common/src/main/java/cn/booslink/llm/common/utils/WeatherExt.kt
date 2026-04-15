@@ -7,8 +7,9 @@ import cn.booslink.llm.common.model.enums.EmoteState
 
 @DrawableRes
 fun Weather.getBigIcon(): Int {
-    return when (weather) {
-        "晴", "晴转阴" -> R.drawable.ic_weather_big_sunny
+    val processedWeather = preprocessWeather()
+    return when (processedWeather) {
+        "晴" -> R.drawable.ic_weather_big_sunny
         "雾" -> R.drawable.ic_weather_big_fog
         "雾霾" -> R.drawable.ic_weather_big_smog
         "阴" -> R.drawable.ic_weather_big_overcast
@@ -41,9 +42,9 @@ fun Weather.getBigIcon(): Int {
 
 @DrawableRes
 fun Weather.getSmallIcon(): Int {
-    // "多云转晴"
-    return when (weather) {
-        "晴", "晴转阴" -> R.drawable.ic_weather_sunny
+    val processedWeather = preprocessWeather()
+    return when (processedWeather) {
+        "晴" -> R.drawable.ic_weather_sunny
         "雾" -> R.drawable.ic_weather_fog
         "雾霾" -> R.drawable.ic_weather_smog
         "阴" -> R.drawable.ic_weather_overcast
@@ -75,8 +76,9 @@ fun Weather.getSmallIcon(): Int {
 }
 
 fun Weather.getEmoteState(): EmoteState {
-    return when (weather) {
-        "晴", "晴转阴" -> EmoteState.WEATHER_SUNNY
+    val processedWeather = preprocessWeather()
+    return when (processedWeather) {
+        "晴" -> EmoteState.WEATHER_SUNNY
         "雾", "雾霾" -> EmoteState.WEATHER_FOG
         "阴" -> EmoteState.WEATHER_OVERCAST
         "多云" -> EmoteState.WEATHER_CLOUDY
@@ -86,4 +88,14 @@ fun Weather.getEmoteState(): EmoteState {
         "沙尘暴", "强沙尘暴", "浮尘", "扬沙" -> EmoteState.WEATHER_SANDSTORM
         else -> EmoteState.IDLE
     }
+}
+
+fun Weather.preprocessWeather(): String {
+    val weatherText = weather
+    // 如果包含"转"字，说明是转换天气，取第一个主要天气状态
+    if (weatherText.contains("转")) {
+        val weatherParts = weatherText.split("转")
+        return weatherParts.firstOrNull()?.trim() ?: weatherText
+    }
+    return weatherText
 }

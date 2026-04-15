@@ -119,6 +119,7 @@ public class AIRootLayout extends ConstraintLayout {
                 break;
             case WAKE_UP:
                 llInteraction.updateTipTitle(getContext().getString(R.string.speech_voice_listening));
+                llInteraction.showWakeup();
                 break;
             case QUERYING:
                 llInteraction.updateTipTitle(getContext().getString(R.string.speech_voice_querying));

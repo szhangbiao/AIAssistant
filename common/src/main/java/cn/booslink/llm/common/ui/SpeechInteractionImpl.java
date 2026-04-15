@@ -220,6 +220,16 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
         mApkDownloadLiveData.postValue(download);
     }
 
+    @Override
+    public void UIWakeup() {
+
+    }
+
+    @Override
+    public void UISleep() {
+
+    }
+
     /**
      * 检查View是否已添加到WindowManager
      */

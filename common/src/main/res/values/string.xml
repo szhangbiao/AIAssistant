@@ -7,4 +7,9 @@
     <string name="speech_voice_sorry">很抱歉</string>
     <string name="downloading">正在为您下载…</string>
     <string name="download_done">恭喜您下载完成！</string>
+    <string name="speech_wakeup_title">您可以这样问我：</string>
+    <string name="speech_wakeup_recommend1">“今天天气怎么样”</string>
+    <string name="speech_wakeup_recommend2">“红烧鲤鱼怎么做”</string>
+    <string name="speech_wakeup_recommend3">“太阳到地球多远”</string>
+    <string name="speech_wakeup_recommend4">“今天天气好冷，穿什么衣服合适”</string>
 </resources>

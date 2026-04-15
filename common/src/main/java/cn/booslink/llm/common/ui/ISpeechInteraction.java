@@ -27,4 +27,8 @@ public interface ISpeechInteraction {
     void semanticAnswer(UIResponse response);
 
     void downloadUpdate(ApkDownload download);
+
+    void UIWakeup();
+
+    void UISleep();
 }

@@ -62,6 +62,17 @@
             android:background="@drawable/bg_content_transparent"
             app:layout_constraintTop_toTopOf="parent">
 
+            <TextView
+                android:id="@+id/tv_npl"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="20dp"
+                android:lineSpacingExtra="2dp"
+                android:textColor="@android:color/white"
+                android:textSize="24sp"
+                tools:text="上午好！现在是北京时间2024年7月23日11:46。您所在的地区：苏州市今日小雨转多云，气温10°C，注意天冷加衣哦～"
+                tools:visibility="gone" />
+
             <cn.booslink.llm.common.widget.LoadingView
                 android:id="@+id/loadingView"
                 android:layout_width="wrap_content"
@@ -80,21 +91,16 @@
                 android:layout_height="110dp"
                 android:visibility="gone" />
 
-            <TextView
-                android:id="@+id/tv_npl"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="20dp"
-                android:lineSpacingExtra="2dp"
-                android:textColor="@android:color/white"
-                android:textSize="24sp"
-                tools:text="上午好！现在是北京时间2024年7月23日11:46。您所在的地区：苏州市今日小雨转多云，气温10°C，注意天冷加衣哦～"
-                tools:visibility="gone" />
-
             <cn.booslink.llm.common.widget.WeatherListLayout
                 android:id="@+id/cl_weather_list"
                 android:layout_width="match_parent"
                 android:layout_height="385dp"
+                android:visibility="gone" />
+
+            <cn.booslink.llm.common.widget.WakeUpLayout
+                android:id="@+id/ll_wakeup"
+                android:layout_width="match_parent"
+                android:layout_height="278dp"
                 android:visibility="gone" />
 
         </eightbitlab.com.blurview.BlurView>
