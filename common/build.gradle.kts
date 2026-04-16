@@ -42,6 +42,8 @@ dependencies {
     implementation(libs.hilt)
     annotationProcessor(libs.hilt.compiler)
 
+    compileOnly(libs.iflytek.sdk)
+
     implementation(libs.bundles.android.widget)
 
     implementation(libs.bundles.jetpack)

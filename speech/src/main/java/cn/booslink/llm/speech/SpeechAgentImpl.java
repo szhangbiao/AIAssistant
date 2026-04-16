@@ -1,7 +1,6 @@
 package cn.booslink.llm.speech;
 
 import android.content.Context;
-import android.text.TextUtils;
 
 import com.google.gson.Gson;
 import com.iflytek.aiui.AIUIAgent;
@@ -16,6 +15,7 @@ import javax.inject.Inject;
 import cn.booslink.llm.common.model.Device;
 import cn.booslink.llm.common.model.enums.AIUIState;
 import cn.booslink.llm.common.model.enums.AIUITag;
+import cn.booslink.llm.common.speech.ISpeechAgent;
 import cn.booslink.llm.common.utils.RxUtil;
 import cn.booslink.llm.processor.IEventProcessor;
 import cn.booslink.llm.speech.config.AIUIConfig;

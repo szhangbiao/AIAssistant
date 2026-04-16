@@ -26,6 +26,8 @@ import javax.inject.Inject;
 
 import cn.booslink.llm.R;
 import cn.booslink.llm.common.model.PkgInfo;
+import cn.booslink.llm.common.model.VoiceQuery;
+import cn.booslink.llm.common.model.enums.QueryState;
 import cn.booslink.llm.common.ui.ISpeechInteraction;
 import cn.booslink.llm.common.utils.ContextUtils;
 import cn.booslink.llm.common.utils.FileUtils;
@@ -213,6 +215,7 @@ public class MainActivity extends AppCompatActivity {
         Button btnShow = findViewById(R.id.btn_show);
         btnShow.setOnClickListener(v -> {
             mSpeechInteraction.UIWakeup();
+            mSpeechInteraction.updateQuery(new VoiceQuery("bobo在听，有什么可以帮您~", QueryState.WAKE_UP));
         });
         Button btnHide = findViewById(R.id.btn_hide);
         btnHide.setOnClickListener(v -> {

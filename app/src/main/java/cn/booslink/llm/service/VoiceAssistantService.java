@@ -19,7 +19,7 @@ import javax.inject.Inject;
 import cn.booslink.llm.common.ui.ISpeechInteraction;
 import cn.booslink.llm.common.utils.ContextUtils;
 import cn.booslink.llm.common.utils.ScreenAdapter;
-import cn.booslink.llm.speech.ISpeechAgent;
+import cn.booslink.llm.common.speech.ISpeechAgent;
 import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint

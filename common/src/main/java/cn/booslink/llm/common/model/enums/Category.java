@@ -1,7 +1,7 @@
 package cn.booslink.llm.common.model.enums;
 
 public enum Category {
-    UNKNOWN(""), WEATHER("IFLYTEK.weather");
+    UNKNOWN(""), WEATHER("IFLYTEK.weather"), CONTROL("AIUI.control");
 
     private final String category;
 

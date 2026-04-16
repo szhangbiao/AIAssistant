@@ -23,6 +23,7 @@ import cn.booslink.llm.common.model.enums.CBMSub;
 import cn.booslink.llm.common.model.enums.QueryState;
 import cn.booslink.llm.common.ui.ISpeechInteraction;
 import cn.booslink.llm.common.utils.RxUtil;
+import cn.booslink.llm.processor.process.IIntentProcess;
 import io.reactivex.rxjava3.core.BackpressureStrategy;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.FlowableEmitter;
@@ -37,6 +38,7 @@ public class EventProcessorImpl implements IEventProcessor {
     private final Handler mHandler;
     private final StringBuilder mNplBuilder;
     private final ISpeechInteraction mSpeechInteraction;
+    private final IIntentProcess mIntentProcess;
 
     private Disposable mEventDisposable;
     private FlowableEmitter<AIUIEvent> mEventEmitter;
@@ -44,8 +46,9 @@ public class EventProcessorImpl implements IEventProcessor {
     private volatile boolean isDestroyed = false;
 
     @Inject
-    public EventProcessorImpl(Gson gson, ISpeechInteraction speechInteraction) {
+    public EventProcessorImpl(Gson gson, ISpeechInteraction speechInteraction, IIntentProcess intentProcess) {
         this.mGson = gson;
+        this.mIntentProcess = intentProcess;
         this.mNplBuilder = new StringBuilder();
         this.mSpeechInteraction = speechInteraction;
         this.mHandler = new Handler(Looper.getMainLooper());
@@ -73,6 +76,7 @@ public class EventProcessorImpl implements IEventProcessor {
                 Timber.tag(TAG).d("prepare sleep");
                 break;
             case AIUIConstant.EVENT_SLEEP: // 休眠事件
+                int sleepType = event.arg1; // 0 （交互超时,自动休眠）, 1 （发送CMD_RESET_WAKEUP手动唤醒）
                 Timber.tag(TAG).d("sleep");
                 mHandler.post(mSpeechInteraction::UISleep);
                 break;
@@ -157,6 +161,7 @@ public class EventProcessorImpl implements IEventProcessor {
         if (CBMSub.CBM_SEMANTIC == eventData.getSub() && eventData.getCbmSemantic() != null) {
             CBMSemantic cbmSemantic = eventData.getCbmSemantic().getText();
             if (cbmSemantic == null) return eventData;
+            Timber.tag(TAG).d("processSemanticData, category = %s", cbmSemantic.getCategory());
             try {
                 UIResponse response = cbmSemantic.getResponse(mGson);
                 eventData.setResponse(response);
@@ -200,9 +205,14 @@ public class EventProcessorImpl implements IEventProcessor {
             mSpeechInteraction.updateQuery(new VoiceQuery(data.getCbmTidy().getText().getQuery(), QueryState.QUERYING));
         } else if (sub == CBMSub.CBM_SEMANTIC) {
             if (data.getResponse() == null || data.getTag() == AIUITag.LAUNCH) return;
-            Timber.tag(TAG).d("cbm semantic content= %s", mGson.toJson(data.getResponse()));
+            //Timber.tag(TAG).d("cbm semantic content= %s", mGson.toJson(data.getResponse()));
             mSpeechInteraction.updateQuery(new VoiceQuery(null, QueryState.DONE));
             mSpeechInteraction.semanticAnswer(data.getResponse());
+            if (data.getCbmSemantic() == null) return;
+            CBMSemantic cbmSemantic = data.getCbmSemantic().getText();
+            if (cbmSemantic != null && cbmSemantic.getSemantic() != null) {
+                mIntentProcess.processIntent(data.getResponse().getCategory(), cbmSemantic.getSemantic());
+            }
         } else if (sub == CBMSub.CBM_TOOL_PK) {
             if (data.getCbmToolPK() == null || data.getCbmToolPK().getText() == null) return;
             Timber.tag(TAG).d("cbm tool pk = %s", data.getCbmToolPK().getText().getPkType());

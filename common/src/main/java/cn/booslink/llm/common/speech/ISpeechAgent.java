@@ -1,4 +1,4 @@
-package cn.booslink.llm.speech;
+package cn.booslink.llm.common.speech;
 
 import com.iflytek.aiui.AIUIMessage;
 
