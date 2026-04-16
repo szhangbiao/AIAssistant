@@ -52,6 +52,6 @@ class Semantic(
     val template: String?
 )
 
-data class Slot(val name: String?, val normValue: String?, val value: String?)
+data class Slot(val begin: Int?, val end: Int?, val name: String?, val normValue: String?, val value: String?)
 
 

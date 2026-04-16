@@ -202,9 +202,11 @@ public class EventProcessorImpl implements IEventProcessor {
                     mSpeechInteraction.updateQuery(new VoiceQuery(null, QueryState.DONE));
                     break;
                 case 2:
-                    Timber.tag(TAG).d("nlp, content = %s", mNplBuilder.toString());
-                    mSpeechInteraction.nlpAnswer(mNplBuilder.toString());
-                    if (data.getTag() == AIUITag.LAUNCH) return;
+                    String nplContent = mNplBuilder.toString();
+                    Timber.tag(TAG).d("nlp, content = %s", nplContent);
+                    mSpeechInteraction.nlpAnswer(nplContent);
+                    mNplBuilder.delete(0, mNplBuilder.length());
+                    if (data.getTag() == AIUITag.LAUNCH || TextUtils.isEmpty(nplContent)) return;
                     mSpeechInteraction.updateQuery(new VoiceQuery(null, QueryState.DONE));
                     break;
             }

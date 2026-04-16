@@ -8,6 +8,8 @@ import cn.booslink.llm.processor.process.IIntentProcess;
 import cn.booslink.llm.processor.process.IntentProcessProxy;
 import cn.booslink.llm.processor.process.control.ControlProcessImpl;
 import cn.booslink.llm.processor.process.control.IControlProcess;
+import cn.booslink.llm.processor.process.volume.IVolumeProcess;
+import cn.booslink.llm.processor.process.volume.VolumeProcessImpl;
 import dagger.Binds;
 import dagger.Module;
 import dagger.hilt.InstallIn;
@@ -26,4 +28,7 @@ public interface ProcessorModule {
 
     @Binds
     IControlProcess bindControlProcess(ControlProcessImpl controlProcessImpl);
+
+    @Binds
+    IVolumeProcess bindVolumeProcess(VolumeProcessImpl volumeProcessImpl);
 }
