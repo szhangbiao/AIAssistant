@@ -21,6 +21,7 @@ import cn.booslink.llm.common.model.VoiceQuery;
 import cn.booslink.llm.common.model.enums.AIUITag;
 import cn.booslink.llm.common.model.enums.CBMSub;
 import cn.booslink.llm.common.model.enums.QueryState;
+import cn.booslink.llm.common.storage.ISpeechStorage;
 import cn.booslink.llm.common.ui.ISpeechInteraction;
 import cn.booslink.llm.common.utils.RxUtil;
 import cn.booslink.llm.processor.process.IIntentProcess;
@@ -37,8 +38,9 @@ public class EventProcessorImpl implements IEventProcessor {
     private final Gson mGson;
     private final Handler mHandler;
     private final StringBuilder mNplBuilder;
-    private final ISpeechInteraction mSpeechInteraction;
+    private final ISpeechStorage mSpeechStorage;
     private final IIntentProcess mIntentProcess;
+    private final ISpeechInteraction mSpeechInteraction;
 
     private Disposable mEventDisposable;
     private FlowableEmitter<AIUIEvent> mEventEmitter;
@@ -46,9 +48,10 @@ public class EventProcessorImpl implements IEventProcessor {
     private volatile boolean isDestroyed = false;
 
     @Inject
-    public EventProcessorImpl(Gson gson, ISpeechInteraction speechInteraction, IIntentProcess intentProcess) {
+    public EventProcessorImpl(Gson gson, IIntentProcess intentProcess, ISpeechStorage speechStorage, ISpeechInteraction speechInteraction) {
         this.mGson = gson;
         this.mIntentProcess = intentProcess;
+        this.mSpeechStorage = speechStorage;
         this.mNplBuilder = new StringBuilder();
         this.mSpeechInteraction = speechInteraction;
         this.mHandler = new Handler(Looper.getMainLooper());
@@ -66,8 +69,8 @@ public class EventProcessorImpl implements IEventProcessor {
                 break;
             case AIUIConstant.EVENT_WAKEUP: // 唤醒事件
                 Timber.tag(TAG).d("wakeup");
-                mHandler.post(mSpeechInteraction::UIWakeup);
                 int type = event.arg1; // 0 （语音唤醒）, 1 （发送CMD_WAKEUP手动唤醒）
+                mHandler.post(mSpeechInteraction::UIWakeup);
                 if (type == 0) {
                     mSpeechInteraction.updateQuery(new VoiceQuery("bobo在听，有什么可以帮您~", QueryState.WAKE_UP));
                 }
@@ -78,7 +81,12 @@ public class EventProcessorImpl implements IEventProcessor {
             case AIUIConstant.EVENT_SLEEP: // 休眠事件
                 int sleepType = event.arg1; // 0 （交互超时,自动休眠）, 1 （发送CMD_RESET_WAKEUP手动唤醒）
                 Timber.tag(TAG).d("sleep");
-                mHandler.post(mSpeechInteraction::UISleep);
+                boolean showLeaveConfirm = mSpeechStorage.shouldShowLeaveConfirm(sleepType);
+                if (showLeaveConfirm) {
+                    mSpeechInteraction.semanticAnswer(UIResponse.Companion.withSleep(sleepType));
+                } else {
+                    mHandler.post(mSpeechInteraction::UISleep);
+                }
                 break;
             case AIUIConstant.EVENT_VAD: // VAD事件
                 int vadState = event.arg1;
@@ -147,6 +155,7 @@ public class EventProcessorImpl implements IEventProcessor {
         try {
             byte[] bytes = event.data.getByteArray(cntId);
             String cntJsonRaw = new String(bytes, StandardCharsets.UTF_8);
+            Timber.tag(TAG).d("parseEventData, cnt json = %s", cntJsonRaw);
             EventData data = mGson.fromJson(cntJsonRaw, EventData.class);
             data.setTag(AIUITag.fromTag(tag));
             data.setSub(sub);

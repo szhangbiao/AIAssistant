@@ -63,11 +63,13 @@ data class PKSource(val domain: String?)
 
 data class UIResponse(
     val category: Category,
-    val weathers: List<Weather>?
+    val weathers: List<Weather>? = null,
+    val sleepType: Int? = -1
 ) {
     companion object {
-        fun empty() = UIResponse(Category.UNKNOWN, null)
-        fun withCategory(category: Category,) = UIResponse(category, null)
+        fun empty() = UIResponse(Category.UNKNOWN)
+        fun withCategory(category: Category) = UIResponse(category)
+        fun withSleep(sleepType: Int) = UIResponse(Category.SLEEP, null, sleepType)
         fun weatherData(category: Category, weathers: List<Weather>?) = UIResponse(category, weathers)
     }
 

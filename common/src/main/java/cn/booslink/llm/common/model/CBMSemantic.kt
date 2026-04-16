@@ -8,7 +8,7 @@ import com.google.gson.reflect.TypeToken
 
 data class CBMSemantic(
     val answer: Answer?,
-    val category: Category?,
+    val category: String?,
     val data: Map<String, Any>?,
     @SerializedName("dialog_stat")
     val dialogStat: String?,
@@ -29,13 +29,13 @@ data class CBMSemantic(
         val result = data?.get("result")
         return result?.let {
             val resultJson = gson.toJson(it)
-            when (category) {
+            when (val categoryEnum: Category = Category.fromString(category)) {
                 Category.WEATHER -> {
                     val weatherList = gson.fromJson<List<Weather>>(resultJson, object : TypeToken<List<Weather>>() {}.type)
-                    UIResponse.weatherData(category, weatherList)
+                    UIResponse.weatherData(categoryEnum, weatherList)
                 }
 
-                Category.CONTROL -> UIResponse.withCategory(category)
+                Category.CONTROL -> UIResponse.withCategory(categoryEnum)
                 else -> UIResponse.empty()
             }
         } ?: UIResponse.empty()

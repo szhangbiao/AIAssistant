@@ -10,7 +10,6 @@ import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.animation.AccelerateInterpolator;
-import android.view.animation.BounceInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.LinearInterpolator;
 import android.widget.FrameLayout;
@@ -138,6 +137,8 @@ public class AIRootLayout extends ConstraintLayout {
     }
 
     private void changeUIWithVoiceInput(VoiceQuery query) {
+        flLeave.setVisibility(View.GONE);
+        llInteraction.setVisibility(View.VISIBLE);
         String voiceInput = query.getQuery();
         if (!TextUtils.isEmpty(voiceInput)) {
             llInteraction.voiceInput(voiceInput);
@@ -172,10 +173,14 @@ public class AIRootLayout extends ConstraintLayout {
     }
 
     private void changeUIWithNplResponse(String nplText) {
+        flLeave.setVisibility(View.GONE);
+        llInteraction.setVisibility(View.VISIBLE);
         llInteraction.nplReply(nplText);
     }
 
     private void changeUIWithApkDownload(ApkDownload apkDownload) {
+        flLeave.setVisibility(View.GONE);
+        llInteraction.setVisibility(View.VISIBLE);
         llInteraction.showDownloadProcess(apkDownload);
     }
 
@@ -184,8 +189,15 @@ public class AIRootLayout extends ConstraintLayout {
             case WEATHER:
                 if (response.getWeathers() == null) return;
                 WeatherUI weatherUI = WeatherUI.Companion.fromWeatherList(response.getWeathers());
+                flLeave.setVisibility(View.GONE);
+                llInteraction.setVisibility(View.VISIBLE);
                 llInteraction.showWeatherList(weatherUI);
                 break;
+            case SLEEP:
+                int sleepType = response.getSleepType() != null ? response.getSleepType() : 0;
+                llInteraction.setVisibility(View.GONE);
+                flLeave.setVisibility(View.VISIBLE);
+                flLeave.updateByType(sleepType);
             default:
                 break;
         }

@@ -17,7 +17,6 @@ import androidx.lifecycle.MutableLiveData;
 
 import javax.inject.Inject;
 
-import cn.booslink.llm.common.R;
 import cn.booslink.llm.common.model.ApkDownload;
 import cn.booslink.llm.common.model.UIResponse;
 import cn.booslink.llm.common.model.VoiceQuery;
@@ -77,13 +76,15 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
             } else {
                 params.type = WindowManager.LayoutParams.TYPE_TOAST;
             }
-            // 允许触摸事件，但不获取焦点，不影响下方应用操作
-            params.flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
+            // 允许触摸事件传递到下方，同时监听外部触摸事件
+            params.flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH;
             // 如果需要完全透明且不拦截触摸，可以使用下面的配置
             // params.flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
             params.gravity = Gravity.TOP | Gravity.END;
-            params.height = WindowManager.LayoutParams.MATCH_PARENT;
-            params.width = WindowManager.LayoutParams.MATCH_PARENT;
+            // 使用实际内容区域的大小，而不是全屏，这样不会阻挡下方的触摸事件
+            int width = ContextUtils.dp2px(mContext, 554);
+            params.height = WindowManager.LayoutParams.WRAP_CONTENT;
+            params.width = width;
             params.format = PixelFormat.RGBA_8888;
             setupRootViewParams();
             wm.addView(mParentView, params);
@@ -123,14 +124,16 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
             WindowManager wm = (WindowManager) activity.getSystemService(WINDOW_SERVICE);
             WindowManager.LayoutParams params = new WindowManager.LayoutParams();
             params.type = WindowManager.LayoutParams.TYPE_APPLICATION_SUB_PANEL;
-            // 允许触摸事件，但不获取焦点，不影响下方应用操作
-            // params.flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
+            // 允许触摸事件传递到下方，同时监听外部触摸事件
+            params.flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH;
             // 如果需要完全透明且不拦截触摸，可以使用下面的配置
-            params.flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
+            // params.flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
             params.token = activity.getWindow().getDecorView().getWindowToken();
             params.gravity = Gravity.TOP | Gravity.END;
-            params.height = WindowManager.LayoutParams.MATCH_PARENT;
-            params.width = WindowManager.LayoutParams.MATCH_PARENT;
+            // 使用实际内容区域的大小，而不是全屏，这样不会阻挡下方的触摸事件
+            int width = ContextUtils.dp2px(mContext, 554);
+            params.height = WindowManager.LayoutParams.WRAP_CONTENT;
+            params.width = width;
             params.format = PixelFormat.RGBA_8888;
             setupRootViewParams();
             wm.addView(mParentView, params);
@@ -216,6 +219,9 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
             if (response.getWeathers() == null || response.getWeathers().isEmpty()) return;
             Weather weather = response.getWeathers().get(0);
             mEmoteStateLiveData.postValue(WeatherExtKt.getEmoteState(weather));
+        } else if (response.getCategory() == Category.SLEEP) {
+            int sleepType = response.getSleepType() != null ? response.getSleepType() : 0;
+            mEmoteStateLiveData.postValue(sleepType == 0 ? EmoteState.CRYING : EmoteState.NORMAL);
         }
     }
 
@@ -269,7 +275,7 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
         childParams.gravity = Gravity.TOP | Gravity.END;
         childParams.topMargin = ContextUtils.dp2px(mContext, 32);
         AIRootLayout rootLayout = mRootLayoutRef.get();
-        mParentView.setBackgroundResource(R.drawable.bg_full_screen);
+        // mParentView.setBackgroundResource(R.drawable.bg_full_screen);
         mParentView.setVisibility(View.GONE);
         if (rootLayout != null) {
             bindData(rootLayout);

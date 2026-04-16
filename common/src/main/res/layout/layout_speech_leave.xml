@@ -12,12 +12,12 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
         android:layout_marginTop="12dp"
-        android:layout_marginEnd="156dp"
+        android:layout_marginEnd="150dp"
         android:includeFontPadding="false"
         android:lineSpacingExtra="4dp"
+        android:text="@string/speech_sleep_passive"
         android:textColor="@android:color/white"
-        android:textSize="28sp"
-        android:text="您不需要我了嘛？我还想再和您聊会天呢～" />
+        android:textSize="28sp" />
 
     <Button
         android:id="@+id/btn_negative"
@@ -27,9 +27,11 @@
         android:layout_marginStart="48dp"
         android:layout_marginBottom="24dp"
         android:background="@drawable/bg_button_negative"
+        android:clickable="true"
+        android:focusable="true"
+        android:text="@string/passive_button_negative"
         android:textColor="#1D2543"
-        android:textSize="26sp"
-        android:text="不需要" />
+        android:textSize="26sp" />
 
     <Button
         android:id="@+id/btn_positive"
@@ -39,7 +41,9 @@
         android:layout_marginEnd="48dp"
         android:layout_marginBottom="24dp"
         android:background="@drawable/bg_button_positive"
+        android:clickable="true"
+        android:focusable="true"
+        android:text="@string/passive_button_positive"
         android:textColor="@android:color/white"
-        android:textSize="26sp"
-        android:text="需要" />
+        android:textSize="26sp" />
 </merge>

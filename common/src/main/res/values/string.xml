@@ -12,4 +12,10 @@
     <string name="speech_wakeup_recommend2">“红烧鲤鱼怎么做”</string>
     <string name="speech_wakeup_recommend3">“太阳到地球多远”</string>
     <string name="speech_wakeup_recommend4">“今天天气好冷，穿什么衣服合适”</string>
+    <string name="speech_sleep_active">再次使用时，试着叫Bobo\n来唤醒我！</string>
+    <string name="speech_sleep_passive">您不需要我了嘛？我还想再\n和您聊会天呢～</string>
+    <string name="active_button_positive">我来试试</string>
+    <string name="active_button_negative">不再提醒</string>
+    <string name="passive_button_positive">需要</string>
+    <string name="passive_button_negative">不需要</string>
 </resources>

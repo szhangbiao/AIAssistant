@@ -4,6 +4,8 @@ import javax.inject.Singleton;
 
 import cn.booslink.llm.common.image.ImageLoader;
 import cn.booslink.llm.common.image.ImageLoaderImpl;
+import cn.booslink.llm.common.storage.ISpeechStorage;
+import cn.booslink.llm.common.storage.SpeechStorageImpl;
 import cn.booslink.llm.common.ui.ISpeechInteraction;
 import cn.booslink.llm.common.ui.SpeechInteractionImpl;
 import dagger.Binds;
@@ -21,4 +23,8 @@ public interface CommonBinds {
     @Binds
     @Singleton
     ImageLoader bindImageLoader(ImageLoaderImpl imageLoaderImpl);
+
+    @Binds
+    @Singleton
+    ISpeechStorage bindSpeechStorage(SpeechStorageImpl speechStorageImpl);
 }
