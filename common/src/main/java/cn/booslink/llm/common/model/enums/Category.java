@@ -2,7 +2,11 @@ package cn.booslink.llm.common.model.enums;
 
 public enum Category {
     UNKNOWN(""),
+    APP("IFLYTEK.app"),
     WEATHER("IFLYTEK.weather"),
+    MUSIC("IFLYTEK.musicX"),
+    VIDEO("IFLYTEK.video@2"),
+    DRAMA("IFLYTEK.drama"),
     CONTROL("AIUI.control"),
     SLEEP("Custom.sleep"); // 自定义
 

@@ -10,7 +10,7 @@
     "aiui_ver": "3"
   },
   "interact": {
-    "interact_timeout": "10000",
+    "interact_timeout": "30000",
     "result_timeout": "5000"
   },
   "vad": {

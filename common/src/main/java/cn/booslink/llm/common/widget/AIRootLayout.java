@@ -169,7 +169,7 @@ public class AIRootLayout extends ConstraintLayout {
             default:
                 break;
         }
-        processLoadingState(mCurrentQueryState == QueryState.QUERYING);
+        processLoadingState(mCurrentQueryState);
     }
 
     private void changeUIWithNplResponse(String nplText) {
@@ -299,11 +299,13 @@ public class AIRootLayout extends ConstraintLayout {
         }
     }
 
-    private void processLoadingState(boolean isLoading) {
-        llInteraction.showLoading(isLoading);
+    private void processLoadingState(QueryState queryState) {
+        boolean isQuerying = queryState == QueryState.QUERYING;
+        boolean shouldShowLoading = queryState == QueryState.QUERYING || queryState == QueryState.IDLE;
+        llInteraction.showLoading(shouldShowLoading);
         if (pagLoading != null) {
-            pagLoading.setVisibility(isLoading ? View.VISIBLE : View.GONE);
-            if (isLoading) {
+            pagLoading.setVisibility(isQuerying ? View.VISIBLE : View.GONE);
+            if (isQuerying) {
                 pagLoading.setPath("assets://pag_loading.pag");
                 pagLoading.setRepeatCount(-1);
                 pagLoading.play();

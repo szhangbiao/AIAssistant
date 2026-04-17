@@ -15,7 +15,6 @@ public class ApkInfo implements Parcelable {
     private int versionCode;
     private boolean isInstalled;
 
-
     public String getName() {
         return name;
     }

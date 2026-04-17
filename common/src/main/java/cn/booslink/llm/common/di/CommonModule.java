@@ -8,6 +8,7 @@ import org.joda.time.DateTime;
 
 import java.util.concurrent.TimeUnit;
 
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 import cn.booslink.llm.common.model.CBMSemantic;
@@ -17,6 +18,7 @@ import cn.booslink.llm.common.model.Device;
 import cn.booslink.llm.common.model.enums.AIUIIntent;
 import cn.booslink.llm.common.model.enums.CBMSub;
 import cn.booslink.llm.common.model.enums.Category;
+import cn.booslink.llm.common.network.ApiService;
 import cn.booslink.llm.common.network.adapter.AIUIIntentAdapter;
 import cn.booslink.llm.common.network.adapter.CBMSemanticAdapter;
 import cn.booslink.llm.common.network.adapter.CBMSubAdapter;
@@ -24,6 +26,7 @@ import cn.booslink.llm.common.network.adapter.CBMTidyAdapter;
 import cn.booslink.llm.common.network.adapter.CBMToolPKAdapter;
 import cn.booslink.llm.common.network.adapter.CategoryAdapter;
 import cn.booslink.llm.common.network.adapter.DateTimeAdapter;
+import cn.booslink.llm.common.utils.Constants;
 import cn.booslink.llm.common.utils.GsonProvider;
 import cn.booslink.llm.common.utils.HttpEngine;
 import dagger.Module;
@@ -34,6 +37,9 @@ import dagger.hilt.components.SingletonComponent;
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
+import retrofit2.Retrofit;
+import retrofit2.adapter.rxjava3.RxJava3CallAdapterFactory;
+import retrofit2.converter.gson.GsonConverterFactory;
 import timber.log.Timber;
 
 @Module
@@ -64,7 +70,7 @@ public class CommonModule {
 
     @Singleton
     @Provides
-    public OkHttpClient provideApiOkHttpClient() {
+    public OkHttpClient provideOkHttpClient() {
         final OkHttpClient.Builder builder = HttpEngine.createClientBuilder(false, 10 * 1000, 10 * 1000);
         HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor(message -> Timber.tag("OkHttp").d(message));
         interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
@@ -72,5 +78,22 @@ public class CommonModule {
         builder.retryOnConnectionFailure(true);
         builder.connectionPool(new ConnectionPool(5, 2, TimeUnit.MINUTES));
         return builder.build();
+    }
+
+    @Singleton
+    @Provides
+    public Retrofit provideRetrofit(OkHttpClient okHttpClient, RxJava3CallAdapterFactory rxJava3CallAdapterFactory, GsonConverterFactory gsonConverterFactory) {
+        return new Retrofit.Builder()
+                .baseUrl(Constants.BASE_URL)
+                .client(okHttpClient)
+                .addCallAdapterFactory(rxJava3CallAdapterFactory)
+                .addConverterFactory(gsonConverterFactory)
+                .build();
+    }
+
+    @Singleton
+    @Provides
+    public ApiService provideApiServices(Retrofit retrofit) {
+        return retrofit.create(ApiService.class);
     }
 }

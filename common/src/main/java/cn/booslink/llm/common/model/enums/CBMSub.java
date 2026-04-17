@@ -13,7 +13,17 @@ package cn.booslink.llm.common.model.enums;
  * tts	                合成结果
  */
 public enum CBMSub {
-    UNKNOWN(""), EVENT("event"), IAT("iat"), CBM_TIDY("cbm_tidy"), CBM_SEMANTIC("cbm_semantic"), CBM_TOOL_PK("cbm_tool_pk"), CBM_KNOWLEDGE("cbm_knowledge"), NLP("nlp"), TPP("tpp"), TTS("tts");
+    UNKNOWN(""),
+    EVENT("event"),
+    IAT("iat"),
+    CBM_TIDY("cbm_tidy"),
+    CBM_SEMANTIC("cbm_semantic"),
+    CBM_TOOL_PK("cbm_tool_pk"),
+    CBM_KNOWLEDGE("cbm_knowledge"),
+    CBM_RETRIEVAL_CLASSIFY("cbm_retrieval_classify"),
+    NLP("nlp"),
+    TPP("tpp"),
+    TTS("tts");
 
     private final String sub;
 

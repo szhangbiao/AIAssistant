@@ -2,8 +2,6 @@ package cn.booslink.llm.common.model;
 
 import android.text.TextUtils;
 
-import androidx.annotation.NonNull;
-
 import com.google.gson.annotations.SerializedName;
 
 public class PkgInfo {
@@ -14,15 +12,14 @@ public class PkgInfo {
     protected String name;
     @SerializedName("pkg_name")
     protected String pkgName;
-    @SerializedName("img")
+    @SerializedName("img_url")
     protected String apkIcon;
     @SerializedName("info")
     protected String apkInfo;
-    @SerializedName("download_url")
+    @SerializedName("apk_url")
     protected String downloadUrl;
     @SerializedName("apk_md5")
     protected String apkMd5;
-    protected transient String uniqueId;
     @SerializedName("version_name")
     private String versionName;
     @SerializedName("version_code")
@@ -30,10 +27,6 @@ public class PkgInfo {
 
     public PkgInfo() {
 
-    }
-
-    public PkgInfo(String uniqueId) {
-        this.uniqueId = uniqueId;
     }
 
     public boolean isEmpty() {
@@ -117,30 +110,5 @@ public class PkgInfo {
 
     public void setVersionName(String versionName) {
         this.versionName = versionName;
-    }
-
-    public String getUniqueId() {
-        return uniqueId;
-    }
-
-    public void setUniqueId(String uniqueId) {
-        this.uniqueId = uniqueId;
-    }
-
-    public boolean areItemsTheSame(@NonNull PkgInfo newItem) {
-        if (!TextUtils.isEmpty(getUniqueId()) && !TextUtils.isEmpty(newItem.getUniqueId())) {
-            return this.getUniqueId().equals(newItem.getUniqueId());
-        }
-        if (this.apkId == -1 || newItem.apkId == -1) return false;
-        return this.apkId == newItem.apkId;
-    }
-
-    public boolean areContentsTheSame(@NonNull PkgInfo newItem) {
-        if (this.apkId == -1 || newItem.apkId == -1) return false;
-        return this.apkId == newItem.apkId &&
-                this.getApkIcon().equals(newItem.getApkIcon()) &&
-                this.getName().equals(newItem.getName()) &&
-                this.getApkInfo().equals(newItem.getApkInfo()) &&
-                this.getPkgName().equals(newItem.getPkgName());
     }
 }

@@ -45,6 +45,7 @@ public class AIInteractionLayout extends LinearLayout {
         inflateLayout(context);
         initWidgets();
         setupBlurView();
+        showLoading(true);
     }
 
     public void voiceInput(String voiceTxt) {
@@ -87,17 +88,14 @@ public class AIInteractionLayout extends LinearLayout {
     }
 
     public void showLoading(boolean isShow) {
-        loadingView.setVisibility(isShow ? VISIBLE : GONE);
         if (isShow) {
             tvNplReply.setText("");
             tvNplReply.setVisibility(View.VISIBLE);
             apkDownloadLayout.setVisibility(GONE);
             weatherListLayout.setVisibility(GONE);
             llWakeup.setVisibility(GONE);
-            loadingView.play();
-        } else {
-            loadingView.stop();
         }
+        loadingView.setVisibility(isShow ? VISIBLE : GONE);
     }
 
     public void showWakeup() {

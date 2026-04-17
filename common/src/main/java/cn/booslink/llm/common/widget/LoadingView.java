@@ -110,23 +110,23 @@ public class LoadingView extends View {
     private void createDotAnimations() {
         AnimatorSet mainAnimator = new AnimatorSet();
         List<AnimatorSet> dotAnimators = new ArrayList<>();
-        
+
         // Create animation for each dot
         for (int i = 0; i < DOT_COUNT; i++) {
             AnimatorSet dotAnimator = createDotAnimation(i);
             dotAnimators.add(dotAnimator);
         }
-        
+
         // Play animations with overlap for wave effect
         // Each dot starts when previous dot is halfway through its animation
         long delayBetweenDots = mAnimationDuration / 2; // Start delay between dots
-        
+
         dotAnimators.get(0).setStartDelay(0);
         dotAnimators.get(1).setStartDelay(delayBetweenDots);
         dotAnimators.get(2).setStartDelay(delayBetweenDots * 2);
-        
+
         mainAnimator.playTogether(dotAnimators.get(0), dotAnimators.get(1), dotAnimators.get(2));
-        
+
         // Create infinite loop
         mainAnimator.addListener(new android.animation.AnimatorListenerAdapter() {
             @Override
@@ -136,7 +136,7 @@ public class LoadingView extends View {
                 }
             }
         });
-        
+
         mAnimatorSets.add(mainAnimator);
     }
 
@@ -223,6 +223,18 @@ public class LoadingView extends View {
         return isEnlarged ? mEnlargedColor : mNormalColor;
     }
 
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        play();
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        stop();
+    }
+
     // Animation control methods
     public void play() {
         if (!isAnimating) {
@@ -254,14 +266,6 @@ public class LoadingView extends View {
             mCurrentRadii.set(i, mDotRadius);
         }
         invalidate();
-    }
-
-    public void startAnimation() {
-        play();
-    }
-
-    public void stopAnimation() {
-        stop();
     }
 
     private float dpToPx(float dp) {

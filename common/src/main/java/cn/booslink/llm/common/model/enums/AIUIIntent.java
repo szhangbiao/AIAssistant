@@ -4,6 +4,7 @@ public enum AIUIIntent {
 
     UNKNOWN(""),
     EXIT("EXIT"),
+    LAUNCH("LAUNCH"),
     VOLUME_PLUS("VOLUME_PLUS"),
     VOLUME_MINUS("VOLUME_MINUS"),
     VOLUME_MAX("VOLUME_MAX"),
