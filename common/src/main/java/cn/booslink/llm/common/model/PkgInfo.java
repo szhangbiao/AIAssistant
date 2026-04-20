@@ -25,12 +25,31 @@ public class PkgInfo {
     @SerializedName("version_code")
     private int versionCode;
 
+    private transient String entryPoint;
+
+    private transient boolean isDownloaded;
+    private transient String localPath;
+
+    public static PkgInfo empty() {
+        return new PkgInfo();
+    }
+
+    public static PkgInfo ignore() {
+        PkgInfo pkgInfo = new PkgInfo();
+        pkgInfo.setApkId(-2);
+        return pkgInfo;
+    }
+
     public PkgInfo() {
 
     }
 
     public boolean isEmpty() {
         return apkId == -1;
+    }
+
+    public boolean isIgnore() {
+        return apkId == -2;
     }
 
     public int getApkId() {
@@ -110,5 +129,29 @@ public class PkgInfo {
 
     public void setVersionName(String versionName) {
         this.versionName = versionName;
+    }
+
+    public String getEntryPoint() {
+        return entryPoint;
+    }
+
+    public void setEntryPoint(String entryPoint) {
+        this.entryPoint = entryPoint;
+    }
+
+    public boolean isDownloaded() {
+        return isDownloaded;
+    }
+
+    public void setDownloaded(boolean downloaded) {
+        isDownloaded = downloaded;
+    }
+
+    public String getLocalPath() {
+        return localPath;
+    }
+
+    public void setLocalPath(String localPath) {
+        this.localPath = localPath;
     }
 }

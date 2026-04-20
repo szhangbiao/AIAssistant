@@ -36,6 +36,7 @@ import dagger.Provides;
 import dagger.hilt.InstallIn;
 import dagger.hilt.android.qualifiers.ApplicationContext;
 import dagger.hilt.components.SingletonComponent;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
@@ -81,6 +82,16 @@ public class CommonModule {
         builder.retryOnConnectionFailure(true);
         builder.connectionPool(new ConnectionPool(5, 2, TimeUnit.MINUTES));
         return builder.build();
+    }
+
+    @Provides
+    protected RxJava3CallAdapterFactory provideRxJava2CallAdapterFactory() {
+        return RxJava3CallAdapterFactory.createWithScheduler(Schedulers.io());
+    }
+
+    @Provides
+    protected GsonConverterFactory provideGsonConverterFactory(Gson gson) {
+        return GsonConverterFactory.create(gson);
     }
 
     @Singleton

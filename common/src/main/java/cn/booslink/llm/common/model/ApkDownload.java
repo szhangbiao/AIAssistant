@@ -52,7 +52,7 @@ public class ApkDownload implements Cloneable {
         return download;
     }
 
-    public static ApkDownload createFromApkInfo(ApkInfo apkInfo, boolean isAppUpdate) {
+    public static ApkDownload createFromApkInfo(ApkInfo apkInfo) {
         ApkDownload dto = new ApkDownload();
         dto.setName(apkInfo.getName());
         dto.setPkgName(apkInfo.getPkgName());
@@ -62,7 +62,6 @@ public class ApkDownload implements Cloneable {
         dto.setRetryCount(0);
         dto.setProgress(100);
         dto.setApkIcon(apkInfo.getIcon());
-        dto.setAppUpdate(isAppUpdate);
         return dto;
     }
 

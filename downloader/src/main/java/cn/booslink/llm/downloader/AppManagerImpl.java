@@ -83,8 +83,13 @@ public class AppManagerImpl implements IAppManager {
     }
 
     @Override
+    public void downloadPkgOnly(PkgInfo pkgInfo) {
+
+    }
+
+    @Override
     public void install(ApkInfo apkInfo) {
-        ApkDownload download = ApkDownload.createFromApkInfo(apkInfo, false);
+        ApkDownload download = ApkDownload.createFromApkInfo(apkInfo);
         install(download);
     }
 

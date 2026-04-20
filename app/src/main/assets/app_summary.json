@@ -1,0 +1,66 @@
+[
+  {
+    "name": "全民K歌",
+    "pkg_name": "cn.booslink.kg",
+    "entry": ".GuideActivity"
+  },
+  {
+    "name": "网易云音乐",
+    "pkg_name": "com.netease.cloudmusic.tv",
+    "entry": "com.netease.cloudmusic.app.LoadingActivity"
+  },
+  {
+    "name": "腾讯视频",
+    "nickname": "云视听极光",
+    "pkg_name": "com.ktcp.tvvideo",
+    "entry": "com.ktcp.video.activity.MainActivity"
+  },
+  {
+    "name": "爱奇艺",
+    "nickname": "银河奇异果",
+    "pkg_name": "com.gitvvideo.shenzhenweihaocpa",
+    "entry": "com.gala.video.app.epg.HomeActivity"
+  },
+  {
+    "name": "炫舞未来",
+    "pkg_name": "com.newtv.vltdance",
+    "entry": "com.newtv.cboxtv.activity.SplashActivity"
+  },
+  {
+    "name": "雷石K歌",
+    "nickname": "金麦客专业K歌",
+    "pkg_name": "cn.jmake.karaoke.box.ott",
+    "entry": "cn.jmake.karaoke.box.activity.SplashActivity"
+  },
+  {
+    "name": "听戏唱曲",
+    "pkg_name": "cn.jmake.karaoke.opera",
+    "entry": "cn.jmake.karaoke.box.activity.SplashActivity"
+  },
+  {
+    "name": "芒果TV",
+    "pkg_name": "com.starcor.mango",
+    "entry": "com.mgtv.tv.launcher.ChannelHomeActivity"
+  },
+  {
+    "name": "央视频TV版",
+    "pkg_name": "com.newtv.cboxtv",
+    "entry": "com.newtv.host.LauncherActivity"
+  },
+  {
+    "name": "优酷视频",
+    "nickname": "CIBN酷喵影视",
+    "pkg_name": "com.cibn.tv",
+    "entry": "com.youku.tv.home.activity.HomeActivity"
+  },
+  {
+    "name": "多唱K歌",
+    "pkg_name": "com.evideo.kmbox",
+    "entry": ".activity.GuideActivity"
+  },
+  {
+    "name": "智能K歌",
+    "pkg_name": "com.huiaichang.sdm.desktop",
+    "entry": "com.hhc.muse.desktop.MainActivity"
+  }
+]

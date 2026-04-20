@@ -9,16 +9,19 @@ import javax.inject.Inject;
 import cn.booslink.llm.common.model.Semantic;
 import cn.booslink.llm.common.model.enums.AIUIIntent;
 import cn.booslink.llm.common.model.enums.Category;
+import cn.booslink.llm.processor.process.app.IAppProcess;
 import cn.booslink.llm.processor.process.control.IControlProcess;
 import cn.booslink.llm.processor.process.volume.IVolumeProcess;
 
 public class IntentProcessProxy implements IIntentProcess {
 
+    private final IAppProcess mAppProcess;
     private final IVolumeProcess mVolumeProcess;
     private final IControlProcess mControlProcess;
 
     @Inject
-    public IntentProcessProxy(IControlProcess controlProcess, IVolumeProcess volumeProcess) {
+    public IntentProcessProxy(IAppProcess appProcess, IControlProcess controlProcess, IVolumeProcess volumeProcess) {
+        this.mAppProcess = appProcess;
         this.mVolumeProcess = volumeProcess;
         this.mControlProcess = controlProcess;
     }
@@ -46,6 +49,10 @@ public class IntentProcessProxy implements IIntentProcess {
             case UNMUTE:
                 mVolumeProcess.volumeControl(intent, semantic.getSlots());
                 return true;
+            case LAUNCH:
+            case DOWNLOAD:
+            case INSTALL:
+                return mAppProcess.handleAppAction(intent, semantic.getSlots());
         }
         return false;
     }

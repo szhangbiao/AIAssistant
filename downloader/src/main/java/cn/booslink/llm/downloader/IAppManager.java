@@ -8,6 +8,8 @@ public interface IAppManager {
 
     void startDownloadPkg(PkgInfo pkgInfo);
 
+    void downloadPkgOnly(PkgInfo pkgInfo);
+
     void install(ApkInfo apkInfo);
 
     boolean isPkgDownloading();

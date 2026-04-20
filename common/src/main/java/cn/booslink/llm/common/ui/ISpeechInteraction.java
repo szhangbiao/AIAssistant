@@ -2,8 +2,6 @@ package cn.booslink.llm.common.ui;
 
 import android.app.Activity;
 
-import org.jetbrains.annotations.Nullable;
-
 import cn.booslink.llm.common.model.ApkDownload;
 import cn.booslink.llm.common.model.UIResponse;
 import cn.booslink.llm.common.model.VoiceQuery;
