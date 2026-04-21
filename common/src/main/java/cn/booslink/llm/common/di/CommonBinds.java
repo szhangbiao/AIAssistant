@@ -7,7 +7,9 @@ import cn.booslink.llm.common.image.ImageLoaderImpl;
 import cn.booslink.llm.common.storage.ISpeechStorage;
 import cn.booslink.llm.common.storage.SpeechStorageImpl;
 import cn.booslink.llm.common.ui.ISpeechInteraction;
+import cn.booslink.llm.common.ui.IToast;
 import cn.booslink.llm.common.ui.SpeechInteractionImpl;
+import cn.booslink.llm.common.ui.ToastImpl;
 import dagger.Binds;
 import dagger.Module;
 import dagger.hilt.InstallIn;
@@ -27,4 +29,8 @@ public interface CommonBinds {
     @Binds
     @Singleton
     ISpeechStorage bindSpeechStorage(SpeechStorageImpl speechStorageImpl);
+
+    @Binds
+    @Singleton
+    IToast bindToast(ToastImpl toastImpl);
 }

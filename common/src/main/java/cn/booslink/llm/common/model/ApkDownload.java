@@ -27,6 +27,8 @@ public class ApkDownload implements Cloneable {
     private String speed;
     private String failedReason;
 
+    private boolean downloadOnly;
+
     private Drawable apkIcon;
 
     public static ApkDownload empty() {
@@ -35,7 +37,7 @@ public class ApkDownload implements Cloneable {
         return download;
     }
 
-    public static ApkDownload createFromPkgInfo(PkgInfo pkgInfo) {
+    public static ApkDownload createFromPkgInfo(PkgInfo pkgInfo, boolean isDownloadOnly) {
         ApkDownload download = new ApkDownload();
         if (pkgInfo.getApkId() > 0) {
             download.setApkId(pkgInfo.getApkId());
@@ -49,6 +51,7 @@ public class ApkDownload implements Cloneable {
         download.setVersionCode(pkgInfo.getVersionCode());
         download.setStatus(ApkStatus.DOWNLOAD_PADDING);
         download.setRetryCount(0);
+        download.setDownloadOnly(isDownloadOnly);
         return download;
     }
 
@@ -196,6 +199,14 @@ public class ApkDownload implements Cloneable {
 
     public void setFailedReason(String failedReason) {
         this.failedReason = failedReason;
+    }
+
+    public boolean isDownloadOnly() {
+        return downloadOnly;
+    }
+
+    public void setDownloadOnly(boolean downloadOnly) {
+        this.downloadOnly = downloadOnly;
     }
 
     public Drawable getApkIcon() {

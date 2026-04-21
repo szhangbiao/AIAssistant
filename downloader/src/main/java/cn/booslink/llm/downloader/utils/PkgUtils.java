@@ -6,7 +6,6 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
-import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
 import android.text.format.Formatter;
 
@@ -18,7 +17,6 @@ import java.util.Map;
 import cn.booslink.llm.common.model.ApkInfo;
 import cn.booslink.llm.common.model.AppInfo;
 import cn.booslink.llm.common.utils.ContextUtils;
-import cn.booslink.llm.common.utils.DrawableUtils;
 import timber.log.Timber;
 
 public class PkgUtils {
@@ -64,7 +62,7 @@ public class PkgUtils {
         return null;
     }
 
-    public static AppInfo getAppInfo(Context context, String pkgName) {
+    public static AppInfo getAppInfo2(Context context, String pkgName) {
         List<ResolveInfo> allApps = getAllApps(context);
         if (!allApps.isEmpty()) {
             for (ResolveInfo info : allApps) {
@@ -77,25 +75,19 @@ public class PkgUtils {
     }
 
     private static AppInfo getAppInfo(Context context, ResolveInfo res) {
-        final String pkgName = res.activityInfo.packageName;
+        String launchActivity = res.activityInfo.name;
+        String pkgName = res.activityInfo.packageName;
         String appName = res.loadLabel(context.getPackageManager()).toString();
-        Drawable appIcon = res.loadIcon(context.getPackageManager());
-        if (appIcon == null) {
-            appIcon = DrawableUtils.getAppIcon(context, pkgName);
-        }
-        String appSize = "";
         int versionCode = 0;
         String versionName = "";
         try {
             PackageInfo packageInfo = context.getPackageManager().getPackageInfo(pkgName, 0);
-            File file = new File(packageInfo.applicationInfo.sourceDir);
-            appSize = Formatter.formatFileSize(context, file.length());
             versionCode = packageInfo.versionCode;
             versionName = packageInfo.versionName;
         } catch (PackageManager.NameNotFoundException e) {
             Timber.tag(TAG).e(e, "get app info error");
         }
-        return new AppInfo(pkgName, appName, appIcon, versionName, versionCode, appSize);
+        return new AppInfo(pkgName, appName, versionName, versionCode, launchActivity);
     }
 
     private static List<ResolveInfo> getAllApps(Context context) {
@@ -103,5 +95,48 @@ public class PkgUtils {
         appIntent.setAction("android.intent.action.MAIN");
         appIntent.addCategory("android.intent.category.LAUNCHER");
         return context.getPackageManager().queryIntentActivities(appIntent, 0);
+    }
+
+    public static AppInfo getAppInfo(Context context, String pkgName) {
+        try {
+            PackageManager pm = context.getPackageManager();
+            PackageInfo packageInfo = pm.getPackageInfo(pkgName, PackageManager.GET_ACTIVITIES);
+            // Get launch intent to find the main activity
+            Intent launchIntent = pm.getLaunchIntentForPackage(pkgName);
+            if (launchIntent == null) {
+                return null; // No launch activity found
+            }
+            String launchActivity = launchIntent.getComponent().getClassName();
+            String appName = packageInfo.applicationInfo.loadLabel(pm).toString();
+            return new AppInfo(pkgName, appName, packageInfo.versionName, packageInfo.versionCode, launchActivity);
+        } catch (PackageManager.NameNotFoundException e) {
+            Timber.tag(TAG).e(e, "get app info error for package: %s", pkgName);
+            return null;
+        }
+    }
+
+    public static void launchApp(Context context, String pkgName) {
+        if (pkgName.equals(context.getPackageName())) return;
+        AppInfo appInfo = getAppInfo(context, pkgName);
+        if (appInfo != null) {
+            launchApp(context, appInfo);
+        }
+    }
+
+    public static void launchApp(Context context, AppInfo appInfo) {
+        if (appInfo == null || appInfo.getLaunchActivity() == null) {
+            Timber.tag(TAG).w("Cannot launch app: invalid app info or missing launch activity");
+            return;
+        }
+        if (appInfo.getPkgName().equals(context.getPackageName())) return;
+        try {
+            Intent launchIntent = new Intent();
+            launchIntent.setClassName(appInfo.getPkgName(), appInfo.getLaunchActivity());
+            launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(launchIntent);
+            Timber.tag(TAG).i("Successfully launched app: %s", appInfo.getPkgName());
+        } catch (Exception e) {
+            Timber.tag(TAG).e(e, "Failed to launch app: %s", appInfo.getPkgName());
+        }
     }
 }

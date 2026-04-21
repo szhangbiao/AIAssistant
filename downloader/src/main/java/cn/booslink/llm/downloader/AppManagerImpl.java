@@ -28,6 +28,7 @@ import cn.booslink.llm.common.utils.ContextUtils;
 import cn.booslink.llm.common.utils.FileUtils;
 import cn.booslink.llm.downloader.bus.IRxApkBus;
 import cn.booslink.llm.downloader.listener.OnApkDownloadListener;
+import cn.booslink.llm.downloader.listener.OnAppManagerListener;
 import cn.booslink.llm.downloader.listener.SimpleDownloadListener;
 import cn.booslink.llm.downloader.model.InstallState;
 import cn.booslink.llm.downloader.observer.PackageInstallObserver;
@@ -57,9 +58,10 @@ public class AppManagerImpl implements IAppManager {
     private final CompositeDisposable mCompositeDisposable;
     private final ConcurrentHashMap<String, ApkDownload> mApkDownloadMap;
     private final PkgInstallBroadcastReceiver mPkgInstallBroadcastReceiver;
-
     private DownloadTask mDownloadingTask;
     private volatile String currentPackageName = null;
+
+    private OnAppManagerListener mOnAppManagerListener;
 
     @Inject
     public AppManagerImpl(@ApplicationContext Context context, IRxApkBus rxApkBus, PkgInstallBroadcastReceiver receiver) {
@@ -77,14 +79,20 @@ public class AppManagerImpl implements IAppManager {
         if (pkgInfo.getPkgName().equals(taskTag) && OkDownload.with().downloadDispatcher().isRunning(mDownloadingTask)) return;
         ApkDownload currentDownload = mApkDownloadMap.get(pkgInfo.getPkgName());
         if (currentDownload != null) return;
-        ApkDownload download = ApkDownload.createFromPkgInfo(pkgInfo);
+        ApkDownload download = ApkDownload.createFromPkgInfo(pkgInfo, false);
         startDownloadApkIfNeed(download);
         mRxApkBus.post(download);
     }
 
     @Override
     public void downloadPkgOnly(PkgInfo pkgInfo) {
-
+        Object taskTag = mDownloadingTask != null ? mDownloadingTask.getTag() : null;
+        if (pkgInfo.getPkgName().equals(taskTag) && OkDownload.with().downloadDispatcher().isRunning(mDownloadingTask)) return;
+        ApkDownload currentDownload = mApkDownloadMap.get(pkgInfo.getPkgName());
+        if (currentDownload != null) return;
+        ApkDownload download = ApkDownload.createFromPkgInfo(pkgInfo, true);
+        startDownloadApkIfNeed(download);
+        mRxApkBus.post(download);
     }
 
     @Override
@@ -127,9 +135,22 @@ public class AppManagerImpl implements IAppManager {
                 .subscribe(installedApk -> {
                     handlePaddingInstallList(installedApk);
                     currentPackageName = null;
-                    //mRxApkBus.post(installedApk);
+                    if (mOnAppManagerListener != null) {
+                        mOnAppManagerListener.onAppInstalled(installedApk);
+                    }
+                    mRxApkBus.post(installedApk);
                 });
         addDisposable(disposable);
+    }
+
+    @Override
+    public void registerListener(OnAppManagerListener listener) {
+        this.mOnAppManagerListener = listener;
+    }
+
+    @Override
+    public void release() {
+        mRxApkBus.clear();
     }
 
     private void registerPackageInstallBroadcast() {
@@ -187,9 +208,19 @@ public class AppManagerImpl implements IAppManager {
             @Override
             public void onDownloadUpdate(String apkPath, ApkDownload downloadItem) {
                 if (downloadItem.getStatus() == ApkStatus.INSTALL_PADDING) {
-                    install(downloadItem);
+                    if (mOnAppManagerListener != null) {
+                        mOnAppManagerListener.onAppDownloaded(downloadItem);
+                    }
+                    if (!downloadItem.isDownloadOnly()) {
+                        install(downloadItem);
+                    } else {
+                        mApkDownloadMap.remove(downloadItem.getPkgName());
+                    }
                 } else if (downloadItem.isDownloadFail()) {
                     // TODO mToast.get().showMessage(downloadItem.getFailedReason(), 10);
+                    if (mOnAppManagerListener != null) {
+                        mOnAppManagerListener.onAppFailed(true, downloadItem);
+                    }
                 }
                 mDownloadingTask = null;
                 mRxApkBus.post(downloadItem);
@@ -204,6 +235,9 @@ public class AppManagerImpl implements IAppManager {
             public void onDownloadFailed(ApkDownload downloadItem) {
                 mRxApkBus.post(downloadItem);
                 // TODO mToast.get().showMessage(downloadItem.getFailedReason(), 10);
+                if (mOnAppManagerListener != null) {
+                    mOnAppManagerListener.onAppFailed(true, downloadItem);
+                }
             }
         };
     }
@@ -261,6 +295,9 @@ public class AppManagerImpl implements IAppManager {
         ApkDownload apkDownload = mApkDownloadMap.get(installPkgName);
         if (apkDownload != null && apkDownload.shouldRemoveFromInstallList()) {
             apkDownload.installResult(isInstallSuccess, state != InstallState.INSUFFICIENT_STORAGE);
+            if (mOnAppManagerListener != null && !isInstallSuccess) {
+                mOnAppManagerListener.onAppFailed(false, apkDownload);
+            }
             mRxApkBus.post(apkDownload);
         }
         Timber.tag(TAG).d("update apk install success, and download is %s", apkDownload == null ? "null" : "not null");

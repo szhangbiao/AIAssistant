@@ -35,11 +35,7 @@ public class AppRepositoryImpl implements IAppRepository {
     public Single<PkgInfo> getPkgInfo(AppSummary summary) {
         String pkgName = summary.getPkgName();
         return mApiService.getApkInfoByPkg(ApkRequest.Companion.create(pkgName))
-                .compose(TransformerUtil.singleApiTransformer())
-                .map(pkgInfo -> {
-                    pkgInfo.setEntryPoint(summary.getEntry());
-                    return pkgInfo;
-                });
+                .compose(TransformerUtil.singleApiTransformer());
     }
 
     @Override

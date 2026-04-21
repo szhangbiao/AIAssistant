@@ -25,8 +25,6 @@ public class PkgInfo {
     @SerializedName("version_code")
     private int versionCode;
 
-    private transient String entryPoint;
-
     private transient boolean isDownloaded;
     private transient String localPath;
 
@@ -129,14 +127,6 @@ public class PkgInfo {
 
     public void setVersionName(String versionName) {
         this.versionName = versionName;
-    }
-
-    public String getEntryPoint() {
-        return entryPoint;
-    }
-
-    public void setEntryPoint(String entryPoint) {
-        this.entryPoint = entryPoint;
     }
 
     public boolean isDownloaded() {

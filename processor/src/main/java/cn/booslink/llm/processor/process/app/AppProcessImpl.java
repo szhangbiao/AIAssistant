@@ -8,7 +8,6 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 
 import javax.inject.Inject;
 
@@ -22,9 +21,11 @@ import cn.booslink.llm.common.model.VoiceQuery;
 import cn.booslink.llm.common.model.enums.AIUIIntent;
 import cn.booslink.llm.common.model.enums.QueryState;
 import cn.booslink.llm.common.ui.ISpeechInteraction;
+import cn.booslink.llm.common.ui.IToast;
 import cn.booslink.llm.common.utils.ContextUtils;
 import cn.booslink.llm.common.utils.RxUtil;
 import cn.booslink.llm.downloader.IAppManager;
+import cn.booslink.llm.downloader.listener.SimpleAppManagerListener;
 import cn.booslink.llm.downloader.utils.PkgUtils;
 import cn.booslink.llm.processor.repository.IAppRepository;
 import dagger.Lazy;
@@ -38,15 +39,16 @@ import io.reactivex.rxjava3.functions.Function;
 
 public class AppProcessImpl implements IAppProcess {
 
+    private final IToast mToast;
     private final Context mContext;
     private final IAppRepository mAppRepository;
     private final Lazy<IAppManager> mAppManagerLazy;
     private final ISpeechInteraction mSpeechInteraction;
-
     private final CompositeDisposable mCompositeDisposable;
 
     @Inject
-    public AppProcessImpl(@ApplicationContext Context context, IAppRepository appRepository, Lazy<IAppManager> appManagerLazy, ISpeechInteraction speechInteraction) {
+    public AppProcessImpl(@ApplicationContext Context context, IToast toast, IAppRepository appRepository, Lazy<IAppManager> appManagerLazy, ISpeechInteraction speechInteraction) {
+        this.mToast = toast;
         this.mContext = context;
         this.mAppRepository = appRepository;
         this.mAppManagerLazy = appManagerLazy;
@@ -73,11 +75,11 @@ public class AppProcessImpl implements IAppProcess {
         Disposable disposable = mAppRepository.getAppSummaryList()
                 .flatMap((Function<List<AppSummary>, SingleSource<PkgInfo>>)
                         appSummaries -> Observable.fromIterable(appSummaries)
-                                .filter(summary -> summary.getName().contains(appName) || (!TextUtils.isEmpty(summary.getNickname()) && summary.getNickname().contains(appName)))
+                                .filter(summary -> summary.findMatch(appName))
                                 .first(AppSummary.Companion.empty())
                                 .flatMap(summary -> {
                                     if (summary.isEmpty()) return Single.just(PkgInfo.empty());
-                                    if (populateAppLaunchWithSummary(intent, summary)) return Single.just(PkgInfo.ignore());
+                                    if (populateAppInstalledWithSummary(intent, summary)) return Single.just(PkgInfo.ignore());
                                     return mAppRepository.getPkgInfo(summary);
                                 }))
                 .map(pkgInfo -> {
@@ -120,7 +122,8 @@ public class AppProcessImpl implements IAppProcess {
         mSpeechInteraction.nlpAnswer("处理过程出错了");
     }
 
-    private boolean populateAppLaunchWithSummary(AIUIIntent intent, AppSummary summary) {
+    private boolean populateAppInstalledWithSummary(AIUIIntent intent, AppSummary summary) {
+        // TODO 检查当前打开的应用是否和summary一致
         AppInfo appInfo = PkgUtils.getAppInfo(mContext, summary.getPkgName());
         if (appInfo != null) {
             mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.DONE));
@@ -132,17 +135,13 @@ public class AppProcessImpl implements IAppProcess {
                     mSpeechInteraction.nlpAnswer("设备已有" + summary.getName() + "，无需安装");
                     break;
                 case LAUNCH:
-                    // TODO adb commend
+                    PkgUtils.launchApp(mContext, appInfo);
                     mSpeechInteraction.nlpAnswer("已为你打开应用");
                     break;
             }
             return true;
         }
         return false;
-    }
-
-    private void populateAppLaunchWithPkgInfo(PkgInfo pkgInfo) {
-        // download install and launch
     }
 
     private void populateAppDownload(PkgInfo pkgInfo) {
@@ -156,9 +155,17 @@ public class AppProcessImpl implements IAppProcess {
             IAppManager downloadManager = mAppManagerLazy.get();
             if (downloadManager == null) return;
             if (downloadManager.isPkgDownloading()) {
-                // TODO downloading
+                mToast.showMessage("正在下载应用，请稍候再试");
                 return;
             }
+            downloadManager.registerListener(new SimpleAppManagerListener() {
+                @Override
+                public void onAppFailed(boolean isDownloadFailed, ApkDownload download) {
+                    super.onAppFailed(isDownloadFailed, download);
+                    mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.FAILED));
+                    mSpeechInteraction.nlpAnswer(download.getFailedReason());
+                }
+            });
             downloadManager.downloadPkgOnly(pkgInfo);
         }
     }
@@ -167,9 +174,57 @@ public class AppProcessImpl implements IAppProcess {
         IAppManager downloadManager = mAppManagerLazy.get();
         if (downloadManager == null) return;
         if (downloadManager.isPkgDownloading() || downloadManager.isPkgInstalling()) {
-            // TODO downloading or installing
+            mToast.showMessage("正在进行应用的下载安装，请稍候再试");
             return;
         }
+        downloadManager.registerListener(new SimpleAppManagerListener() {
+            @Override
+            public void onAppInstalled(ApkDownload download) {
+                super.onAppInstalled(download);
+                mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.DONE));
+                mSpeechInteraction.nlpAnswer("安装" + pkgInfo.getName() + "成功");
+            }
+
+            @Override
+            public void onAppFailed(boolean isDownloadFailed, ApkDownload download) {
+                super.onAppFailed(isDownloadFailed, download);
+                mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.FAILED));
+                mSpeechInteraction.nlpAnswer(download.getFailedReason());
+            }
+        });
+        if (pkgInfo.isDownloaded()) {
+            ApkInfo apkInfo = PkgUtils.getApkInfoByFile(mContext, new File(pkgInfo.getLocalPath()));
+            if (apkInfo != null) {
+                downloadManager.install(apkInfo);
+            }
+        } else {
+            downloadManager.startDownloadPkg(pkgInfo);
+        }
+    }
+
+    private void populateAppLaunchWithPkgInfo(PkgInfo pkgInfo) {
+        IAppManager downloadManager = mAppManagerLazy.get();
+        if (downloadManager == null) return;
+        if (downloadManager.isPkgDownloading() || downloadManager.isPkgInstalling()) {
+            mToast.showMessage("正在进行应用的下载安装，请稍候再试");
+            return;
+        }
+        downloadManager.registerListener(new SimpleAppManagerListener() {
+            @Override
+            public void onAppFailed(boolean isDownloadFailed, ApkDownload download) {
+                super.onAppFailed(isDownloadFailed, download);
+                mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.FAILED));
+                mSpeechInteraction.nlpAnswer(download.getFailedReason());
+            }
+
+            @Override
+            public void onAppInstalled(ApkDownload download) {
+                super.onAppInstalled(download);
+                PkgUtils.launchApp(mContext, download.getPkgName());
+                mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.DONE));
+                mSpeechInteraction.nlpAnswer("已为你打开应用");
+            }
+        });
         if (pkgInfo.isDownloaded()) {
             ApkInfo apkInfo = PkgUtils.getApkInfoByFile(mContext, new File(pkgInfo.getLocalPath()));
             if (apkInfo != null) {
