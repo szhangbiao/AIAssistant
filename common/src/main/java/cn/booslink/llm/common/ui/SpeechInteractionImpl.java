@@ -24,6 +24,7 @@ import cn.booslink.llm.common.model.Weather;
 import cn.booslink.llm.common.model.enums.Category;
 import cn.booslink.llm.common.model.enums.EmoteState;
 import cn.booslink.llm.common.model.enums.QueryState;
+import cn.booslink.llm.common.speech.ISpeechAgent;
 import cn.booslink.llm.common.utils.ContextUtils;
 import cn.booslink.llm.common.utils.WeatherExtKt;
 import cn.booslink.llm.common.widget.AIRootLayout;
@@ -37,6 +38,8 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
 
     @Inject
     Lazy<AIRootLayout> mRootLayoutRef;
+    @Inject
+    Lazy<ISpeechAgent> mSpeechAgentLazy;
 
     private final Context mContext;
     private final FrameLayout mParentView;
@@ -233,7 +236,8 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
 
     @Override
     public void UIWakeup() {
-        if (!isAttached || isActive) return;
+        boolean isViewVisible = mParentView.getVisibility() == View.VISIBLE;
+        if (!isAttached || (isActive && isViewVisible)) return;
         AIRootLayout rootLayout = mRootLayoutRef.get();
         if (rootLayout != null) {
             rootLayout.startWakeupAnimation();
@@ -276,7 +280,12 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
         childParams.topMargin = ContextUtils.dp2px(mContext, 32);
         AIRootLayout rootLayout = mRootLayoutRef.get();
         // mParentView.setBackgroundResource(R.drawable.bg_full_screen);
-        mParentView.setVisibility(View.GONE);
+        ISpeechAgent speechAgent = mSpeechAgentLazy.get();
+        if (speechAgent != null && speechAgent.isAIUIWorking()) {
+            mParentView.setVisibility(View.VISIBLE);
+        } else {
+            mParentView.setVisibility(View.GONE);
+        }
         if (rootLayout != null) {
             bindData(rootLayout);
             mParentView.addView(rootLayout, childParams);

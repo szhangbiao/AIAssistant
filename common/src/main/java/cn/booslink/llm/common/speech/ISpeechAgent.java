@@ -7,5 +7,7 @@ public interface ISpeechAgent {
 
     void sendMessage(AIUIMessage message);
 
+    boolean isAIUIWorking();
+
     void destroyAgent();
 }

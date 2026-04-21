@@ -328,7 +328,6 @@ public class AppManagerImpl implements IAppManager {
         if (ContextUtils.isSystemApp(mContext)) {
             installDownloadApk(downloadApk);
         } else {
-            mApkDownloadMap.remove(downloadApk.getPkgName());
             currentPackageName = null;
             installRandomApk(downloadApk);
         }

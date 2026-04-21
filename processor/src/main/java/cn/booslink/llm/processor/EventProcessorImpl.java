@@ -13,6 +13,8 @@ import java.nio.charset.StandardCharsets;
 
 import javax.inject.Inject;
 
+import cn.booslink.llm.common.model.Answer;
+import cn.booslink.llm.common.model.CBMEvent;
 import cn.booslink.llm.common.model.CBMSemantic;
 import cn.booslink.llm.common.model.EventData;
 import cn.booslink.llm.common.model.EventInfo;
@@ -24,6 +26,7 @@ import cn.booslink.llm.common.model.enums.QueryState;
 import cn.booslink.llm.common.storage.ISpeechStorage;
 import cn.booslink.llm.common.ui.ISpeechInteraction;
 import cn.booslink.llm.common.utils.RxUtil;
+import cn.booslink.llm.downloader.IAppManager;
 import cn.booslink.llm.processor.process.IIntentProcess;
 import io.reactivex.rxjava3.core.BackpressureStrategy;
 import io.reactivex.rxjava3.core.Flowable;
@@ -35,8 +38,13 @@ import timber.log.Timber;
 public class EventProcessorImpl implements IEventProcessor {
     private final static String TAG = "EventProcessor";
 
+    private final static String TYPE_VAD = "Vad";
+    private final static String VAD_BOS = "Bos";
+    private final static String VAD_EOS = "Eos";
+
     private final Gson mGson;
     private final Handler mHandler;
+    private final IAppManager mAppManager;
     private final StringBuilder mNplBuilder;
     private final ISpeechStorage mSpeechStorage;
     private final IIntentProcess mIntentProcess;
@@ -47,9 +55,12 @@ public class EventProcessorImpl implements IEventProcessor {
     private volatile boolean isSubscriptionActive = false;
     private volatile boolean isDestroyed = false;
 
+    private EventData mEventData = EventData.Companion.empty();
+
     @Inject
-    public EventProcessorImpl(Gson gson, IIntentProcess intentProcess, ISpeechStorage speechStorage, ISpeechInteraction speechInteraction) {
+    public EventProcessorImpl(Gson gson, IIntentProcess intentProcess, IAppManager appManager, ISpeechStorage speechStorage, ISpeechInteraction speechInteraction) {
         this.mGson = gson;
+        this.mAppManager = appManager;
         this.mIntentProcess = intentProcess;
         this.mSpeechStorage = speechStorage;
         this.mNplBuilder = new StringBuilder();
@@ -72,6 +83,8 @@ public class EventProcessorImpl implements IEventProcessor {
                 int type = event.arg1; // 0 （语音唤醒）, 1 （发送CMD_WAKEUP手动唤醒）
                 mHandler.post(mSpeechInteraction::UIWakeup);
                 if (type == 0) {
+                    boolean shouldBlockSleepLogic = mAppManager.isPkgDownloading() || mAppManager.isPkgInstalling();
+                    if (shouldBlockSleepLogic) return;
                     mSpeechInteraction.updateQuery(new VoiceQuery("bobo在听，有什么可以帮您~", QueryState.WAKE_UP));
                 }
                 break;
@@ -81,6 +94,8 @@ public class EventProcessorImpl implements IEventProcessor {
             case AIUIConstant.EVENT_SLEEP: // 休眠事件
                 int sleepType = event.arg1; // 0 （交互超时,自动休眠）, 1 （发送CMD_RESET_WAKEUP手动唤醒）
                 Timber.tag(TAG).d("sleep");
+                boolean shouldBlockSleepLogic = mAppManager.isPkgDownloading() || mAppManager.isPkgInstalling();
+                if (shouldBlockSleepLogic) return;
                 boolean showLeaveConfirm = mSpeechStorage.shouldShowLeaveConfirm(sleepType);
                 if (showLeaveConfirm) {
                     mSpeechInteraction.semanticAnswer(UIResponse.Companion.withSleep(sleepType));
@@ -187,6 +202,7 @@ public class EventProcessorImpl implements IEventProcessor {
         if (sub == CBMSub.IAT) {
             if (data.getText() == null || data.getTag() == AIUITag.LAUNCH) return;
             Timber.tag(TAG).d("iat result = %s", data.getText().getIATVoice());
+            mEventData = mEventData.copyIat(data.getText());
             mSpeechInteraction.updateQuery(new VoiceQuery(data.getText().getIATVoice(), QueryState.QUERYING));
         } else if (sub == CBMSub.NLP) {
             if (data.getNlp() == null) return;
@@ -206,6 +222,7 @@ public class EventProcessorImpl implements IEventProcessor {
                     Timber.tag(TAG).d("nlp, content = %s", nplContent);
                     mSpeechInteraction.nlpAnswer(nplContent);
                     mNplBuilder.delete(0, mNplBuilder.length());
+                    mEventData = mEventData.copyNlp(data.getNlp());
                     if (data.getTag() == AIUITag.LAUNCH || TextUtils.isEmpty(nplContent)) return;
                     mSpeechInteraction.updateQuery(new VoiceQuery(null, QueryState.DONE));
                     break;
@@ -213,6 +230,7 @@ public class EventProcessorImpl implements IEventProcessor {
         } else if (sub == CBMSub.CBM_TIDY) {
             if (data.getCbmTidy() == null || data.getCbmTidy().getText() == null || data.getTag() == AIUITag.LAUNCH) return;
             Timber.tag(TAG).d("cbm tidy, query = %s", data.getCbmTidy().getText().getQuery());
+            mEventData = mEventData.copyTidy(data.getCbmTidy());
             mSpeechInteraction.updateQuery(new VoiceQuery(data.getCbmTidy().getText().getQuery(), QueryState.QUERYING));
         } else if (sub == CBMSub.CBM_SEMANTIC) {
             if (data.getResponse() == null || data.getTag() == AIUITag.LAUNCH) return;
@@ -220,6 +238,7 @@ public class EventProcessorImpl implements IEventProcessor {
             mSpeechInteraction.updateQuery(new VoiceQuery(null, QueryState.DONE));
             mSpeechInteraction.semanticAnswer(data.getResponse());
             if (data.getCbmSemantic() == null) return;
+            mEventData = mEventData.copySemantic(data.getCbmSemantic(), data.getResponse());
             CBMSemantic cbmSemantic = data.getCbmSemantic().getText();
             if (cbmSemantic != null && cbmSemantic.getSemantic() != null) {
                 mIntentProcess.processIntent(data.getResponse().getCategory(), cbmSemantic.getSemantic());
@@ -227,6 +246,19 @@ public class EventProcessorImpl implements IEventProcessor {
         } else if (sub == CBMSub.CBM_TOOL_PK) {
             if (data.getCbmToolPK() == null || data.getCbmToolPK().getText() == null) return;
             Timber.tag(TAG).d("cbm tool pk = %s", data.getCbmToolPK().getText().getPkType());
+        } else if ((sub == CBMSub.EVENT)) {
+            if (data.getEvent() == null) return;
+            CBMEvent event = data.getEvent().getText();
+            if (event == null) return;
+            if (TYPE_VAD.equals(event.getType()) && VAD_EOS.equals(event.getKey())) {
+                if (mEventData.getCbmSemantic() == null || mEventData.getCbmSemantic().getText() == null) return;
+                Answer answer = mEventData.getCbmSemantic().getText().getAnswer();
+                String semanticAnswer = answer != null ? answer.getText() : "";
+                if (data.getTag() == AIUITag.LAUNCH && TextUtils.isEmpty(mNplBuilder.toString()) && !TextUtils.isEmpty(semanticAnswer)) {
+                    mSpeechInteraction.nlpAnswer(semanticAnswer);
+                }
+            }
+            mEventData = EventData.Companion.empty();
         }
     }
 

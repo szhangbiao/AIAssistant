@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import cn.booslink.llm.common.model.CBMEvent;
 import cn.booslink.llm.common.model.CBMSemantic;
 import cn.booslink.llm.common.model.CBMTidy;
 import cn.booslink.llm.common.model.CBMToolPK;
@@ -21,6 +22,7 @@ import cn.booslink.llm.common.model.enums.Category;
 import cn.booslink.llm.common.model.enums.VideoTag;
 import cn.booslink.llm.common.network.ApiService;
 import cn.booslink.llm.common.network.adapter.AIUIIntentAdapter;
+import cn.booslink.llm.common.network.adapter.CBMEventAdapter;
 import cn.booslink.llm.common.network.adapter.CBMSemanticAdapter;
 import cn.booslink.llm.common.network.adapter.CBMSubAdapter;
 import cn.booslink.llm.common.network.adapter.CBMTidyAdapter;
@@ -63,6 +65,7 @@ public class CommonModule {
         return GsonProvider.builder()
                 .registerTypeAdapter(CBMSub.class, new CBMSubAdapter())
                 .registerTypeAdapter(CBMTidy.class, new CBMTidyAdapter())
+                .registerTypeAdapter(CBMEvent.class, new CBMEventAdapter())
                 .registerTypeAdapter(Category.class, new CategoryAdapter())
                 .registerTypeAdapter(VideoTag.class, new VideoTagAdapter())
                 .registerTypeAdapter(DateTime.class, new DateTimeAdapter())

@@ -21,6 +21,7 @@ import cn.booslink.llm.common.utils.ContextUtils;
 import cn.booslink.llm.common.utils.ScreenAdapter;
 import cn.booslink.llm.common.speech.ISpeechAgent;
 import dagger.hilt.android.AndroidEntryPoint;
+import timber.log.Timber;
 
 @AndroidEntryPoint
 public class VoiceAssistantService extends Service {
@@ -41,12 +42,14 @@ public class VoiceAssistantService extends Service {
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
+        Timber.tag(TAG).d("onBind");
         return binder;
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
+        Timber.tag(TAG).d("onCreate");
         // 创建交互UIView
         // 把View添加到WindowManager
         if (ContextUtils.isSystemApp(getApplicationContext())) {
@@ -58,17 +61,20 @@ public class VoiceAssistantService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Timber.tag(TAG).d("onStartCommand");
         return START_STICKY;
     }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
+        Timber.tag(TAG).d("onConfigurationChanged");
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
+        Timber.tag(TAG).d("onDestroy");
         mSpeechAgent.destroyAgent();
         if (ContextUtils.isSystemApp(getApplicationContext())) {
             mSpeechInteraction.detachFromWindow();
@@ -79,11 +85,13 @@ public class VoiceAssistantService extends Service {
     @Override
     public void onLowMemory() {
         super.onLowMemory();
+        Timber.tag(TAG).d("onLowMemory");
     }
 
     @Override
     public void onTrimMemory(int level) {
         super.onTrimMemory(level);
+        Timber.tag(TAG).d("onTrimMemory");
     }
 
     @Override

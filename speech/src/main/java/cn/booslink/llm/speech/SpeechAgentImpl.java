@@ -39,6 +39,7 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
     private AIUIAgent mAIUIAgent = null;
 
     private volatile boolean mIsFirstStartup = true;
+    private volatile boolean mIsAIUIWorking = false;
 
     @Inject
     public SpeechAgentImpl(@ApplicationContext Context context, Device device, Gson gson, IEventProcessor eventProcessor, IConfigRepository configRepository) {
@@ -77,6 +78,11 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
     }
 
     @Override
+    public boolean isAIUIWorking() {
+        return mIsAIUIWorking;
+    }
+
+    @Override
     public void onEvent(AIUIEvent event) {
         //Timber.tag(TAG).d("onEvent, type = %s", EventType.fromType(event.eventType));
         switch (event.eventType) {
@@ -87,6 +93,7 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
                 if (mIsFirstStartup && aiuiState == AIUIState.READ) {
                     autoWakeUpAdkWhenFirst();
                 }
+                mIsAIUIWorking = aiuiState == AIUIState.WORKING;
                 break;
             case AIUIConstant.EVENT_RESULT: // 结果事件
                 break;

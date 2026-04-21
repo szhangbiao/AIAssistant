@@ -7,6 +7,7 @@ import com.google.gson.annotations.SerializedName
 
 data class EventData(
     val text: IATText?,
+    @SerializedName("event") val event: SdkResponse<CBMEvent>?,
     @SerializedName("cbm_tidy") val cbmTidy: SdkResponse<CBMTidy>?,
     @SerializedName("cbm_semantic") val cbmSemantic: SdkResponse<CBMSemantic>?,
     @SerializedName("cbm_tool_pk") val cbmToolPK: SdkResponse<CBMToolPK>?,
@@ -16,10 +17,18 @@ data class EventData(
     var response: UIResponse? = null
 ) {
     companion object {
-        fun empty() = EventData(null, null, null, null, null)
+        fun empty() = EventData(null, null, null, null, null, null)
     }
 
     fun isEmpty(): Boolean = text == null && cbmTidy == null && cbmSemantic == null && cbmToolPK == null && nlp == null
+
+    fun copyIat(text: IATText) = EventData(text, event, cbmTidy, cbmSemantic, cbmToolPK, nlp, sub, tag, response)
+
+    fun copyTidy(cbmTidy: SdkResponse<CBMTidy>) = EventData(text, event, cbmTidy, cbmSemantic, cbmToolPK, nlp, sub, tag, response)
+
+    fun copySemantic(cbmSemantic: SdkResponse<CBMSemantic>, response: UIResponse) = EventData(text, event, cbmTidy, cbmSemantic, cbmToolPK, nlp, sub, tag, response)
+
+    fun copyNlp(nlp: SdkResponse<String>) = EventData(text, event, cbmTidy, cbmSemantic, cbmToolPK, nlp, sub, tag, response)
 }
 
 data class IATText(val ls: Boolean?, val pgs: String?, val rg: List<Int>?, val sn: Int?, val ws: List<WS>?) {
@@ -77,5 +86,7 @@ data class UIResponse(
         return category == Category.UNKNOWN
     }
 }
+
+data class CBMEvent(val type: String, val key: String, val data: String)
 
 
