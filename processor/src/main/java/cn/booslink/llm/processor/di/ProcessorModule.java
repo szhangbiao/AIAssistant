@@ -1,5 +1,6 @@
 package cn.booslink.llm.processor.di;
 
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 import cn.booslink.llm.processor.EventProcessorImpl;
@@ -10,6 +11,10 @@ import cn.booslink.llm.processor.process.app.AppProcessImpl;
 import cn.booslink.llm.processor.process.app.IAppProcess;
 import cn.booslink.llm.processor.process.control.ControlProcessImpl;
 import cn.booslink.llm.processor.process.control.IControlProcess;
+import cn.booslink.llm.processor.process.music.IMusicProcess;
+import cn.booslink.llm.processor.process.music.NetEaseMusicProcessImpl;
+import cn.booslink.llm.processor.process.video.IQiYiVideoProcessImpl;
+import cn.booslink.llm.processor.process.video.IVideoProcess;
 import cn.booslink.llm.processor.process.volume.IVolumeProcess;
 import cn.booslink.llm.processor.process.volume.VolumeProcessImpl;
 import cn.booslink.llm.processor.repository.AppRepositoryImpl;
@@ -41,4 +46,12 @@ public interface ProcessorModule {
 
     @Binds
     IAppRepository bindAppRepository(AppRepositoryImpl appRepositoryImpl);
+
+    @Binds
+    @Named("netease")
+    IMusicProcess bindMusicProcess(NetEaseMusicProcessImpl netEaseMusicProcessImpl);
+
+    @Binds
+    @Named("iqiyi")
+    IVideoProcess bindVideoProcess(IQiYiVideoProcessImpl iQiYiVideoProcessImpl);
 }

@@ -9,5 +9,5 @@ import io.reactivex.rxjava3.core.Single;
 public interface IAppRepository {
 
     Single<List<AppSummary>> getAppSummaryList();
-    Single<PkgInfo> getPkgInfo(AppSummary summary);
+    Single<PkgInfo> getPkgInfo(String pkgName);
 }

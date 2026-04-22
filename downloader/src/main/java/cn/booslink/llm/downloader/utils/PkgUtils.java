@@ -139,4 +139,13 @@ public class PkgUtils {
             Timber.tag(TAG).e(e, "Failed to launch app: %s", appInfo.getPkgName());
         }
     }
+
+    public static void launchIntent(Context context, Intent intent) {
+        try {
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(intent);
+        } catch (Exception e) {
+            Timber.tag(TAG).e(e, "Failed to launch app");
+        }
+    }
 }

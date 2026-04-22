@@ -1,9 +1,11 @@
 package cn.booslink.llm.processor.process.app;
 
 import android.content.Context;
+import android.content.Intent;
 import android.text.TextUtils;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.List;
@@ -57,7 +59,7 @@ public class AppProcessImpl implements IAppProcess {
     }
 
     @Override
-    public boolean handleAppAction(AIUIIntent intent, @NotNull List<Slot> slots) {
+    public boolean handleAppIntent(AIUIIntent intent, @NotNull List<Slot> slots) {
         if (slots.isEmpty()) return false;
         String appName = null;
         for (Slot slot : slots) {
@@ -71,6 +73,39 @@ public class AppProcessImpl implements IAppProcess {
         return true;
     }
 
+    @Override
+    public void launchAppWithInstall(String pkgName, @Nullable Intent intent) {
+        Disposable disposable = Single.just(pkgName)
+                .flatMap((Function<String, SingleSource<PkgInfo>>) deliveryPkgName -> {
+                    AppInfo appInfo = PkgUtils.getAppInfo(mContext, deliveryPkgName);
+                    if (appInfo != null) {
+                        if (intent == null) {
+                            PkgUtils.launchApp(mContext, deliveryPkgName);
+                            mSpeechInteraction.nlpAnswer("已为你打开应用");
+                        } else {
+                            PkgUtils.launchIntent(mContext, intent);
+                            mSpeechInteraction.nlpAnswer("好的");
+                        }
+                        return Single.just(PkgInfo.ignore());
+                    }
+                    return mAppRepository.getPkgInfo(deliveryPkgName);
+                })
+                .map(pkgInfo -> {
+                    if (pkgInfo.isIgnore()) return pkgInfo;
+                    File parentFile = ContextUtils.getDownloadParentFile(mContext);
+                    Map<String, ApkInfo> apkMap = PkgUtils.getApkInfoMapByDir(mContext, parentFile.getPath());
+                    ApkInfo apkInfo = apkMap.get(pkgInfo.getPkgName());
+                    if (apkInfo != null) {
+                        pkgInfo.setDownloaded(true);
+                        pkgInfo.setLocalPath(apkInfo.getPath());
+                    }
+                    return pkgInfo;
+                })
+                .compose(RxUtil.singleOnMain())
+                .subscribe(pkgInfo -> populateAppLaunchWithPkgInfo(pkgInfo, intent), this::populateProcessError);
+        addDisposable(disposable);
+    }
+
     private void findMatchApp(AIUIIntent intent, String appName) {
         Disposable disposable = mAppRepository.getAppSummaryList()
                 .flatMap((Function<List<AppSummary>, SingleSource<PkgInfo>>)
@@ -80,9 +115,10 @@ public class AppProcessImpl implements IAppProcess {
                                 .flatMap(summary -> {
                                     if (summary.isEmpty()) return Single.just(PkgInfo.empty());
                                     if (populateAppInstalledWithSummary(intent, summary)) return Single.just(PkgInfo.ignore());
-                                    return mAppRepository.getPkgInfo(summary);
+                                    return mAppRepository.getPkgInfo(summary.getPkgName());
                                 }))
                 .map(pkgInfo -> {
+                    if (pkgInfo.isEmpty() || pkgInfo.isIgnore()) return pkgInfo;
                     File parentFile = ContextUtils.getDownloadParentFile(mContext);
                     Map<String, ApkInfo> apkMap = PkgUtils.getApkInfoMapByDir(mContext, parentFile.getPath());
                     ApkInfo apkInfo = apkMap.get(pkgInfo.getPkgName());
@@ -95,31 +131,6 @@ public class AppProcessImpl implements IAppProcess {
                 .compose(RxUtil.singleOnMain())
                 .subscribe(pkgInfo -> processIntentWithPkgInfo(intent, pkgInfo), this::populateProcessError);
         addDisposable(disposable);
-    }
-
-    private void processIntentWithPkgInfo(AIUIIntent intent, PkgInfo pkgInfo) {
-        if (pkgInfo.isIgnore()) return;
-        if (pkgInfo.isEmpty()) {
-            mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.EMPTY));
-            mSpeechInteraction.nlpAnswer("未找到匹配的应用");
-        } else {
-            switch (intent) {
-                case DOWNLOAD:
-                    populateAppDownload(pkgInfo);
-                    break;
-                case INSTALL:
-                    populateAppInstall(pkgInfo);
-                    break;
-                case LAUNCH:
-                    populateAppLaunchWithPkgInfo(pkgInfo);
-                    break;
-            }
-        }
-    }
-
-    private void populateProcessError(Throwable throwable) {
-        mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.FAILED));
-        mSpeechInteraction.nlpAnswer("处理过程出错了");
     }
 
     private boolean populateAppInstalledWithSummary(AIUIIntent intent, AppSummary summary) {
@@ -142,6 +153,31 @@ public class AppProcessImpl implements IAppProcess {
             return true;
         }
         return false;
+    }
+
+    private void processIntentWithPkgInfo(AIUIIntent intent, PkgInfo pkgInfo) {
+        if (pkgInfo.isIgnore()) return;
+        if (pkgInfo.isEmpty()) {
+            mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.EMPTY));
+            mSpeechInteraction.nlpAnswer("未找到匹配的应用");
+        } else {
+            switch (intent) {
+                case DOWNLOAD:
+                    populateAppDownload(pkgInfo);
+                    break;
+                case INSTALL:
+                    populateAppInstall(pkgInfo);
+                    break;
+                case LAUNCH:
+                    populateAppLaunchWithPkgInfo(pkgInfo, null);
+                    break;
+            }
+        }
+    }
+
+    private void populateProcessError(Throwable throwable) {
+        mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.FAILED));
+        mSpeechInteraction.nlpAnswer("处理过程出错了");
     }
 
     private void populateAppDownload(PkgInfo pkgInfo) {
@@ -202,7 +238,7 @@ public class AppProcessImpl implements IAppProcess {
         }
     }
 
-    private void populateAppLaunchWithPkgInfo(PkgInfo pkgInfo) {
+    private void populateAppLaunchWithPkgInfo(PkgInfo pkgInfo, @Nullable Intent intent) {
         IAppManager downloadManager = mAppManagerLazy.get();
         if (downloadManager == null) return;
         if (downloadManager.isPkgDownloading() || downloadManager.isPkgInstalling()) {
@@ -220,9 +256,14 @@ public class AppProcessImpl implements IAppProcess {
             @Override
             public void onAppInstalled(ApkDownload download) {
                 super.onAppInstalled(download);
-                PkgUtils.launchApp(mContext, download.getPkgName());
+                if (intent == null) {
+                    PkgUtils.launchApp(mContext, download.getPkgName());
+                    mSpeechInteraction.nlpAnswer("已为你打开应用");
+                } else {
+                    PkgUtils.launchIntent(mContext, intent);
+                    mSpeechInteraction.nlpAnswer("好的");
+                }
                 mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.DONE));
-                mSpeechInteraction.nlpAnswer("已为你打开应用");
             }
         });
         if (pkgInfo.isDownloaded()) {

@@ -12,7 +12,14 @@ public enum AIUIIntent {
     VOLUME_MAX("VOLUME_MAX"),
     VOLUME_MIN("VOLUME_MIN"),
     UNMUTE("UNMUTE"),
-    MUTE("MUTE");
+    MUTE("MUTE"),
+    RANDOM_SEARCH("RANDOM_SEARCH"),
+    PLAY("PLAY"),
+    RESUME_PLAY("RESUME_PLAY"),
+    PAUSE("PAUSE"),
+    REPLAY("REPLAY"),
+    SCREEN_FULL("SCREEN_FULL"),
+    EXIT_SCREEN_FULL("EXIT_SCREEN_FULL");
 
     public static AIUIIntent fromString(String intent) {
         if (intent == null) {
