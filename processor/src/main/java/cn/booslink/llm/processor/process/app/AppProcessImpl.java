@@ -74,7 +74,7 @@ public class AppProcessImpl implements IAppProcess {
     }
 
     @Override
-    public void launchAppWithInstall(String pkgName, @Nullable Intent intent) {
+    public void launchAppWithIntent(String pkgName, @Nullable Intent intent) {
         Disposable disposable = Single.just(pkgName)
                 .flatMap((Function<String, SingleSource<PkgInfo>>) deliveryPkgName -> {
                     AppInfo appInfo = PkgUtils.getAppInfo(mContext, deliveryPkgName);

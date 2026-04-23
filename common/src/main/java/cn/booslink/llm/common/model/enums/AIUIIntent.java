@@ -15,6 +15,7 @@ public enum AIUIIntent {
     MUTE("MUTE"),
     RANDOM_SEARCH("RANDOM_SEARCH"),
     PLAY("PLAY"),
+    QUERY("QUERY"),
     RESUME_PLAY("RESUME_PLAY"),
     PAUSE("PAUSE"),
     REPLAY("REPLAY"),

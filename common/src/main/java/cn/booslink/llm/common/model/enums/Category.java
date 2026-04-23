@@ -8,6 +8,8 @@ public enum Category {
     VIDEO("IFLYTEK.video@2"),
     DRAMA("IFLYTEK.drama"),
     CONTROL("AIUI.control"),
+    KSONG("BOOSLINK.ksong"),
+    DANCE("BOOSLINK.square_dance"),
     SLEEP("Custom.sleep"); // 自定义
 
     private final String category;

@@ -5,7 +5,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import cn.booslink.llm.common.model.Semantic;
 import cn.booslink.llm.common.model.enums.AIUIIntent;
@@ -23,7 +22,7 @@ public class IntentProcessProxy implements IIntentProcess {
     private final IMusicProcess mMusicProcess;
 
     @Inject
-    public IntentProcessProxy(IAppProcess appProcess, IControlProcess controlProcess, IVolumeProcess volumeProcess, @Named("netease") IMusicProcess musicProcess) {
+    public IntentProcessProxy(IAppProcess appProcess, IControlProcess controlProcess, IVolumeProcess volumeProcess, IMusicProcess musicProcess) {
         this.mAppProcess = appProcess;
         this.mMusicProcess = musicProcess;
         this.mVolumeProcess = volumeProcess;
@@ -32,7 +31,7 @@ public class IntentProcessProxy implements IIntentProcess {
 
     @Override
     public void processIntent(Category category, @Nullable List<Semantic> semantics) {
-         if (semantics == null || semantics.isEmpty()) return;
+        if (semantics == null || semantics.isEmpty()) return;
         for (Semantic semantic : semantics) {
             boolean handled = processIntent(category, semantic);
         }
@@ -41,7 +40,7 @@ public class IntentProcessProxy implements IIntentProcess {
     private boolean processIntent(Category category, Semantic semantic) {
         AIUIIntent intent = semantic.getIntent();
         if (intent == null) return false;
-        if (category == Category.MUSIC) return mMusicProcess.handleMusicIntent(intent, semantic.getSlots());
+        if (mMusicProcess.shouldMusicProcess(category, intent)) return mMusicProcess.handleMusicIntent(intent, semantic.getSlots());
         switch (intent) {
             case EXIT:
                 mControlProcess.speechSleep();

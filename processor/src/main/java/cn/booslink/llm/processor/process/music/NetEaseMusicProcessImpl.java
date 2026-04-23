@@ -10,6 +10,7 @@ import javax.inject.Inject;
 
 import cn.booslink.llm.common.model.Slot;
 import cn.booslink.llm.common.model.enums.AIUIIntent;
+import cn.booslink.llm.common.model.enums.Category;
 import cn.booslink.llm.processor.process.app.IAppProcess;
 
 public class NetEaseMusicProcessImpl implements IMusicProcess {
@@ -26,14 +27,19 @@ public class NetEaseMusicProcessImpl implements IMusicProcess {
     }
 
     @Override
+    public boolean shouldMusicProcess(Category category, AIUIIntent intent) {
+        return category == Category.MUSIC && (intent == AIUIIntent.RANDOM_SEARCH || intent == AIUIIntent.PLAY);
+    }
+
+    @Override
     public boolean handleMusicIntent(AIUIIntent aiuiIntent, @NotNull List<Slot> slots) {
         switch (aiuiIntent) {
             case RANDOM_SEARCH:
-                mAppProcess.launchAppWithInstall(NETEASE_PACKAGE_NAME, null);
+                mAppProcess.launchAppWithIntent(NETEASE_PACKAGE_NAME, null);
                 return true;
             case PLAY:
                 Intent intent = getSupportActionBySlot(slots);
-                mAppProcess.launchAppWithInstall(NETEASE_PACKAGE_NAME, intent);
+                mAppProcess.launchAppWithIntent(NETEASE_PACKAGE_NAME, intent);
                 return true;
         }
         return false;

@@ -11,10 +11,17 @@ import cn.booslink.llm.processor.process.app.AppProcessImpl;
 import cn.booslink.llm.processor.process.app.IAppProcess;
 import cn.booslink.llm.processor.process.control.ControlProcessImpl;
 import cn.booslink.llm.processor.process.control.IControlProcess;
+import cn.booslink.llm.processor.process.ksong.BslQmKSongAction;
+import cn.booslink.llm.processor.process.ksong.DuoChangKSongAction;
+import cn.booslink.llm.processor.process.ksong.IKSongAction;
+import cn.booslink.llm.processor.process.ksong.IKSongProcess;
+import cn.booslink.llm.processor.process.ksong.KSongProcessImpl;
+import cn.booslink.llm.processor.process.ksong.QuanMinKSongAction;
+import cn.booslink.llm.processor.process.ksong.SmartKSongAction;
 import cn.booslink.llm.processor.process.music.IMusicProcess;
 import cn.booslink.llm.processor.process.music.NetEaseMusicProcessImpl;
-import cn.booslink.llm.processor.process.video.IQiYiVideoProcessImpl;
 import cn.booslink.llm.processor.process.video.IVideoProcess;
+import cn.booslink.llm.processor.process.video.VideoProcessImpl;
 import cn.booslink.llm.processor.process.volume.IVolumeProcess;
 import cn.booslink.llm.processor.process.volume.VolumeProcessImpl;
 import cn.booslink.llm.processor.repository.AppRepositoryImpl;
@@ -48,10 +55,27 @@ public interface ProcessorModule {
     IAppRepository bindAppRepository(AppRepositoryImpl appRepositoryImpl);
 
     @Binds
-    @Named("netease")
     IMusicProcess bindMusicProcess(NetEaseMusicProcessImpl netEaseMusicProcessImpl);
 
     @Binds
-    @Named("iqiyi")
-    IVideoProcess bindVideoProcess(IQiYiVideoProcessImpl iQiYiVideoProcessImpl);
+    IVideoProcess bindVideoProcess(VideoProcessImpl videoProcessImpl);
+
+    @Binds
+    IKSongProcess bindKSongProcess(KSongProcessImpl kSongProcessImpl);
+
+    @Binds
+    @Named("quanmin")
+    IKSongAction bindQuanMinAction(QuanMinKSongAction quanMinKSongAction);
+
+    @Binds
+    @Named("duochang")
+    IKSongAction bindDuoChangeAction(DuoChangKSongAction duoChangeKSongAction);
+
+    @Binds
+    @Named("smart")
+    IKSongAction bindSmartAction(SmartKSongAction smartKSongAction);
+
+    @Binds
+    @Named("bslqm")
+    IKSongAction bindBslQmAction(BslQmKSongAction bslQmKSongAction);
 }

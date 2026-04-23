@@ -1,11 +1,15 @@
 package cn.booslink.llm.downloader.utils;
 
+import android.app.ActivityManager;
+import android.app.usage.UsageStats;
+import android.app.usage.UsageStatsManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.os.Build;
 import android.text.TextUtils;
 import android.text.format.Formatter;
 
@@ -147,5 +151,35 @@ public class PkgUtils {
         } catch (Exception e) {
             Timber.tag(TAG).e(e, "Failed to launch app");
         }
+    }
+
+    public static String getForegroundPkgName(Context context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+            // 使用 UsageStatsManager (API 21+)
+            UsageStatsManager usageStatsManager = (UsageStatsManager) context.getSystemService(Context.USAGE_STATS_SERVICE);
+            long endTime = System.currentTimeMillis();
+            long beginTime = endTime - 1000 * 10; // 最近10秒
+            List<UsageStats> stats = usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, beginTime, endTime);
+            if (stats != null && !stats.isEmpty()) {
+                UsageStats recentStats = null;
+                for (UsageStats usageStats : stats) {
+                    if (recentStats == null || usageStats.getLastTimeUsed() > recentStats.getLastTimeUsed()) {
+                        recentStats = usageStats;
+                    }
+                }
+                return recentStats != null ? recentStats.getPackageName() : null;
+            }
+        } else {
+            // 降级到旧方法 (API < 21)
+            ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+            List<ActivityManager.RunningTaskInfo> infoList = manager.getRunningTasks(1);
+            if (infoList != null && !infoList.isEmpty()) {
+                ActivityManager.RunningTaskInfo taskInfo = infoList.get(0);
+                if (taskInfo != null && taskInfo.topActivity != null) {
+                    return taskInfo.topActivity.getPackageName();
+                }
+            }
+        }
+        return null;
     }
 }

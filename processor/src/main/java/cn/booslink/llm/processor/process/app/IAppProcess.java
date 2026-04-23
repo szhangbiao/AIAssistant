@@ -14,5 +14,5 @@ public interface IAppProcess {
 
     boolean handleAppIntent(AIUIIntent intent, @NotNull List<Slot> slots);
 
-    void launchAppWithInstall(String pkgName,@Nullable Intent intent);
+    void launchAppWithIntent(String pkgName, @Nullable Intent intent);
 }

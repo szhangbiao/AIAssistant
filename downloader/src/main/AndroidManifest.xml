@@ -14,7 +14,6 @@
     <uses-permission android:name="android.permission.READ_INSTALL_SESSIONS" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
-
     <application>
         <!-- 安装服务 -->
         <service
