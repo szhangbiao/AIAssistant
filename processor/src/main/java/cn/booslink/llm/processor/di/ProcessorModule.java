@@ -20,8 +20,13 @@ import cn.booslink.llm.processor.process.ksong.QuanMinKSongAction;
 import cn.booslink.llm.processor.process.ksong.SmartKSongAction;
 import cn.booslink.llm.processor.process.music.IMusicProcess;
 import cn.booslink.llm.processor.process.music.NetEaseMusicProcessImpl;
+import cn.booslink.llm.processor.process.video.IQiYiVideoAction;
+import cn.booslink.llm.processor.process.video.IVideoAction;
 import cn.booslink.llm.processor.process.video.IVideoProcess;
+import cn.booslink.llm.processor.process.video.ManGoTVVideoAction;
+import cn.booslink.llm.processor.process.video.TencentVideoAction;
 import cn.booslink.llm.processor.process.video.VideoProcessImpl;
+import cn.booslink.llm.processor.process.video.YouKuVideoAction;
 import cn.booslink.llm.processor.process.volume.IVolumeProcess;
 import cn.booslink.llm.processor.process.volume.VolumeProcessImpl;
 import cn.booslink.llm.processor.repository.AppRepositoryImpl;
@@ -78,4 +83,20 @@ public interface ProcessorModule {
     @Binds
     @Named("bslqm")
     IKSongAction bindBslQmAction(BslQmKSongAction bslQmKSongAction);
+
+    @Binds
+    @Named("iqiyi")
+    IVideoAction bindIQiYiAction(IQiYiVideoAction iqiyiVideoAction);
+
+    @Binds
+    @Named("youku")
+    IVideoAction bindYouKuAction(YouKuVideoAction youkuVideoAction);
+
+    @Binds
+    @Named("mango")
+    IVideoAction bindManGoAction(ManGoTVVideoAction manGoVideoAction);
+
+    @Binds
+    @Named("tencent")
+    IVideoAction bindTencentAction(TencentVideoAction tencentVideoAction);
 }

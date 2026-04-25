@@ -25,7 +25,9 @@ public class KSongProcessImpl implements IKSongProcess {
     private static final String BOOSLINK_QM_PACKAGE_NAME = "cn.booslink.kg";
     private static final String DUO_CHANG_PACKAGE_NAME = "com.evideo.kmbox";
     private static final String QUANMIN_PACKAGE_NAME = "com.tencent.karaoketv";
+    private static final String LEISHI_PACKAGE_NAME = "cn.jmake.karaoke.box.ott";
     private static final String SMART_PACKAGE_NAME = "com.huiaichang.sdm.desktop";
+    private static final String LEIKA_PACKAGE_NAME = "com.huiaichang.mars.desktop";
 
     @Inject
     @Named("quanmin")
@@ -51,18 +53,54 @@ public class KSongProcessImpl implements IKSongProcess {
 
     @Override
     public boolean shouldKSongProcess(Category category, AIUIIntent intent) {
-        return category == Category.KSONG || (category == Category.CONTROL && (
-                intent == AIUIIntent.RESUME_PLAY || intent == AIUIIntent.PAUSE // TODO
+        String foregroundPackage = PkgUtils.getForegroundPkgName(mContext);
+        boolean isKSongAppStartup = BOOSLINK_QM_PACKAGE_NAME.equals(foregroundPackage) || DUO_CHANG_PACKAGE_NAME.equals(foregroundPackage) || QUANMIN_PACKAGE_NAME.equals(foregroundPackage) || SMART_PACKAGE_NAME.equals(foregroundPackage) || LEIKA_PACKAGE_NAME.equals(foregroundPackage);
+        return category == Category.KSONG || (isKSongAppStartup && category == Category.CONTROL && (
+                intent == AIUIIntent.RESUME_PLAY || // 播放
+                        intent == AIUIIntent.PAUSE ||// 暂停
+                        //intent == AIUIIntent.XXX ||// 原唱
+                        //intent == AIUIIntent.XXX ||// 伴唱
+                        intent == AIUIIntent.CHOOSE_NEXT ||// 下一曲, 下一页
+                        intent == AIUIIntent.REPLAY ||// 重播
+                        //intent == AIUIIntent.XXX ||// 点歌
+                        //intent == AIUIIntent.XXX ||// 移除点歌
+                        //intent == AIUIIntent.XXX ||// 置顶
+                        //intent == AIUIIntent.XXX ||// 打开评分
+                        //intent == AIUIIntent.XXX ||// 关闭评分
+                        intent == AIUIIntent.SCREEN_FULL ||// 全屏
+                        intent == AIUIIntent.EXIT_SCREEN_FULL ||// 退出全屏
+                        intent == AIUIIntent.PLAYLIST_OPEN || // 打开播放列表
+                        intent == AIUIIntent.CHOOSE_WHICH || // 选择第几首
+                        intent == AIUIIntent.CHOOSE_PREVIOUS || // 上一页
+                        intent == AIUIIntent.EXIT // 关闭当前页
+                //intent == AIUIIntent.XXX || // 打开最近播放
+                //intent == AIUIIntent.XXX || // 打开收藏
+                //intent == AIUIIntent.XXX || // 打开本地
+                //intent == AIUIIntent.XXX || // 打开常唱
         ));
     }
 
     @Override
     public boolean handleKSongIntent(AIUIIntent intent, @NotNull List<Slot> slots) {
+        if (intent == AIUIIntent.RANDOM_KSONG) {
+            return populateKSongEntryPoint();
+        }
         Intent actionIntent = getActualIntent(intent, slots);
         if (actionIntent != null) {
-            mAppProcess.launchAppWithIntent(getTargetPkgName(), actionIntent);
+            populateKSongIntent(actionIntent);
             return true;
         }
+        return false;
+    }
+
+    private boolean populateKSongEntryPoint() {
+        String foregroundPackage = PkgUtils.getForegroundPkgName(mContext);
+        boolean isKSongAppStartup = BOOSLINK_QM_PACKAGE_NAME.equals(foregroundPackage) || DUO_CHANG_PACKAGE_NAME.equals(foregroundPackage) || QUANMIN_PACKAGE_NAME.equals(foregroundPackage) || SMART_PACKAGE_NAME.equals(foregroundPackage) || LEIKA_PACKAGE_NAME.equals(foregroundPackage);
+        if (!isKSongAppStartup) {
+            mAppProcess.launchAppWithIntent(BOOSLINK_QM_PACKAGE_NAME, null);
+            return true;
+        }
+        // TODO ksong app already startup
         return false;
     }
 
@@ -74,7 +112,22 @@ public class KSongProcessImpl implements IKSongProcess {
                 return songAction.play();
             case PAUSE:
                 return songAction.pause();
-            // TODO other action
+            case CHOOSE_NEXT:
+            case REPLAY:
+                return songAction.replay();
+            case SCREEN_FULL:
+                return songAction.fullScreen();
+            case EXIT_SCREEN_FULL:
+                return songAction.exitFullScreen();
+            case PLAYLIST_OPEN:
+                return songAction.openPlaylist();
+            case CHOOSE_WHICH:
+                int num = getChooseNumBySlot(slots);
+                return songAction.select(num);
+            case CHOOSE_PREVIOUS:
+                return songAction.previousPage();
+            case EXIT:
+                return songAction.closePage();
         }
         return null;
     }
@@ -91,6 +144,7 @@ public class KSongProcessImpl implements IKSongProcess {
             case DUO_CHANG_PACKAGE_NAME:
                 return mDuoChangActionLazy.get();
             case SMART_PACKAGE_NAME:
+            case LEIKA_PACKAGE_NAME:
                 return mSmartActionLazy.get();
             case BOOSLINK_QM_PACKAGE_NAME:
                 return mBslQmActionLazy.get();
@@ -98,21 +152,17 @@ public class KSongProcessImpl implements IKSongProcess {
         return null;
     }
 
-    private String getTargetPkgName() {
+    private void populateKSongIntent(Intent actionIntent) {
         String foregroundPackage = PkgUtils.getForegroundPkgName(mContext);
-        if (TextUtils.isEmpty(foregroundPackage)) {
-            return BOOSLINK_QM_PACKAGE_NAME;
+        if (QUANMIN_PACKAGE_NAME.equals(foregroundPackage)) {
+            mContext.sendBroadcast(actionIntent);
+        } else if (!DUO_CHANG_PACKAGE_NAME.equals(foregroundPackage)) {
+            mContext.startActivity(actionIntent);
         }
-        switch (foregroundPackage) {
-            case QUANMIN_PACKAGE_NAME:
-                return QUANMIN_PACKAGE_NAME;
-            case DUO_CHANG_PACKAGE_NAME:
-                return DUO_CHANG_PACKAGE_NAME;
-            case SMART_PACKAGE_NAME:
-                return SMART_PACKAGE_NAME;
-            case BOOSLINK_QM_PACKAGE_NAME:
-                return BOOSLINK_QM_PACKAGE_NAME;
-        }
-        return null;
+    }
+
+    private int getChooseNumBySlot(@NotNull List<Slot> slots) {
+        // TODO
+        return 0;
     }
 }

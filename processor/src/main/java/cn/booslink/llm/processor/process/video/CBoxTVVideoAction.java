@@ -2,8 +2,7 @@ package cn.booslink.llm.processor.process.video;
 
 import android.content.Intent;
 
-public class YouKuVideoAction implements IVideoAction {
-
+public class CBoxTVVideoAction implements IVideoAction{
     @Override
     public Intent exitApp() {
         return null;

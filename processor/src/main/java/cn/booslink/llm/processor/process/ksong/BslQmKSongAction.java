@@ -12,7 +12,7 @@ import timber.log.Timber;
 
 public class BslQmKSongAction implements IKSongAction {
 
-    private static final String TAG = "BoosLinKSong";
+    private static final String TAG = "BoosLinkKSong";
 
     @Inject
     public BslQmKSongAction() {
@@ -160,7 +160,7 @@ public class BslQmKSongAction implements IKSongAction {
     }
 
     private Intent getIntentWithParams(int action, int m0, String artist, String song) {
-        StringBuilder deeplink = new StringBuilder("booslink_kg://?action=" + action);
+        StringBuilder deeplink = new StringBuilder("booslink_kg://?action=").append(action);
         if (m0 != -1) {
             deeplink.append("&m0=").append(m0);
         }

@@ -23,4 +23,14 @@ public class ControlProcessImpl implements IControlProcess {
             speechAgent.sendMessage(new AIUIMessage(AIUIConstant.CMD_RESET_WAKEUP, 0, 0, null, null));
         }
     }
+
+    @Override
+    public void pageBack() {
+
+    }
+
+    @Override
+    public void backToDesktop() {
+
+    }
 }

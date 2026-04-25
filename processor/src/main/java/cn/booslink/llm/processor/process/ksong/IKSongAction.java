@@ -68,7 +68,7 @@ public interface IKSongAction {
     Intent openFavorite(); // 打开收藏
 
     @Nullable
-    Intent openLocal(); //
+    Intent openLocal(); // 打开本地
 
     @Nullable
     Intent openFrequent(); //打开常唱
