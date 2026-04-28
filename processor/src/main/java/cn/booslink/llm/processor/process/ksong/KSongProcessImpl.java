@@ -58,25 +58,25 @@ public class KSongProcessImpl implements IKSongProcess {
         return category == Category.KSONG || (isKSongAppStartup && category == Category.CONTROL && (
                 intent == AIUIIntent.RESUME_PLAY || // 播放
                         intent == AIUIIntent.PAUSE ||// 暂停
-                        //intent == AIUIIntent.XXX ||// 原唱
-                        //intent == AIUIIntent.XXX ||// 伴唱
                         intent == AIUIIntent.CHOOSE_NEXT ||// 下一曲, 下一页
                         intent == AIUIIntent.REPLAY ||// 重播
-                        //intent == AIUIIntent.XXX ||// 点歌
-                        //intent == AIUIIntent.XXX ||// 移除点歌
-                        //intent == AIUIIntent.XXX ||// 置顶
-                        //intent == AIUIIntent.XXX ||// 打开评分
-                        //intent == AIUIIntent.XXX ||// 关闭评分
+
                         intent == AIUIIntent.SCREEN_FULL ||// 全屏
                         intent == AIUIIntent.EXIT_SCREEN_FULL ||// 退出全屏
                         intent == AIUIIntent.PLAYLIST_OPEN || // 打开播放列表
                         intent == AIUIIntent.CHOOSE_WHICH || // 选择第几首
-                        intent == AIUIIntent.CHOOSE_PREVIOUS || // 上一页
-                        intent == AIUIIntent.EXIT // 关闭当前页
-                //intent == AIUIIntent.XXX || // 打开最近播放
-                //intent == AIUIIntent.XXX || // 打开收藏
-                //intent == AIUIIntent.XXX || // 打开本地
-                //intent == AIUIIntent.XXX || // 打开常唱
+                        intent == AIUIIntent.CHOOSE_PREVIOUS // 上一页
+        )) || (isKSongAppStartup && category == Category.PAGE_CONTROL && (
+                intent == AIUIIntent.PAGE_OPEN || //打开最近播放,收藏,本地,常唱
+                        intent == AIUIIntent.PAGE_BACK // 关闭当前页 or 返回到上一级页面
+        )) || (isKSongAppStartup && (
+                intent == AIUIIntent.ORIGINAL ||// 原唱
+                        intent == AIUIIntent.ACCOMPANY ||// 伴唱
+                        intent == AIUIIntent.KSONG_ADD ||// 点歌
+                        //intent == AIUIIntent.KSONG_TOP ||// 移除点歌
+                        intent == AIUIIntent.KSONG_TOP ||// 置顶
+                        intent == AIUIIntent.OPEN_SCORE ||// 打开评分
+                        intent == AIUIIntent.CLOSE_SCORE // 关闭评分);
         ));
     }
 
@@ -126,8 +126,22 @@ public class KSongProcessImpl implements IKSongProcess {
                 return songAction.select(num);
             case CHOOSE_PREVIOUS:
                 return songAction.previousPage();
-            case EXIT:
+            case PAGE_BACK:
                 return songAction.closePage();
+            case PAGE_OPEN:
+                return getPageIntentBySlot(slots);
+            case ORIGINAL:
+                return songAction.originTrack();
+            case ACCOMPANY:
+                return songAction.accompanyTrack();
+            case KSONG_ADD:
+                return songAction.addSong(slots.get(0).getValue(), slots.get(1).getValue(), false);
+            case KSONG_TOP:
+                return songAction.topSong(slots.get(0).getValue(), slots.get(1).getValue());
+            case OPEN_SCORE:
+                return songAction.openScore();
+            case CLOSE_SCORE:
+                return songAction.closeScore();
         }
         return null;
     }
@@ -162,7 +176,42 @@ public class KSongProcessImpl implements IKSongProcess {
     }
 
     private int getChooseNumBySlot(@NotNull List<Slot> slots) {
-        // TODO
+        for (Slot slot : slots) {
+            if ("number".equals(slot.getName())) {
+                return tryParseIntNum(slot.getNormValue());
+            }
+        }
         return 0;
+    }
+
+    private Intent getPageIntentBySlot(@NotNull List<Slot> slots) {
+        for (Slot slot : slots) {
+            if ("page".equals(slot.getName())) {
+                if (TextUtils.isEmpty(slot.getValue())) return null;
+                IKSongAction songAction = getKSongAction();
+                if (songAction == null) return null;
+                switch (slot.getValue()) {
+                    case "收藏":
+                        return songAction.openFavorite();
+                    case "最近播放":
+                        return songAction.openRecent();
+                    case "本地":
+                        return songAction.openLocal();
+                    case "常唱":
+                        return songAction.openFrequent();
+                }
+            }
+        }
+        return null;
+    }
+
+    private int tryParseIntNum(String value) {
+        int intNum;
+        try {
+            intNum = Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            intNum = 0;
+        }
+        return intNum;
     }
 }

@@ -39,17 +39,10 @@ public class VideoProcessImpl implements IVideoProcess {
     @Override
     public boolean shouldVideoProcess(Category category, AIUIIntent intent) {
         String foregroundPackage = PkgUtils.getForegroundPkgName(mContext);
-        return category == Category.VIDEO || (IQIYI_PACKAGE_NAME.equals(foregroundPackage) && category == Category.CONTROL && (
-                intent == AIUIIntent.EXIT || // 退出APP
-                        //intent == AIUIIntent.XXX || // 返回到上一级页面
-                        //intent == AIUIIntent.XXX || // 打开登录页面
-                        //intent == AIUIIntent.XXX || // 打开收银台页面
-                        //intent == AIUIIntent.XXX || // 打开播放历史页面
-                        //intent == AIUIIntent.XXX || // 打开收藏页面
-                        //intent == AIUIIntent.XXX || // 打开榜单页面
-                        //intent == AIUIIntent.XXX || // 打开首页频道页面
-                        //intent == AIUIIntent.XXX || // 打开搜索页面
-                        intent == AIUIIntent.RESUME_PLAY || // 播放
+        boolean isAppOpened = IQIYI_PACKAGE_NAME.equals(foregroundPackage);
+        return category == Category.VIDEO || (isAppOpened && category == Category.CONTROL && (
+                //intent == AIUIIntent.XXX || // 打开搜索页面
+                intent == AIUIIntent.RESUME_PLAY || // 播放
                         intent == AIUIIntent.PAUSE || // 暂停
                         intent == AIUIIntent.REPLAY || // 重新播放
                         intent == AIUIIntent.CHOOSE_NEXT || // 下一集
@@ -57,14 +50,17 @@ public class VideoProcessImpl implements IVideoProcess {
                         intent == AIUIIntent.FAST_FORWARD || // 快进
                         intent == AIUIIntent.REWIND || // 快退
                         intent == AIUIIntent.PLAYTIME_SET || // 跳转到指定时间
-                        // intent == AIUIIntent.XXX || // 切换倍速
-                        // intent == AIUIIntent.XXX || // 切换清晰度
                         intent == AIUIIntent.BRIGHT_UP || intent == AIUIIntent.BRIGHT_DOWN || intent == AIUIIntent.BRIGHT_MAX || intent == AIUIIntent.BRIGHT_MIN ||// 修改亮度
                         intent == AIUIIntent.VOLUME_PLUS || intent == AIUIIntent.VOLUME_MINUS || intent == AIUIIntent.VOLUME_MAX || intent == AIUIIntent.VOLUME_MIN || intent == AIUIIntent.UNMUTE || intent == AIUIIntent.MUTE || // 修改音量
                         intent == AIUIIntent.SKIP_SET // 跳过片头， 跳过片尾
-                //intent == AIUIIntent.XXX || // // 收藏/取消收藏
-                //intent == AIUIIntent.XXX || // // 开启/关闭弹幕
-
+        )) || (isAppOpened && category == Category.PAGE_CONTROL && (
+                intent == AIUIIntent.PAGE_OPEN || // 打开登录、收银台、播放历史、收藏、xx频道榜单、首页XX频道
+                        intent == AIUIIntent.PAGE_BACK //返回到上一级页面
+        )) || (isAppOpened && category == Category.VIDEO_ENHANCE && (
+                intent == AIUIIntent.SPEED_DOWN || intent == AIUIIntent.SPEED_UP || intent == AIUIIntent.CHANGE_SPEED || // 切换倍速
+                        intent == AIUIIntent.RATE_DOWN || intent == AIUIIntent.RATE_UP || intent == AIUIIntent.CHANGE_RATE || //  切换清晰度
+                        intent == AIUIIntent.FAVOR_REMOVE || intent == AIUIIntent.FAVOR_ADD || // 收藏/取消收藏
+                        intent == AIUIIntent.CLOSE_DANMU || intent == AIUIIntent.OPEN_DANMU // 开启/关闭弹幕
         ));
     }
 
@@ -73,7 +69,12 @@ public class VideoProcessImpl implements IVideoProcess {
         if (intent == AIUIIntent.QUERY) {
             return populateActionBySlots(slots);
         }
-        return populateByVideoAction(intent, slots);
+        Intent actionIntent = populateByVideoAction(intent, slots);
+        if (actionIntent != null) {
+            startIntent(actionIntent);
+            return true;
+        }
+        return false;
     }
 
     private boolean populateActionBySlots(@NotNull List<Slot> slots) {
@@ -98,68 +99,87 @@ public class VideoProcessImpl implements IVideoProcess {
         return false;
     }
 
-    private boolean populateByVideoAction(AIUIIntent intent, @NotNull List<Slot> slots) {
+    private Intent populateByVideoAction(AIUIIntent intent, @NotNull List<Slot> slots) {
         String foregroundPackage = PkgUtils.getForegroundPkgName(mContext);
         IVideoAction videoAction = getVideoActionByPkgName(foregroundPackage);
         switch (intent) {
             case EXIT:
-                return startIntent(videoAction.exitApp());
+                return videoAction.exitApp();
             case RESUME_PLAY:
-                return startIntent(videoAction.play());
+                return videoAction.play();
             case PAUSE:
-                return startIntent(videoAction.pause());
+                return videoAction.pause();
             case REPLAY:
-                return startIntent(videoAction.replay());
+                return videoAction.replay();
             case CHOOSE_NEXT:
-                return startIntent(videoAction.next());
+                return videoAction.next();
             case CHOOSE_WHICH:
                 String num = getPlayNumberBySlot(slots);
-                if (TextUtils.isEmpty(num)) return false;
-                return startIntent(videoAction.choosePlay(num));
+                if (TextUtils.isEmpty(num)) return null;
+                return videoAction.choosePlay(num);
             case CHOOSE_LAST:
-                return startIntent(videoAction.choosePlay("END"));
+                return videoAction.choosePlay("END");
             case FAST_FORWARD:
                 String forward = getDurationBySlot(slots);
-                return startIntent(videoAction.fastForward(forward));
+                return videoAction.fastForward(forward);
             case REWIND:
                 String backword = getDurationBySlot(slots);
-                return startIntent(videoAction.fastBackword(backword));
+                return videoAction.fastBackword(backword);
             case PLAYTIME_SET:
                 String playTime = getDurationBySlot(slots);
-                return startIntent(videoAction.seekTo(playTime));
+                return videoAction.seekTo(playTime);
             case BRIGHT_UP:
-                return startIntent(videoAction.changeBright("UP"));
+                return videoAction.changeBright("UP");
             case BRIGHT_DOWN:
-                return startIntent(videoAction.changeBright("DOWN"));
+                return videoAction.changeBright("DOWN");
             case BRIGHT_MAX:
-                return startIntent(videoAction.changeBright("225"));
+                return videoAction.changeBright("225");
             case BRIGHT_MIN:
-                return startIntent(videoAction.changeBright("0"));
+                return videoAction.changeBright("0");
             case VOLUME_PLUS:
-                return startIntent(videoAction.changeVolume("UP"));
+                return videoAction.changeVolume("UP");
             case VOLUME_MINUS:
-                return startIntent(videoAction.changeVolume("DOWN"));
+                return videoAction.changeVolume("DOWN");
             case VOLUME_MAX:
-                return startIntent(videoAction.changeVolume("500"));
+                return videoAction.changeVolume("500");
             case MUTE:
             case VOLUME_MIN:
-                return startIntent(videoAction.changeVolume("0"));
+                return videoAction.changeVolume("0");
             case UNMUTE:
-                return startIntent(videoAction.changeVolume("250"));
+                return videoAction.changeVolume("250");
             case SKIP_SET:
                 int skipValue = getSkipValueBySlot(slots);
                 if (skipValue > 0) {
-                    return startIntent(videoAction.skipHead());
+                    return videoAction.skipHead();
                 } else if (skipValue < 0) {
-                    return startIntent(videoAction.skipTile());
+                    return videoAction.skipTile();
                 } else {
-                    return false;
+                    return null;
                 }
-            default:
-                // TODO operation action
-                break;
+            case SPEED_DOWN:
+                return videoAction.changeSpeed("DOWN");
+            case SPEED_UP:
+                return videoAction.changeSpeed("UP");
+            case CHANGE_SPEED:
+                // TODO get speed by slots
+                return null;
+            case RATE_DOWN:
+                return videoAction.changeRate("DOWN");
+            case RATE_UP:
+                return videoAction.changeRate("UP");
+            case CHANGE_RATE:
+                // TODO get rate by slots
+                return null;
+            case FAVOR_REMOVE:
+                return videoAction.changeFavorite("false");
+            case FAVOR_ADD:
+                return videoAction.changeFavorite("true");
+            case OPEN_DANMU:
+                return videoAction.changeDanMu("true");
+            case CLOSE_DANMU:
+                return videoAction.changeDanMu("false");
         }
-        return false;
+        return null;
     }
 
     private int getSkipValueBySlot(@NotNull List<Slot> slots) {
@@ -176,10 +196,9 @@ public class VideoProcessImpl implements IVideoProcess {
         return 0;
     }
 
-    private boolean startIntent(Intent intent) {
-        if (intent == null) return false;
+    private void startIntent(Intent intent) {
+        if (intent == null) return;
         mContext.startActivity(intent);
-        return true;
     }
 
     private IVideoAction getVideoActionByPkgName(String foregroundPackage) {

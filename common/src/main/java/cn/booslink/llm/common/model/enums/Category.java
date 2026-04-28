@@ -6,9 +6,11 @@ public enum Category {
     WEATHER("IFLYTEK.weather"),
     MUSIC("IFLYTEK.musicX"),
     VIDEO("IFLYTEK.video@2"),
+    VIDEO_ENHANCE("BOOSLINK.video_control"),
     DRAMA("IFLYTEK.drama"),
     CONTROL("AIUI.control"),
     KSONG("BOOSLINK.ksong"),
+    PAGE_CONTROL("BOOSLINK.page_control"),
     DANCE("BOOSLINK.square_dance"),
     SLEEP("Custom.sleep"); // 自定义
 

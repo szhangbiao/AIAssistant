@@ -26,9 +26,8 @@ public class DanceProcessImpl implements IDanceProcess {
     public boolean shouldDanceProcess(Category category, AIUIIntent intent) {
         String foregroundPackage = PkgUtils.getForegroundPkgName(mContext);
         return category == Category.DANCE || (VLT_DANCE_PACKAGE_NAME.equals(foregroundPackage) && category == Category.CONTROL && (
-                intent == AIUIIntent.BRIGHT_DOWN
+                intent == AIUIIntent.BRIGHT_DOWN // TODO
         ));
-
     }
 
     @Override

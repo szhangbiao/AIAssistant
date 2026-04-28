@@ -4,6 +4,9 @@ public enum AIUIIntent {
 
     UNKNOWN(""),
     EXIT("EXIT"),
+    // 页面跳转
+    PAGE_BACK("PAGE_BACK"),
+    PAGE_OPEN("PAGE_OPEN"),
     LAUNCH("LAUNCH"),
     DOWNLOAD("DOWNLOAD"),
     INSTALL("INSTALL"),
@@ -34,7 +37,23 @@ public enum AIUIIntent {
     SKIP_SET("SKIP_SET"),
     SCREEN_FULL("SCREEN_FULL"),
     EXIT_SCREEN_FULL("EXIT_SCREEN_FULL"),
-    PLAYLIST_OPEN("PLAYLIST_OPEN");
+    PLAYLIST_OPEN("PLAYLIST_OPEN"),
+    OPEN_SCORE("OPEN_SCORE"),
+    CLOSE_SCORE("CLOSE_SCORE"),
+    KSONG_TOP("KSONG_TOP"),
+    KSONG_ADD("KSONG_ADD"),
+    ACCOMPANY("ACCOMPANY"),
+    ORIGINAL("ORIGINAL"),
+    SPEED_DOWN("SPEED_DOWN"),
+    SPEED_UP("SPEED_UP"),
+    RATE_DOWN("RATE_DOWN"),
+    RATE_UP("RATE_UP"),
+    FAVOR_REMOVE("FAVOR_REMOVE"),
+    FAVOR_ADD("FAVOR_ADD"),
+    CLOSE_DANMU("CLOSE_DANMU"),
+    OPEN_DANMU("OPEN_DANMU"),
+    CHANGE_RATE("CHANGE_RATE"),
+    CHANGE_SPEED("CHANGE_SPEED");
 
     public static AIUIIntent fromString(String intent) {
         if (intent == null) {
