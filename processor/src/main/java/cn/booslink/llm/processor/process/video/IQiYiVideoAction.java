@@ -13,6 +13,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.inject.Inject;
+
 import timber.log.Timber;
 
 public class IQiYiVideoAction implements IVideoAction {
@@ -60,6 +62,10 @@ public class IQiYiVideoAction implements IVideoAction {
         mChannelIdMap.put("动漫", "4");
         mChannelIdMap.put("综艺", "6");
         mChannelIdMap.put("儿童", "15");
+    }
+
+    @Inject
+    public IQiYiVideoAction() {
     }
 
     @Override

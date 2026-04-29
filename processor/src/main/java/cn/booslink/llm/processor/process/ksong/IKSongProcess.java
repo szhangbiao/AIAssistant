@@ -9,7 +9,7 @@ import cn.booslink.llm.common.model.enums.AIUIIntent;
 import cn.booslink.llm.common.model.enums.Category;
 
 public interface IKSongProcess {
-    boolean shouldKSongProcess(Category category, AIUIIntent intent);
+    boolean shouldKSongProcess(String foregroundPkgName, Category category, AIUIIntent intent);
 
-    boolean handleKSongIntent(AIUIIntent intent, @NotNull List<Slot> slots);
+    boolean handleKSongIntent(String foregroundPkgName, AIUIIntent intent, @NotNull List<Slot> slots);
 }

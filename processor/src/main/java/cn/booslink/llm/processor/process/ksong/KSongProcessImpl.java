@@ -15,7 +15,6 @@ import javax.inject.Named;
 import cn.booslink.llm.common.model.Slot;
 import cn.booslink.llm.common.model.enums.AIUIIntent;
 import cn.booslink.llm.common.model.enums.Category;
-import cn.booslink.llm.downloader.utils.PkgUtils;
 import cn.booslink.llm.processor.process.app.IAppProcess;
 import dagger.Lazy;
 import dagger.hilt.android.qualifiers.ApplicationContext;
@@ -52,15 +51,13 @@ public class KSongProcessImpl implements IKSongProcess {
     }
 
     @Override
-    public boolean shouldKSongProcess(Category category, AIUIIntent intent) {
-        String foregroundPackage = PkgUtils.getForegroundPkgName(mContext);
-        boolean isKSongAppStartup = BOOSLINK_QM_PACKAGE_NAME.equals(foregroundPackage) || DUO_CHANG_PACKAGE_NAME.equals(foregroundPackage) || QUANMIN_PACKAGE_NAME.equals(foregroundPackage) || SMART_PACKAGE_NAME.equals(foregroundPackage) || LEIKA_PACKAGE_NAME.equals(foregroundPackage);
-        return category == Category.KSONG || (isKSongAppStartup && category == Category.CONTROL && (
+    public boolean shouldKSongProcess(String foregroundPkgName, Category category, AIUIIntent intent) {
+        boolean isKSongAppStartup = BOOSLINK_QM_PACKAGE_NAME.equals(foregroundPkgName) || DUO_CHANG_PACKAGE_NAME.equals(foregroundPkgName) || QUANMIN_PACKAGE_NAME.equals(foregroundPkgName) || SMART_PACKAGE_NAME.equals(foregroundPkgName) || LEIKA_PACKAGE_NAME.equals(foregroundPkgName);
+        return (isKSongAppStartup && category == Category.CONTROL && (
                 intent == AIUIIntent.RESUME_PLAY || // 播放
                         intent == AIUIIntent.PAUSE ||// 暂停
                         intent == AIUIIntent.CHOOSE_NEXT ||// 下一曲, 下一页
                         intent == AIUIIntent.REPLAY ||// 重播
-
                         intent == AIUIIntent.SCREEN_FULL ||// 全屏
                         intent == AIUIIntent.EXIT_SCREEN_FULL ||// 退出全屏
                         intent == AIUIIntent.PLAYLIST_OPEN || // 打开播放列表
@@ -69,11 +66,12 @@ public class KSongProcessImpl implements IKSongProcess {
         )) || (isKSongAppStartup && category == Category.PAGE_CONTROL && (
                 intent == AIUIIntent.PAGE_OPEN || //打开最近播放,收藏,本地,常唱
                         intent == AIUIIntent.PAGE_BACK // 关闭当前页 or 返回到上一级页面
-        )) || (isKSongAppStartup && (
-                intent == AIUIIntent.ORIGINAL ||// 原唱
-                        intent == AIUIIntent.ACCOMPANY ||// 伴唱
+        )) || (isKSongAppStartup && category == Category.KSONG && (
+                intent == AIUIIntent.RANDOM_KSONG ||// 打开应用
+                        intent == AIUIIntent.KSONG_ORIGIN ||// 原唱
+                        intent == AIUIIntent.KSONG_ACCOM ||// 伴唱
                         intent == AIUIIntent.KSONG_ADD ||// 点歌
-                        //intent == AIUIIntent.KSONG_TOP ||// 移除点歌
+                        intent == AIUIIntent.KSONG_REMOVE ||// 移除点歌
                         intent == AIUIIntent.KSONG_TOP ||// 置顶
                         intent == AIUIIntent.OPEN_SCORE ||// 打开评分
                         intent == AIUIIntent.CLOSE_SCORE // 关闭评分);
@@ -81,21 +79,20 @@ public class KSongProcessImpl implements IKSongProcess {
     }
 
     @Override
-    public boolean handleKSongIntent(AIUIIntent intent, @NotNull List<Slot> slots) {
-        if (intent == AIUIIntent.RANDOM_KSONG) {
-            return populateKSongEntryPoint();
+    public boolean handleKSongIntent(String foregroundPkgName, AIUIIntent intent, @NotNull List<Slot> slots) {
+        if (intent == AIUIIntent.RANDOM_KSONG || intent == AIUIIntent.KSONG_ADD) {
+            return populateKSongEntryPoint(foregroundPkgName);
         }
-        Intent actionIntent = getActualIntent(intent, slots);
+        Intent actionIntent = getActualIntent(foregroundPkgName, intent, slots);
         if (actionIntent != null) {
-            populateKSongIntent(actionIntent);
+            populateKSongIntent(foregroundPkgName, actionIntent);
             return true;
         }
         return false;
     }
 
-    private boolean populateKSongEntryPoint() {
-        String foregroundPackage = PkgUtils.getForegroundPkgName(mContext);
-        boolean isKSongAppStartup = BOOSLINK_QM_PACKAGE_NAME.equals(foregroundPackage) || DUO_CHANG_PACKAGE_NAME.equals(foregroundPackage) || QUANMIN_PACKAGE_NAME.equals(foregroundPackage) || SMART_PACKAGE_NAME.equals(foregroundPackage) || LEIKA_PACKAGE_NAME.equals(foregroundPackage);
+    private boolean populateKSongEntryPoint(String foregroundPkgName) {
+        boolean isKSongAppStartup = BOOSLINK_QM_PACKAGE_NAME.equals(foregroundPkgName) || DUO_CHANG_PACKAGE_NAME.equals(foregroundPkgName) || QUANMIN_PACKAGE_NAME.equals(foregroundPkgName) || SMART_PACKAGE_NAME.equals(foregroundPkgName) || LEIKA_PACKAGE_NAME.equals(foregroundPkgName);
         if (!isKSongAppStartup) {
             mAppProcess.launchAppWithIntent(BOOSLINK_QM_PACKAGE_NAME, null);
             return true;
@@ -104,8 +101,8 @@ public class KSongProcessImpl implements IKSongProcess {
         return false;
     }
 
-    private Intent getActualIntent(AIUIIntent intent, @NotNull List<Slot> slots) {
-        IKSongAction songAction = getKSongAction();
+    private Intent getActualIntent(String foregroundPkgName, AIUIIntent intent, @NotNull List<Slot> slots) {
+        IKSongAction songAction = getKSongAction(foregroundPkgName);
         if (songAction == null) return null;
         switch (intent) {
             case RESUME_PLAY:
@@ -113,6 +110,8 @@ public class KSongProcessImpl implements IKSongProcess {
             case PAUSE:
                 return songAction.pause();
             case CHOOSE_NEXT:
+                // TODO
+                return null;
             case REPLAY:
                 return songAction.replay();
             case SCREEN_FULL:
@@ -129,15 +128,19 @@ public class KSongProcessImpl implements IKSongProcess {
             case PAGE_BACK:
                 return songAction.closePage();
             case PAGE_OPEN:
-                return getPageIntentBySlot(slots);
-            case ORIGINAL:
+                return getPageIntentBySlot(foregroundPkgName, slots);
+            case KSONG_ORIGIN:
                 return songAction.originTrack();
-            case ACCOMPANY:
+            case KSONG_ACCOM:
                 return songAction.accompanyTrack();
             case KSONG_ADD:
-                return songAction.addSong(slots.get(0).getValue(), slots.get(1).getValue(), false);
+                // TODO
+                return null;// songAction.addSong(slots.get(0).getValue(), slots.get(1).getValue(), false);
+            case KSONG_REMOVE:
+                return null;
             case KSONG_TOP:
-                return songAction.topSong(slots.get(0).getValue(), slots.get(1).getValue());
+                // TODO
+                return null;// songAction.topSong(slots.get(0).getValue(), slots.get(1).getValue());
             case OPEN_SCORE:
                 return songAction.openScore();
             case CLOSE_SCORE:
@@ -147,12 +150,11 @@ public class KSongProcessImpl implements IKSongProcess {
     }
 
     @Nullable
-    private IKSongAction getKSongAction() {
-        String foregroundPackage = PkgUtils.getForegroundPkgName(mContext);
-        if (TextUtils.isEmpty(foregroundPackage)) {
+    private IKSongAction getKSongAction(String foregroundPkgName) {
+        if (TextUtils.isEmpty(foregroundPkgName)) {
             return mBslQmActionLazy.get();
         }
-        switch (foregroundPackage) {
+        switch (foregroundPkgName) {
             case QUANMIN_PACKAGE_NAME:
                 return mQuanMinActionLazy.get();
             case DUO_CHANG_PACKAGE_NAME:
@@ -166,11 +168,10 @@ public class KSongProcessImpl implements IKSongProcess {
         return null;
     }
 
-    private void populateKSongIntent(Intent actionIntent) {
-        String foregroundPackage = PkgUtils.getForegroundPkgName(mContext);
-        if (QUANMIN_PACKAGE_NAME.equals(foregroundPackage)) {
+    private void populateKSongIntent(String foregroundPkgName, Intent actionIntent) {
+        if (QUANMIN_PACKAGE_NAME.equals(foregroundPkgName)) {
             mContext.sendBroadcast(actionIntent);
-        } else if (!DUO_CHANG_PACKAGE_NAME.equals(foregroundPackage)) {
+        } else if (!DUO_CHANG_PACKAGE_NAME.equals(foregroundPkgName)) {
             mContext.startActivity(actionIntent);
         }
     }
@@ -184,11 +185,11 @@ public class KSongProcessImpl implements IKSongProcess {
         return 0;
     }
 
-    private Intent getPageIntentBySlot(@NotNull List<Slot> slots) {
+    private Intent getPageIntentBySlot(String foregroundPkgName, @NotNull List<Slot> slots) {
         for (Slot slot : slots) {
             if ("page".equals(slot.getName())) {
                 if (TextUtils.isEmpty(slot.getValue())) return null;
-                IKSongAction songAction = getKSongAction();
+                IKSongAction songAction = getKSongAction(foregroundPkgName);
                 if (songAction == null) return null;
                 switch (slot.getValue()) {
                     case "收藏":

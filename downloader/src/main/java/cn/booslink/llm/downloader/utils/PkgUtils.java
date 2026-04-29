@@ -9,9 +9,12 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.net.Uri;
 import android.os.Build;
+import android.provider.Settings;
 import android.text.TextUtils;
 import android.text.format.Formatter;
+import android.util.Log;
 
 import java.io.File;
 import java.util.HashMap;
@@ -155,30 +158,85 @@ public class PkgUtils {
 
     public static String getForegroundPkgName(Context context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
-            // 使用 UsageStatsManager (API 21+)
-            UsageStatsManager usageStatsManager = (UsageStatsManager) context.getSystemService(Context.USAGE_STATS_SERVICE);
-            long endTime = System.currentTimeMillis();
-            long beginTime = endTime - 1000 * 10; // 最近10秒
-            List<UsageStats> stats = usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, beginTime, endTime);
-            if (stats != null && !stats.isEmpty()) {
-                UsageStats recentStats = null;
-                for (UsageStats usageStats : stats) {
-                    if (recentStats == null || usageStats.getLastTimeUsed() > recentStats.getLastTimeUsed()) {
-                        recentStats = usageStats;
-                    }
+            try {
+                // 检查是否有 PACKAGE_USAGE_STATS 权限
+                if (!hasUsageStatsPermission(context)) {
+                    Timber.tag(TAG).w("PACKAGE_USAGE_STATS permission not granted");
+                    return getForegroundPkgNameLegacy(context);
                 }
-                return recentStats != null ? recentStats.getPackageName() : null;
+
+                UsageStatsManager usageStatsManager = (UsageStatsManager) context.getSystemService(Context.USAGE_STATS_SERVICE);
+                if (usageStatsManager == null) {
+                    Timber.tag(TAG).e("UsageStatsManager is null");
+                    return getForegroundPkgNameLegacy(context);
+                }
+
+                long endTime = System.currentTimeMillis();
+                long beginTime = endTime - 1000 * 10; // 最近10秒
+
+                List<UsageStats> stats = usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, beginTime, endTime);
+                Timber.tag(TAG).d("queryUsageStats returned %d items", stats != null ? stats.size() : 0);
+
+                if (stats != null && !stats.isEmpty()) {
+                    UsageStats recentStats = null;
+                    for (UsageStats usageStats : stats) {
+                        if (recentStats == null || usageStats.getLastTimeUsed() > recentStats.getLastTimeUsed()) {
+                            recentStats = usageStats;
+                        }
+                    }
+                    String packageName = recentStats != null ? recentStats.getPackageName() : null;
+                    Timber.tag(TAG).d("Found foreground package: %s", packageName);
+                    return packageName;
+                } else {
+                    Timber.tag(TAG).w("UsageStats is empty, trying legacy method");
+                    return getForegroundPkgNameLegacy(context);
+                }
+            } catch (Exception e) {
+                Timber.tag(TAG).e(e, "Error in getForegroundPkgName with UsageStatsManager");
+                return getForegroundPkgNameLegacy(context);
             }
         } else {
-            // 降级到旧方法 (API < 21)
+            return getForegroundPkgNameLegacy(context);
+        }
+    }
+
+    /**
+     * 检查是否有 PACKAGE_USAGE_STATS 权限
+     */
+    private static boolean hasUsageStatsPermission(Context context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+            try {
+                long time = System.currentTimeMillis();
+                UsageStatsManager usageStatsManager = (UsageStatsManager) context.getSystemService(Context.USAGE_STATS_SERVICE);
+                List<UsageStats> stats = usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, time - 1000, time);
+                return stats != null && !stats.isEmpty();
+            } catch (Exception e) {
+                Timber.tag(TAG).e(e, "Error checking usage stats permission");
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * 降级方法：使用 ActivityManager 获取前台应用
+     */
+    private static String getForegroundPkgNameLegacy(Context context) {
+        try {
             ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-            List<ActivityManager.RunningTaskInfo> infoList = manager.getRunningTasks(1);
-            if (infoList != null && !infoList.isEmpty()) {
-                ActivityManager.RunningTaskInfo taskInfo = infoList.get(0);
-                if (taskInfo != null && taskInfo.topActivity != null) {
-                    return taskInfo.topActivity.getPackageName();
+            if (manager != null) {
+                List<ActivityManager.RunningTaskInfo> infoList = manager.getRunningTasks(1);
+                if (infoList != null && !infoList.isEmpty()) {
+                    ActivityManager.RunningTaskInfo taskInfo = infoList.get(0);
+                    if (taskInfo != null && taskInfo.topActivity != null) {
+                        String packageName = taskInfo.topActivity.getPackageName();
+                        Timber.tag(TAG).d("Legacy method found foreground package: %s", packageName);
+                        return packageName;
+                    }
                 }
             }
+        } catch (Exception e) {
+            Timber.tag(TAG).e(e, "Error in legacy getForegroundPkgName method");
         }
         return null;
     }

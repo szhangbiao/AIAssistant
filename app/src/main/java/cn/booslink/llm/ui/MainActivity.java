@@ -88,8 +88,17 @@ public class MainActivity extends AppCompatActivity {
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        checkAndRequestPermissions();
+        startServiceDirectly();
         testDownload();
+    }
+
+    private void startServiceDirectly() {
+        if (ContextUtils.isSystemApp(this)) {
+            startService(new Intent(this, VoiceAssistantService.class));
+            finish();
+            return;
+        }
+        checkAndRequestPermissions();
     }
 
     @Override

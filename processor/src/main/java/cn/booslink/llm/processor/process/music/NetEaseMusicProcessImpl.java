@@ -27,12 +27,12 @@ public class NetEaseMusicProcessImpl implements IMusicProcess {
     }
 
     @Override
-    public boolean shouldMusicProcess(Category category, AIUIIntent intent) {
-        return category == Category.MUSIC && (intent == AIUIIntent.RANDOM_SEARCH || intent == AIUIIntent.PLAY);
+    public boolean shouldMusicProcess(String foregroundPkgName, Category category, AIUIIntent intent) {
+        return false;// category == Category.MUSIC && (intent == AIUIIntent.RANDOM_SEARCH || intent == AIUIIntent.PLAY);
     }
 
     @Override
-    public boolean handleMusicIntent(AIUIIntent aiuiIntent, @NotNull List<Slot> slots) {
+    public boolean handleMusicIntent(String foregroundPkgName, AIUIIntent aiuiIntent, @NotNull List<Slot> slots) {
         switch (aiuiIntent) {
             case RANDOM_SEARCH:
                 mAppProcess.launchAppWithIntent(NETEASE_PACKAGE_NAME, null);

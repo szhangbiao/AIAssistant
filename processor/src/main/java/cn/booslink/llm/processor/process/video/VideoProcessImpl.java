@@ -14,7 +14,6 @@ import javax.inject.Named;
 import cn.booslink.llm.common.model.Slot;
 import cn.booslink.llm.common.model.enums.AIUIIntent;
 import cn.booslink.llm.common.model.enums.Category;
-import cn.booslink.llm.downloader.utils.PkgUtils;
 import cn.booslink.llm.processor.process.app.IAppProcess;
 import dagger.hilt.android.qualifiers.ApplicationContext;
 
@@ -37,9 +36,8 @@ public class VideoProcessImpl implements IVideoProcess {
     }
 
     @Override
-    public boolean shouldVideoProcess(Category category, AIUIIntent intent) {
-        String foregroundPackage = PkgUtils.getForegroundPkgName(mContext);
-        boolean isAppOpened = IQIYI_PACKAGE_NAME.equals(foregroundPackage);
+    public boolean shouldVideoProcess(String foregroundPkgName, Category category, AIUIIntent intent) {
+        boolean isAppOpened = IQIYI_PACKAGE_NAME.equals(foregroundPkgName);
         return category == Category.VIDEO || (isAppOpened && category == Category.CONTROL && (
                 //intent == AIUIIntent.XXX || // 打开搜索页面
                 intent == AIUIIntent.RESUME_PLAY || // 播放
@@ -58,18 +56,18 @@ public class VideoProcessImpl implements IVideoProcess {
                         intent == AIUIIntent.PAGE_BACK //返回到上一级页面
         )) || (isAppOpened && category == Category.VIDEO_ENHANCE && (
                 intent == AIUIIntent.SPEED_DOWN || intent == AIUIIntent.SPEED_UP || intent == AIUIIntent.CHANGE_SPEED || // 切换倍速
-                        intent == AIUIIntent.RATE_DOWN || intent == AIUIIntent.RATE_UP || intent == AIUIIntent.CHANGE_RATE || //  切换清晰度
-                        intent == AIUIIntent.FAVOR_REMOVE || intent == AIUIIntent.FAVOR_ADD || // 收藏/取消收藏
+                        intent == AIUIIntent.CLARITY_DOWN || intent == AIUIIntent.CLARITY_UP || intent == AIUIIntent.CHANGE_CLARITY || //  切换清晰度
+                        intent == AIUIIntent.FAVORITE_REMOVE || intent == AIUIIntent.FAVORITE_ADD || // 收藏/取消收藏
                         intent == AIUIIntent.CLOSE_DANMU || intent == AIUIIntent.OPEN_DANMU // 开启/关闭弹幕
         ));
     }
 
     @Override
-    public boolean handleVideoIntent(AIUIIntent intent, @NotNull List<Slot> slots) {
+    public boolean handleVideoIntent(String foregroundPkgName, AIUIIntent intent, @NotNull List<Slot> slots) {
         if (intent == AIUIIntent.QUERY) {
             return populateActionBySlots(slots);
         }
-        Intent actionIntent = populateByVideoAction(intent, slots);
+        Intent actionIntent = populateByVideoAction(foregroundPkgName, intent, slots);
         if (actionIntent != null) {
             startIntent(actionIntent);
             return true;
@@ -99,9 +97,8 @@ public class VideoProcessImpl implements IVideoProcess {
         return false;
     }
 
-    private Intent populateByVideoAction(AIUIIntent intent, @NotNull List<Slot> slots) {
-        String foregroundPackage = PkgUtils.getForegroundPkgName(mContext);
-        IVideoAction videoAction = getVideoActionByPkgName(foregroundPackage);
+    private Intent populateByVideoAction(String foregroundPkgName, AIUIIntent intent, @NotNull List<Slot> slots) {
+        IVideoAction videoAction = getVideoActionByPkgName(foregroundPkgName);
         switch (intent) {
             case EXIT:
                 return videoAction.exitApp();
@@ -163,16 +160,16 @@ public class VideoProcessImpl implements IVideoProcess {
             case CHANGE_SPEED:
                 // TODO get speed by slots
                 return null;
-            case RATE_DOWN:
+            case CLARITY_DOWN:
                 return videoAction.changeRate("DOWN");
-            case RATE_UP:
+            case CLARITY_UP:
                 return videoAction.changeRate("UP");
-            case CHANGE_RATE:
+            case CHANGE_CLARITY:
                 // TODO get rate by slots
                 return null;
-            case FAVOR_REMOVE:
+            case FAVORITE_REMOVE:
                 return videoAction.changeFavorite("false");
-            case FAVOR_ADD:
+            case FAVORITE_ADD:
                 return videoAction.changeFavorite("true");
             case OPEN_DANMU:
                 return videoAction.changeDanMu("true");

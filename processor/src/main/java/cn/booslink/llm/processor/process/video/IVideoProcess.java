@@ -9,6 +9,6 @@ import cn.booslink.llm.common.model.enums.AIUIIntent;
 import cn.booslink.llm.common.model.enums.Category;
 
 public interface IVideoProcess {
-    boolean shouldVideoProcess(Category category, AIUIIntent intent);
-    boolean handleVideoIntent(AIUIIntent intent, @NotNull List<Slot> slots);
+    boolean shouldVideoProcess(String foregroundPkgName, Category category, AIUIIntent intent);
+    boolean handleVideoIntent(String foregroundPkgName, AIUIIntent intent, @NotNull List<Slot> slots);
 }

@@ -9,6 +9,6 @@ import cn.booslink.llm.common.model.enums.AIUIIntent;
 import cn.booslink.llm.common.model.enums.Category;
 
 public interface IMusicProcess {
-    boolean shouldMusicProcess(Category category, AIUIIntent intent);
-    boolean handleMusicIntent(AIUIIntent intent, @NotNull List<Slot> slots);
+    boolean shouldMusicProcess(String foregroundPkgName, Category category, AIUIIntent intent);
+    boolean handleMusicIntent(String foregroundPkgName, AIUIIntent intent, @NotNull List<Slot> slots);
 }

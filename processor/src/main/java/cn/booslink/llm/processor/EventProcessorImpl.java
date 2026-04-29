@@ -166,11 +166,11 @@ public class EventProcessorImpl implements IEventProcessor {
         String cntId = eventInfo.getCntId();
         if (sub == null || TextUtils.isEmpty(cntId)) return EventData.Companion.empty();
         String tag = event.data.getString("tag");
-        Timber.tag(TAG).d("parseEventData, sub = %s", sub);
+        //Timber.tag(TAG).d("parseEventData, sub = %s", sub);
         try {
             byte[] bytes = event.data.getByteArray(cntId);
             String cntJsonRaw = new String(bytes, StandardCharsets.UTF_8);
-            Timber.tag(TAG).d("parseEventData, cnt json = %s", cntJsonRaw);
+            //Timber.tag(TAG).d("parseEventData, cnt json = %s", cntJsonRaw);
             EventData data = mGson.fromJson(cntJsonRaw, EventData.class);
             data.setTag(AIUITag.fromTag(tag));
             data.setSub(sub);
@@ -234,7 +234,6 @@ public class EventProcessorImpl implements IEventProcessor {
             mSpeechInteraction.updateQuery(new VoiceQuery(data.getCbmTidy().getText().getQuery(), QueryState.QUERYING));
         } else if (sub == CBMSub.CBM_SEMANTIC) {
             if (data.getResponse() == null || data.getTag() == AIUITag.LAUNCH) return;
-            //Timber.tag(TAG).d("cbm semantic content= %s", mGson.toJson(data.getResponse()));
             mSpeechInteraction.updateQuery(new VoiceQuery(null, QueryState.DONE));
             mSpeechInteraction.semanticAnswer(data.getResponse());
             if (data.getCbmSemantic() == null) return;
@@ -242,6 +241,8 @@ public class EventProcessorImpl implements IEventProcessor {
             CBMSemantic cbmSemantic = data.getCbmSemantic().getText();
             if (cbmSemantic != null && cbmSemantic.getSemantic() != null) {
                 mIntentProcess.processIntent(data.getResponse().getCategory(), cbmSemantic.getSemantic());
+                if (cbmSemantic.getSemantic().isEmpty()) return;
+                Timber.tag(TAG).d("cbm semantic category = %s, intent = %s", data.getResponse().getCategory(), cbmSemantic.getSemantic().get(0).getIntent());
             }
         } else if (sub == CBMSub.CBM_TOOL_PK) {
             if (data.getCbmToolPK() == null || data.getCbmToolPK().getText() == null) return;

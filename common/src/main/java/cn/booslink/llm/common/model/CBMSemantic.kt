@@ -35,10 +35,9 @@ data class CBMSemantic(
                     UIResponse.weatherData(categoryEnum, weatherList)
                 }
 
-                Category.CONTROL, Category.MUSIC, Category.APP, Category.VIDEO -> UIResponse.withCategory(categoryEnum)
                 else -> UIResponse.empty()
             }
-        } ?: UIResponse.empty()
+        } ?: UIResponse.withCategory(Category.fromString(category))
     }
 }
 
