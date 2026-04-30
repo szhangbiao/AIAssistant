@@ -34,7 +34,7 @@ data class CBMSemantic(
                     val weatherList = gson.fromJson<List<Weather>>(resultJson, object : TypeToken<List<Weather>>() {}.type)
                     UIResponse.weatherData(categoryEnum, weatherList)
                 }
-
+                Category.CONTROL, Category.MUSIC, Category.APP, Category.VIDEO, Category.VIDEO_ENHANCE, Category.KSONG, Category.PAGE_CONTROL -> UIResponse.withCategory(categoryEnum)
                 else -> UIResponse.empty()
             }
         } ?: UIResponse.withCategory(Category.fromString(category))

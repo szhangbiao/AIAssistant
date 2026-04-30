@@ -53,7 +53,10 @@ public class KSongProcessImpl implements IKSongProcess {
     @Override
     public boolean shouldKSongProcess(String foregroundPkgName, Category category, AIUIIntent intent) {
         boolean isKSongAppStartup = BOOSLINK_QM_PACKAGE_NAME.equals(foregroundPkgName) || DUO_CHANG_PACKAGE_NAME.equals(foregroundPkgName) || QUANMIN_PACKAGE_NAME.equals(foregroundPkgName) || SMART_PACKAGE_NAME.equals(foregroundPkgName) || LEIKA_PACKAGE_NAME.equals(foregroundPkgName);
-        return (isKSongAppStartup && category == Category.CONTROL && (
+        return (category == Category.KSONG && (
+                intent == AIUIIntent.RANDOM_KSONG ||// 打开应用
+                        intent == AIUIIntent.KSONG_ADD// 点歌
+        )) || (isKSongAppStartup && category == Category.CONTROL && (
                 intent == AIUIIntent.RESUME_PLAY || // 播放
                         intent == AIUIIntent.PAUSE ||// 暂停
                         intent == AIUIIntent.CHOOSE_NEXT ||// 下一曲, 下一页
@@ -66,9 +69,8 @@ public class KSongProcessImpl implements IKSongProcess {
         )) || (isKSongAppStartup && category == Category.PAGE_CONTROL && (
                 intent == AIUIIntent.PAGE_OPEN || //打开最近播放,收藏,本地,常唱
                         intent == AIUIIntent.PAGE_BACK // 关闭当前页 or 返回到上一级页面
-        )) || (isKSongAppStartup && category == Category.KSONG && (
-                intent == AIUIIntent.RANDOM_KSONG ||// 打开应用
-                        intent == AIUIIntent.KSONG_ORIGIN ||// 原唱
+        )) || (isKSongAppStartup && (
+                intent == AIUIIntent.KSONG_ORIGIN ||// 原唱
                         intent == AIUIIntent.KSONG_ACCOM ||// 伴唱
                         intent == AIUIIntent.KSONG_ADD ||// 点歌
                         intent == AIUIIntent.KSONG_REMOVE ||// 移除点歌

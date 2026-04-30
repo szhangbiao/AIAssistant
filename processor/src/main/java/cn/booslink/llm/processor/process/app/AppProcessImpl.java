@@ -134,7 +134,8 @@ public class AppProcessImpl implements IAppProcess {
     }
 
     private boolean populateAppInstalledWithSummary(AIUIIntent intent, AppSummary summary) {
-        // TODO 检查当前打开的应用是否和summary一致
+        String foregroundPkgName = PkgUtils.getForegroundPkgName(mContext);
+        if (foregroundPkgName.equals(summary.getPkgName())) return true;
         AppInfo appInfo = PkgUtils.getAppInfo(mContext, summary.getPkgName());
         if (appInfo != null) {
             mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.DONE));
@@ -239,6 +240,7 @@ public class AppProcessImpl implements IAppProcess {
     }
 
     private void populateAppLaunchWithPkgInfo(PkgInfo pkgInfo, @Nullable Intent intent) {
+        if (pkgInfo.isIgnore()) return;
         IAppManager downloadManager = mAppManagerLazy.get();
         if (downloadManager == null) return;
         if (downloadManager.isPkgDownloading() || downloadManager.isPkgInstalling()) {
