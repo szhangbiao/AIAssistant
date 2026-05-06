@@ -12,6 +12,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import cn.booslink.llm.common.model.Slot;
+import cn.booslink.llm.common.model.VoiceResult;
 import cn.booslink.llm.common.model.enums.AIUIIntent;
 import cn.booslink.llm.common.model.enums.Category;
 import cn.booslink.llm.processor.process.app.IAppProcess;
@@ -22,7 +23,7 @@ public class VideoProcessImpl implements IVideoProcess {
     private static final String SLOT_CATEGORY = "category";
     private static final String SLOT_NAME = "name";
 
-    private final String IQIYI_PACKAGE_NAME = "com.gitvvideo.shenzhenweihaocpa";
+    private final String IQIYI_PACKAGE_NAME = "com.qiyi.video.iv";
 
     private final Context mContext;
     private final IAppProcess mAppProcess;
@@ -63,38 +64,38 @@ public class VideoProcessImpl implements IVideoProcess {
     }
 
     @Override
-    public boolean handleVideoIntent(String foregroundPkgName, AIUIIntent intent, @NotNull List<Slot> slots) {
+    public VoiceResult handleVideoIntent(String foregroundPkgName, AIUIIntent intent, @NotNull List<Slot> slots) {
         if (intent == AIUIIntent.QUERY) {
             return populateActionBySlots(slots);
         }
         Intent actionIntent = populateByVideoAction(foregroundPkgName, intent, slots);
         if (actionIntent != null) {
             startIntent(actionIntent);
-            return true;
+            return VoiceResult.Companion.success("好的");
         }
-        return false;
+        return VoiceResult.Companion.failure();
     }
 
-    private boolean populateActionBySlots(@NotNull List<Slot> slots) {
-        if (slots.isEmpty()) return false;
+    private VoiceResult populateActionBySlots(@NotNull List<Slot> slots) {
+        if (slots.isEmpty()) return VoiceResult.Companion.failure();
         for (Slot slot : slots) {
             if (SLOT_CATEGORY.equals(slot.getName())) {
                 String category = slot.getValue();
                 Intent homeChannel = mIQiYiVideoAction.openHomeChannel(category);
                 if (homeChannel != null) {
                     mAppProcess.launchAppWithIntent(IQIYI_PACKAGE_NAME, homeChannel);
-                    return true;
+                    return VoiceResult.Companion.progress();
                 } else {
-                    return false;
+                    return VoiceResult.Companion.failure();
                 }
             } else if (SLOT_NAME.equals(slot.getName())) {
                 String name = slot.getValue();
                 Intent intent = mIQiYiVideoAction.search(name);
                 mAppProcess.launchAppWithIntent(IQIYI_PACKAGE_NAME, intent);
-                return true;
+                return VoiceResult.Companion.progress();
             }
         }
-        return false;
+        return VoiceResult.Companion.failure();
     }
 
     private Intent populateByVideoAction(String foregroundPkgName, AIUIIntent intent, @NotNull List<Slot> slots) {

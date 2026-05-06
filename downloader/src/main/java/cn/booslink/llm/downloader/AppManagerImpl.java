@@ -217,10 +217,11 @@ public class AppManagerImpl implements IAppManager {
                         mApkDownloadMap.remove(downloadItem.getPkgName());
                     }
                 } else if (downloadItem.isDownloadFail()) {
-                    // TODO mToast.get().showMessage(downloadItem.getFailedReason(), 10);
+                    Timber.tag(TAG).d("onDownloadUpdate, download fail");
                     if (mOnAppManagerListener != null) {
                         mOnAppManagerListener.onAppFailed(true, downloadItem);
                     }
+                    mApkDownloadMap.remove(downloadItem.getPkgName());
                 }
                 mDownloadingTask = null;
                 mRxApkBus.post(downloadItem);
@@ -320,6 +321,7 @@ public class AppManagerImpl implements IAppManager {
     }
 
     private void install(ApkDownload downloadApk) {
+        Timber.tag(TAG).d("install package = %s", downloadApk.getPkgName());
         ApkDownload paddingDownload = mApkDownloadMap.get(downloadApk.getPkgName());
         if (paddingDownload == null) {
             downloadApk.installRePadding();
@@ -335,6 +337,7 @@ public class AppManagerImpl implements IAppManager {
     }
 
     private void installDownloadApk(ApkDownload downloadItem) {
+        Timber.tag(TAG).d("installDownloadApk");
         Disposable disposable = Single.just(downloadItem)
                 .map(apkDownload -> {
                     apkDownload.setStatus(ApkStatus.INSTALL_GOING);
@@ -353,6 +356,7 @@ public class AppManagerImpl implements IAppManager {
     }
 
     private Single<Boolean> install(String apkPath, String pkgName) {
+        Timber.tag(TAG).d("install");
         return Single.fromCallable(() -> {
                     //if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q || (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && mDevice.isMTKDevice())) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {

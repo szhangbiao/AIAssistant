@@ -20,7 +20,9 @@ import cn.booslink.llm.common.model.AppSummary;
 import cn.booslink.llm.common.model.PkgInfo;
 import cn.booslink.llm.common.model.Slot;
 import cn.booslink.llm.common.model.VoiceQuery;
+import cn.booslink.llm.common.model.VoiceResult;
 import cn.booslink.llm.common.model.enums.AIUIIntent;
+import cn.booslink.llm.common.model.enums.Category;
 import cn.booslink.llm.common.model.enums.QueryState;
 import cn.booslink.llm.common.ui.ISpeechInteraction;
 import cn.booslink.llm.common.ui.IToast;
@@ -38,8 +40,11 @@ import io.reactivex.rxjava3.core.SingleSource;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.functions.Function;
+import timber.log.Timber;
 
 public class AppProcessImpl implements IAppProcess {
+
+    private final static String TAG = "AppProcess";
 
     private final IToast mToast;
     private final Context mContext;
@@ -59,8 +64,13 @@ public class AppProcessImpl implements IAppProcess {
     }
 
     @Override
-    public boolean handleAppIntent(AIUIIntent intent, @NotNull List<Slot> slots) {
-        if (slots.isEmpty()) return false;
+    public boolean shouldAppProcess(Category category, AIUIIntent intent) {
+        return category == Category.APP && (intent == AIUIIntent.LAUNCH || intent == AIUIIntent.DOWNLOAD || intent == AIUIIntent.INSTALL);
+    }
+
+    @Override
+    public VoiceResult handleAppIntent(AIUIIntent intent, @NotNull List<Slot> slots) {
+        if (slots.isEmpty()) return VoiceResult.Companion.failure();
         String appName = null;
         for (Slot slot : slots) {
             if ("name".equals(slot.getName()) && !TextUtils.isEmpty(slot.getValue())) {
@@ -68,13 +78,14 @@ public class AppProcessImpl implements IAppProcess {
                 break;
             }
         }
-        if (appName == null) return false;
+        if (TextUtils.isEmpty(appName)) return VoiceResult.Companion.failure();
         findMatchApp(intent, appName);
-        return true;
+        return VoiceResult.Companion.success("正在处理");
     }
 
     @Override
     public void launchAppWithIntent(String pkgName, @Nullable Intent intent) {
+        Timber.tag(TAG).d("launchAppWithIntent, package = %s", pkgName);
         Disposable disposable = Single.just(pkgName)
                 .flatMap((Function<String, SingleSource<PkgInfo>>) deliveryPkgName -> {
                     AppInfo appInfo = PkgUtils.getAppInfo(mContext, deliveryPkgName);
@@ -199,6 +210,7 @@ public class AppProcessImpl implements IAppProcess {
                 @Override
                 public void onAppFailed(boolean isDownloadFailed, ApkDownload download) {
                     super.onAppFailed(isDownloadFailed, download);
+                    Timber.tag(TAG).d("populateAppDownload onAppFailed");
                     mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.FAILED));
                     mSpeechInteraction.nlpAnswer(download.getFailedReason());
                 }
@@ -218,6 +230,7 @@ public class AppProcessImpl implements IAppProcess {
             @Override
             public void onAppInstalled(ApkDownload download) {
                 super.onAppInstalled(download);
+                Timber.tag(TAG).d("populateAppInstall onAppInstalled");
                 mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.DONE));
                 mSpeechInteraction.nlpAnswer("安装" + pkgInfo.getName() + "成功");
             }
@@ -225,6 +238,7 @@ public class AppProcessImpl implements IAppProcess {
             @Override
             public void onAppFailed(boolean isDownloadFailed, ApkDownload download) {
                 super.onAppFailed(isDownloadFailed, download);
+                Timber.tag(TAG).d("populateAppInstall onAppFailed");
                 mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.FAILED));
                 mSpeechInteraction.nlpAnswer(download.getFailedReason());
             }
@@ -251,6 +265,7 @@ public class AppProcessImpl implements IAppProcess {
             @Override
             public void onAppFailed(boolean isDownloadFailed, ApkDownload download) {
                 super.onAppFailed(isDownloadFailed, download);
+                Timber.tag(TAG).d("populateAppLaunchWithPkgInfo onAppFailed");
                 mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.FAILED));
                 mSpeechInteraction.nlpAnswer(download.getFailedReason());
             }
@@ -258,6 +273,7 @@ public class AppProcessImpl implements IAppProcess {
             @Override
             public void onAppInstalled(ApkDownload download) {
                 super.onAppInstalled(download);
+                Timber.tag(TAG).d("populateAppLaunchWithPkgInfo onAppInstalled");
                 if (intent == null) {
                     PkgUtils.launchApp(mContext, download.getPkgName());
                     mSpeechInteraction.nlpAnswer("已为你打开应用");

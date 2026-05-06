@@ -46,7 +46,7 @@ public class ApkInstallUtils {
             addApkToInstallSession(apkFile, session);
             // 创建一个安装接收器
             Intent intent = new Intent();
-            intent.setComponent(new ComponentName(context.getPackageName(), "com.yunqinglai.manager.service.AppSilentService"));
+            intent.setComponent(new ComponentName(context.getPackageName(), "cn.booslink.llm.downloader.service.SilentInstallService"));
             intent.setAction(SilentInstallService.ACTION_SILENT_INSTALL);
             int flags;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {

@@ -26,7 +26,8 @@ data class EventData(
 
     fun copyTidy(cbmTidy: SdkResponse<CBMTidy>) = EventData(text, event, cbmTidy, cbmSemantic, cbmToolPK, nlp, sub, tag, response)
 
-    fun copySemantic(cbmSemantic: SdkResponse<CBMSemantic>, response: UIResponse) = EventData(text, event, cbmTidy, cbmSemantic, cbmToolPK, nlp, sub, tag, response)
+    fun copySemantic(cbmSemantic: SdkResponse<CBMSemantic>, response: UIResponse) =
+        EventData(text, event, cbmTidy, cbmSemantic, cbmToolPK, nlp, sub, tag, response)
 
     fun copyNlp(nlp: SdkResponse<String>) = EventData(text, event, cbmTidy, cbmSemantic, cbmToolPK, nlp, sub, tag, response)
 }
@@ -83,7 +84,7 @@ data class UIResponse(
     }
 
     fun isEmpty(): Boolean {
-        return category == Category.UNKNOWN
+        return weathers == null || weathers.isEmpty()
     }
 }
 

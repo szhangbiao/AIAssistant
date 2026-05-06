@@ -12,7 +12,9 @@ import java.util.List;
 import javax.inject.Inject;
 
 import cn.booslink.llm.common.model.Slot;
+import cn.booslink.llm.common.model.VoiceResult;
 import cn.booslink.llm.common.model.enums.AIUIIntent;
+import cn.booslink.llm.common.model.enums.Category;
 import dagger.hilt.android.qualifiers.ApplicationContext;
 import timber.log.Timber;
 
@@ -33,28 +35,39 @@ public class VolumeProcessImpl implements IVolumeProcess {
     }
 
     @Override
-    public void volumeControl(AIUIIntent intent, @Nullable List<Slot> slots) {
+    public boolean shouldVolumeProcess(Category category, AIUIIntent intent) {
+        return category == Category.CONTROL && (intent == AIUIIntent.VOLUME_MAX ||
+                intent == AIUIIntent.VOLUME_MIN ||
+                intent == AIUIIntent.VOLUME_PLUS ||
+                intent == AIUIIntent.VOLUME_MINUS ||
+                intent == AIUIIntent.MUTE ||
+                intent == AIUIIntent.UNMUTE
+        );
+    }
+
+    @Override
+    public VoiceResult handleVolumeIntent(AIUIIntent intent, @Nullable List<Slot> slots) {
         switch (intent) {
             case VOLUME_MAX:
             case VOLUME_MIN:
-                volumeMaxOrMin(intent == AIUIIntent.VOLUME_MAX);
-                break;
+                return volumeMaxOrMin(intent == AIUIIntent.VOLUME_MAX);
             case VOLUME_PLUS:
             case VOLUME_MINUS:
                 int volumeNum = slots != null && !slots.isEmpty() ? parseSlotValue(slots) : 1;
-                volumeChange(intent == AIUIIntent.VOLUME_PLUS ? volumeNum : -volumeNum);
-                break;
+                return volumeChange(intent == AIUIIntent.VOLUME_PLUS ? volumeNum : -volumeNum);
             case MUTE:
             case UNMUTE:
-                volumeMuteOrUnmute(intent == AIUIIntent.MUTE);
-                break;
+                return volumeMuteOrUnmute(intent == AIUIIntent.MUTE);
         }
+        return VoiceResult.Companion.failure();
     }
 
-    private void volumeChange(int volumeNum) {
+    private VoiceResult volumeChange(int volumeNum) {
         int currentVolume = getVolume();
+        if ((currentVolume == mMaxVolume && volumeNum > 0) || (currentVolume == mMinVolume && volumeNum < 0)) {
+            return VoiceResult.Companion.success("当前已是" + (volumeNum > 0 ? "最大" : "最小") + "音量");
+        }
         int newVolume = currentVolume + volumeNum;
-        //  ensure the volume is within the valid range
         if (newVolume < mMinVolume) {
             newVolume = mMinVolume;
         } else if (newVolume > mMaxVolume) {
@@ -62,24 +75,38 @@ public class VolumeProcessImpl implements IVolumeProcess {
         }
         mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, newVolume, 0);
         Timber.tag(TAG).d("volumeChange, num = %d, volume = %d", volumeNum, getVolume());
+        return VoiceResult.Companion.success("已为你" + (volumeNum > 0 ? "增大" : "减小") + "音量");
     }
 
-    private void volumeMaxOrMin(boolean isVolumeMax) {
+    private VoiceResult volumeMaxOrMin(boolean isVolumeMax) {
+        int currentVolume = getVolume();
+        if ((currentVolume == mMaxVolume && isVolumeMax) || (currentVolume == mMinVolume && !isVolumeMax)) {
+            return VoiceResult.Companion.success("当前已是" + (isVolumeMax ? "最大" : "最小") + "音量");
+        }
         int targetVolume = isVolumeMax ? mMaxVolume : mMinVolume;
         mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, targetVolume, 0);
         Timber.tag(TAG).d("volumeMaxOrMin, volume = %d", getVolume());
+        return VoiceResult.Companion.success("已调整音量为" + (isVolumeMax ? "最大" : "最小"));
     }
 
-    private void volumeMuteOrUnmute(boolean isMute) {
+    private VoiceResult volumeMuteOrUnmute(boolean isMute) {
+        int currentVolume = getVolume();
         if (isMute) {
+            if (currentVolume == mMinVolume) {
+                return VoiceResult.Companion.success("当前已是静音");
+            }
             // For STREAM_MUSIC, mute means setting volume to 0
             mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 0, 0);
         } else {
             // Unmute - restore to a reasonable volume (50% of max)
+            if (currentVolume != mMinVolume) {
+                return VoiceResult.Companion.success("当前不是静音状态");
+            }
             int restoreVolume = mMaxVolume / 2;
             mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, restoreVolume, 0);
         }
         Timber.tag(TAG).d("volumeMuteOrUnmute, volume = %d", getVolume());
+        return VoiceResult.Companion.success(isMute ? "已静音" : "已解除静音");
     }
 
     private int parseSlotValue(List<Slot> slots) {

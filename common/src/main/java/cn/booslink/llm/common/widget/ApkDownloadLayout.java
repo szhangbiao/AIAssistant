@@ -63,6 +63,8 @@ public class ApkDownloadLayout extends RelativeLayout {
             CommonEntryPoint hiltEntryPoint = EntryPointAccessors.fromApplication(getContext().getApplicationContext(), CommonEntryPoint.class);
             ImageLoader imageLoader = hiltEntryPoint.imageLoader();
             imageLoader.loadImage(ivIcon, download.getIcon());
+        } else if (download.getApkIcon() != null) {
+            ivIcon.setImageDrawable(download.getApkIcon());
         }
         tvName.setText(download.getName());
         ivDone.setVisibility(download.isDownloadComplete() ? VISIBLE : GONE);

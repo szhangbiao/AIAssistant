@@ -13,6 +13,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import cn.booslink.llm.common.model.Slot;
+import cn.booslink.llm.common.model.VoiceResult;
 import cn.booslink.llm.common.model.enums.AIUIIntent;
 import cn.booslink.llm.common.model.enums.Category;
 import cn.booslink.llm.processor.process.app.IAppProcess;
@@ -81,26 +82,25 @@ public class KSongProcessImpl implements IKSongProcess {
     }
 
     @Override
-    public boolean handleKSongIntent(String foregroundPkgName, AIUIIntent intent, @NotNull List<Slot> slots) {
+    public VoiceResult handleKSongIntent(String foregroundPkgName, AIUIIntent intent, @NotNull List<Slot> slots) {
         if (intent == AIUIIntent.RANDOM_KSONG || intent == AIUIIntent.KSONG_ADD) {
             return populateKSongEntryPoint(foregroundPkgName);
         }
         Intent actionIntent = getActualIntent(foregroundPkgName, intent, slots);
         if (actionIntent != null) {
             populateKSongIntent(foregroundPkgName, actionIntent);
-            return true;
+            return VoiceResult.Companion.success("好的");
         }
-        return false;
+        return VoiceResult.Companion.failure();
     }
 
-    private boolean populateKSongEntryPoint(String foregroundPkgName) {
+    private VoiceResult populateKSongEntryPoint(String foregroundPkgName) {
         boolean isKSongAppStartup = BOOSLINK_QM_PACKAGE_NAME.equals(foregroundPkgName) || DUO_CHANG_PACKAGE_NAME.equals(foregroundPkgName) || QUANMIN_PACKAGE_NAME.equals(foregroundPkgName) || SMART_PACKAGE_NAME.equals(foregroundPkgName) || LEIKA_PACKAGE_NAME.equals(foregroundPkgName);
         if (!isKSongAppStartup) {
             mAppProcess.launchAppWithIntent(BOOSLINK_QM_PACKAGE_NAME, null);
-            return true;
+            return VoiceResult.Companion.progress();
         }
-        // TODO ksong app already startup
-        return false;
+        return VoiceResult.Companion.success("当前正处于唱歌类应用");
     }
 
     private Intent getActualIntent(String foregroundPkgName, AIUIIntent intent, @NotNull List<Slot> slots) {

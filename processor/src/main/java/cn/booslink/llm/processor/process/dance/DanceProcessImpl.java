@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 import cn.booslink.llm.common.model.Slot;
+import cn.booslink.llm.common.model.VoiceResult;
 import cn.booslink.llm.common.model.enums.AIUIIntent;
 import cn.booslink.llm.common.model.enums.Category;
 import cn.booslink.llm.downloader.utils.PkgUtils;
@@ -31,7 +32,7 @@ public class DanceProcessImpl implements IDanceProcess {
     }
 
     @Override
-    public boolean handleDanceIntent(AIUIIntent intent, @NotNull List<Slot> slots) {
-        return false;
+    public VoiceResult handleDanceIntent(AIUIIntent intent, @NotNull List<Slot> slots) {
+        return VoiceResult.Companion.failure();
     }
 }

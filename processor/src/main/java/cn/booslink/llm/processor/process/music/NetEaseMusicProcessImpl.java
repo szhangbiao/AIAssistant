@@ -9,6 +9,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import cn.booslink.llm.common.model.Slot;
+import cn.booslink.llm.common.model.VoiceResult;
 import cn.booslink.llm.common.model.enums.AIUIIntent;
 import cn.booslink.llm.common.model.enums.Category;
 import cn.booslink.llm.processor.process.app.IAppProcess;
@@ -28,21 +29,21 @@ public class NetEaseMusicProcessImpl implements IMusicProcess {
 
     @Override
     public boolean shouldMusicProcess(String foregroundPkgName, Category category, AIUIIntent intent) {
-        return false;// category == Category.MUSIC && (intent == AIUIIntent.RANDOM_SEARCH || intent == AIUIIntent.PLAY);
+        return category == Category.MUSIC && (intent == AIUIIntent.RANDOM_SEARCH || intent == AIUIIntent.PLAY);
     }
 
     @Override
-    public boolean handleMusicIntent(String foregroundPkgName, AIUIIntent aiuiIntent, @NotNull List<Slot> slots) {
+    public VoiceResult handleMusicIntent(String foregroundPkgName, AIUIIntent aiuiIntent, @NotNull List<Slot> slots) {
         switch (aiuiIntent) {
             case RANDOM_SEARCH:
                 mAppProcess.launchAppWithIntent(NETEASE_PACKAGE_NAME, null);
-                return true;
+                return VoiceResult.Companion.progress();
             case PLAY:
                 Intent intent = getSupportActionBySlot(slots);
                 mAppProcess.launchAppWithIntent(NETEASE_PACKAGE_NAME, intent);
-                return true;
+                return VoiceResult.Companion.progress();
         }
-        return false;
+        return VoiceResult.Companion.failure();
     }
 
     private Intent getSupportActionBySlot(@NotNull List<Slot> slots) {
