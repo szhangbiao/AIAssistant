@@ -218,10 +218,10 @@ public class AppManagerImpl implements IAppManager {
                     }
                 } else if (downloadItem.isDownloadFail()) {
                     Timber.tag(TAG).d("onDownloadUpdate, download fail");
+                    mApkDownloadMap.remove(downloadItem.getPkgName());
                     if (mOnAppManagerListener != null) {
                         mOnAppManagerListener.onAppFailed(true, downloadItem);
                     }
-                    mApkDownloadMap.remove(downloadItem.getPkgName());
                 }
                 mDownloadingTask = null;
                 mRxApkBus.post(downloadItem);

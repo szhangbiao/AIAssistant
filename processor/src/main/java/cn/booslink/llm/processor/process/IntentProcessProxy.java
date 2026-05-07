@@ -46,14 +46,16 @@ public class IntentProcessProxy implements IIntentProcess {
     }
 
     @Override
-    public void processIntent(Category category, @Nullable List<Semantic> semantics) {
-        if (semantics == null || semantics.isEmpty()) return;
+    public VoiceResult processIntent(Category category, @Nullable List<Semantic> semantics) {
+        if (semantics == null || semantics.isEmpty()) return VoiceResult.Companion.failure();
         for (Semantic semantic : semantics) {
             VoiceResult handleResult = processIntent(category, semantic);
             if (handleResult.getHandled()) {
                 mSpeechInteraction.nlpAnswer(handleResult.getResponseText());
             }
+            return handleResult;
         }
+        return VoiceResult.Companion.failure();
     }
 
     private VoiceResult processIntent(Category category, Semantic semantic) {

@@ -20,6 +20,7 @@ import cn.booslink.llm.common.model.EventData;
 import cn.booslink.llm.common.model.EventInfo;
 import cn.booslink.llm.common.model.UIResponse;
 import cn.booslink.llm.common.model.VoiceQuery;
+import cn.booslink.llm.common.model.VoiceResult;
 import cn.booslink.llm.common.model.enums.AIUITag;
 import cn.booslink.llm.common.model.enums.CBMSub;
 import cn.booslink.llm.common.model.enums.QueryState;
@@ -213,18 +214,20 @@ public class EventProcessorImpl implements IEventProcessor {
                     break;
                 case 1:
                     mNplBuilder.append(data.getNlp().getText());
+                    if (mEventData.getResponse() != null && !mEventData.getResponse().isSemanticEmpty() && mEventData.getSemanticHandled()) return;
                     mSpeechInteraction.nlpAnswer(mNplBuilder.toString());
                     if (data.getTag() == AIUITag.LAUNCH) return;
-                    mSpeechInteraction.updateQuery(new VoiceQuery(null, QueryState.DONE));
+                    mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.DONE));
                     break;
                 case 2:
                     String nplContent = mNplBuilder.toString();
                     Timber.tag(TAG).d("nlp, content = %s", nplContent);
-                    mSpeechInteraction.nlpAnswer(nplContent);
                     mNplBuilder.delete(0, mNplBuilder.length());
                     mEventData = mEventData.copyNlp(data.getNlp());
+                    if (mEventData.getResponse() != null && !mEventData.getResponse().isSemanticEmpty() && mEventData.getSemanticHandled()) return;
+                    mSpeechInteraction.nlpAnswer(nplContent);
                     if (data.getTag() == AIUITag.LAUNCH || TextUtils.isEmpty(nplContent)) return;
-                    mSpeechInteraction.updateQuery(new VoiceQuery(null, QueryState.DONE));
+                    mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.DONE));
                     break;
             }
         } else if (sub == CBMSub.CBM_TIDY) {
@@ -234,13 +237,14 @@ public class EventProcessorImpl implements IEventProcessor {
             mSpeechInteraction.updateQuery(new VoiceQuery(data.getCbmTidy().getText().getQuery(), QueryState.QUERYING));
         } else if (sub == CBMSub.CBM_SEMANTIC) {
             if (data.getResponse() == null || data.getTag() == AIUITag.LAUNCH) return;
-            mSpeechInteraction.updateQuery(new VoiceQuery(null, QueryState.DONE));
+            mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.DONE));
             mSpeechInteraction.semanticAnswer(data.getResponse());
             if (data.getCbmSemantic() == null) return;
             mEventData = mEventData.copySemantic(data.getCbmSemantic(), data.getResponse());
             CBMSemantic cbmSemantic = data.getCbmSemantic().getText();
             if (cbmSemantic != null && cbmSemantic.getSemantic() != null) {
-                mIntentProcess.processIntent(data.getResponse().getCategory(), cbmSemantic.getSemantic());
+                VoiceResult voiceResult = mIntentProcess.processIntent(data.getResponse().getCategory(), cbmSemantic.getSemantic());
+                mEventData.setSemanticHandled(voiceResult.getHandled());
                 if (cbmSemantic.getSemantic().isEmpty()) return;
                 Timber.tag(TAG).d("cbm semantic category = %s, intent = %s", data.getResponse().getCategory(), cbmSemantic.getSemantic().get(0).getIntent());
             }

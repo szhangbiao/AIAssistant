@@ -18,7 +18,7 @@ public enum Category {
 
     public static Category fromString(String category) {
         if (category == null) {
-            return null;
+            return UNKNOWN;
         }
         for (Category cat : Category.values()) {
             if (cat.category.equals(category)) {

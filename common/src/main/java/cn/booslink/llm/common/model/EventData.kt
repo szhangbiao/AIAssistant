@@ -14,22 +14,23 @@ data class EventData(
     val nlp: SdkResponse<String>?,
     var sub: CBMSub? = null,
     var tag: AIUITag? = null,
-    var response: UIResponse? = null
+    var response: UIResponse? = null,
+    var semanticHandled: Boolean = false,
 ) {
     companion object {
-        fun empty() = EventData(null, null, null, null, null, null)
+        fun empty() = EventData(null, null, null, null, null, null, semanticHandled = false)
     }
 
     fun isEmpty(): Boolean = text == null && cbmTidy == null && cbmSemantic == null && cbmToolPK == null && nlp == null
 
-    fun copyIat(text: IATText) = EventData(text, event, cbmTidy, cbmSemantic, cbmToolPK, nlp, sub, tag, response)
+    fun copyIat(text: IATText) = EventData(text, event, cbmTidy, cbmSemantic, cbmToolPK, nlp, sub, tag, response, semanticHandled)
 
-    fun copyTidy(cbmTidy: SdkResponse<CBMTidy>) = EventData(text, event, cbmTidy, cbmSemantic, cbmToolPK, nlp, sub, tag, response)
+    fun copyTidy(cbmTidy: SdkResponse<CBMTidy>) = EventData(text, event, cbmTidy, cbmSemantic, cbmToolPK, nlp, sub, tag, response, semanticHandled)
 
     fun copySemantic(cbmSemantic: SdkResponse<CBMSemantic>, response: UIResponse) =
-        EventData(text, event, cbmTidy, cbmSemantic, cbmToolPK, nlp, sub, tag, response)
+        EventData(text, event, cbmTidy, cbmSemantic, cbmToolPK, nlp, sub, tag, response, semanticHandled)
 
-    fun copyNlp(nlp: SdkResponse<String>) = EventData(text, event, cbmTidy, cbmSemantic, cbmToolPK, nlp, sub, tag, response)
+    fun copyNlp(nlp: SdkResponse<String>) = EventData(text, event, cbmTidy, cbmSemantic, cbmToolPK, nlp, sub, tag, response, semanticHandled)
 }
 
 data class IATText(val ls: Boolean?, val pgs: String?, val rg: List<Int>?, val sn: Int?, val ws: List<WS>?) {
@@ -85,6 +86,10 @@ data class UIResponse(
 
     fun isEmpty(): Boolean {
         return weathers == null || weathers.isEmpty()
+    }
+
+    fun isSemanticEmpty(): Boolean {
+        return category == Category.UNKNOWN
     }
 }
 
