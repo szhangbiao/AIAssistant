@@ -3,6 +3,7 @@ package cn.booslink.llm.processor.process.ksong;
 import android.content.Context;
 import android.content.Intent;
 import android.text.TextUtils;
+import android.util.Pair;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -71,8 +72,9 @@ public class KSongProcessImpl implements IKSongProcess {
                 intent == AIUIIntent.PAGE_OPEN || //打开最近播放,收藏,本地,常唱
                         intent == AIUIIntent.PAGE_BACK // 关闭当前页 or 返回到上一级页面
         )) || (isKSongAppStartup && (
-                intent == AIUIIntent.KSONG_ORIGIN ||// 原唱
-                        intent == AIUIIntent.KSONG_ACCOM ||// 伴唱
+                intent == AIUIIntent.KSONG_ORIGIN || intent == AIUIIntent.CLOSE_ACCOM ||// 原唱
+                        intent == AIUIIntent.KSONG_ACCOM || intent == AIUIIntent.CLOSE_ORIGIN || // 伴唱
+                        intent == AIUIIntent.KSONG_REPLAY ||// 重唱
                         intent == AIUIIntent.KSONG_ADD ||// 点歌
                         intent == AIUIIntent.KSONG_REMOVE ||// 移除点歌
                         intent == AIUIIntent.KSONG_TOP ||// 置顶
@@ -84,7 +86,21 @@ public class KSongProcessImpl implements IKSongProcess {
     @Override
     public VoiceResult handleKSongIntent(String foregroundPkgName, AIUIIntent intent, @NotNull List<Slot> slots) {
         if (intent == AIUIIntent.RANDOM_KSONG || intent == AIUIIntent.KSONG_ADD) {
-            return populateKSongEntryPoint(foregroundPkgName);
+            boolean isKSongAppStartup = BOOSLINK_QM_PACKAGE_NAME.equals(foregroundPkgName) || DUO_CHANG_PACKAGE_NAME.equals(foregroundPkgName) || QUANMIN_PACKAGE_NAME.equals(foregroundPkgName) || SMART_PACKAGE_NAME.equals(foregroundPkgName) || LEIKA_PACKAGE_NAME.equals(foregroundPkgName);
+            if (!isKSongAppStartup) {
+                Intent launchIntent = null;
+                if (intent == AIUIIntent.KSONG_ADD) {
+                    IKSongAction songAction = getKSongAction(foregroundPkgName);
+                    Pair<String, String> addSongPair = parseArtistAndSongBySlot(foregroundPkgName, slots);
+                    if (addSongPair != null && songAction != null) {
+                        launchIntent = songAction.addSong(addSongPair.first, addSongPair.second, false);
+                    }
+                }
+                mAppProcess.launchAppWithIntent(BOOSLINK_QM_PACKAGE_NAME, launchIntent);
+                return VoiceResult.Companion.progress();
+            } else if (intent == AIUIIntent.RANDOM_KSONG) {
+                return VoiceResult.Companion.success("当前正处于唱歌类应用");
+            }
         }
         Intent actionIntent = getActualIntent(foregroundPkgName, intent, slots);
         if (actionIntent != null) {
@@ -92,15 +108,6 @@ public class KSongProcessImpl implements IKSongProcess {
             return VoiceResult.Companion.success("好的");
         }
         return VoiceResult.Companion.failure();
-    }
-
-    private VoiceResult populateKSongEntryPoint(String foregroundPkgName) {
-        boolean isKSongAppStartup = BOOSLINK_QM_PACKAGE_NAME.equals(foregroundPkgName) || DUO_CHANG_PACKAGE_NAME.equals(foregroundPkgName) || QUANMIN_PACKAGE_NAME.equals(foregroundPkgName) || SMART_PACKAGE_NAME.equals(foregroundPkgName) || LEIKA_PACKAGE_NAME.equals(foregroundPkgName);
-        if (!isKSongAppStartup) {
-            mAppProcess.launchAppWithIntent(BOOSLINK_QM_PACKAGE_NAME, null);
-            return VoiceResult.Companion.progress();
-        }
-        return VoiceResult.Companion.success("当前正处于唱歌类应用");
     }
 
     private Intent getActualIntent(String foregroundPkgName, AIUIIntent intent, @NotNull List<Slot> slots) {
@@ -112,9 +119,9 @@ public class KSongProcessImpl implements IKSongProcess {
             case PAUSE:
                 return songAction.pause();
             case CHOOSE_NEXT:
-                // TODO
-                return null;
+                return songAction.next();
             case REPLAY:
+            case KSONG_REPLAY:
                 return songAction.replay();
             case SCREEN_FULL:
                 return songAction.fullScreen();
@@ -132,23 +139,46 @@ public class KSongProcessImpl implements IKSongProcess {
             case PAGE_OPEN:
                 return getPageIntentBySlot(foregroundPkgName, slots);
             case KSONG_ORIGIN:
+            case CLOSE_ACCOM:
                 return songAction.originTrack();
             case KSONG_ACCOM:
+            case CLOSE_ORIGIN:
                 return songAction.accompanyTrack();
             case KSONG_ADD:
-                // TODO
-                return null;// songAction.addSong(slots.get(0).getValue(), slots.get(1).getValue(), false);
+                Pair<String, String> addSongPair = parseArtistAndSongBySlot(foregroundPkgName, slots);
+                if (addSongPair == null) return null;
+                return songAction.addSong(addSongPair.first, addSongPair.second, false);
             case KSONG_REMOVE:
+                // TODO
                 return null;
             case KSONG_TOP:
-                // TODO
-                return null;// songAction.topSong(slots.get(0).getValue(), slots.get(1).getValue());
+                Pair<String, String> topSongPair = parseArtistAndSongBySlot(foregroundPkgName, slots);
+                if (topSongPair == null) return null;
+                return songAction.topSong(topSongPair.first, topSongPair.second);
             case OPEN_SCORE:
                 return songAction.openScore();
             case CLOSE_SCORE:
                 return songAction.closeScore();
         }
         return null;
+    }
+
+    private Pair<String, String> parseArtistAndSongBySlot(String foregroundPkgName, @NotNull List<Slot> slots) {
+        if (slots.isEmpty()) return null;
+        String artist = null;
+        String song = null;
+        for (Slot slot : slots) {
+            if ("artist".equals(slot.getName())) {
+                artist = slot.getValue();
+            }
+            if ("song".equals(slot.getName())) {
+                song = slot.getValue();
+            }
+        }
+        if (TextUtils.isEmpty(artist) && TextUtils.isEmpty(song)) return null;
+        IKSongAction songAction = getKSongAction(foregroundPkgName);
+        if (songAction == null) return null;
+        return new Pair<>(artist, song);
     }
 
     @Nullable

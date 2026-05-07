@@ -39,9 +39,13 @@ import timber.log.Timber;
 public class EventProcessorImpl implements IEventProcessor {
     private final static String TAG = "EventProcessor";
 
+    private final static String KEY_TAG = "tag";
+    private final static String KEY_STREAM_ID = "stream_id";
+
     private final static String TYPE_VAD = "Vad";
     private final static String VAD_BOS = "Bos";
     private final static String VAD_EOS = "Eos";
+    private final static String VAD_SILENCE = "Silence";
 
     private final Gson mGson;
     private final Handler mHandler;
@@ -166,13 +170,15 @@ public class EventProcessorImpl implements IEventProcessor {
         CBMSub sub = eventInfo.getSub();
         String cntId = eventInfo.getCntId();
         if (sub == null || TextUtils.isEmpty(cntId)) return EventData.Companion.empty();
-        String tag = event.data.getString("tag");
         //Timber.tag(TAG).d("parseEventData, sub = %s", sub);
         try {
             byte[] bytes = event.data.getByteArray(cntId);
             String cntJsonRaw = new String(bytes, StandardCharsets.UTF_8);
+            String tag = event.data.getString(KEY_TAG);
+            String streamId = event.data.getString(KEY_STREAM_ID);
             //Timber.tag(TAG).d("parseEventData, cnt json = %s", cntJsonRaw);
             EventData data = mGson.fromJson(cntJsonRaw, EventData.class);
+            data.setId(streamId);
             data.setTag(AIUITag.fromTag(tag));
             data.setSub(sub);
             return data;
@@ -206,7 +212,7 @@ public class EventProcessorImpl implements IEventProcessor {
             mEventData = mEventData.copyIat(data.getText());
             mSpeechInteraction.updateQuery(new VoiceQuery(data.getText().getIATVoice(), QueryState.QUERYING));
         } else if (sub == CBMSub.NLP) {
-            if (data.getNlp() == null) return;
+            if (data.getNlp() == null || (!TextUtils.isEmpty(mEventData.getId()) && !mEventData.getId().equals(data.getId()))) return;
             int status = data.getNlp().getStatus() != null ? data.getNlp().getStatus() : -1;
             switch (status) {
                 case 0:
@@ -255,15 +261,20 @@ public class EventProcessorImpl implements IEventProcessor {
             if (data.getEvent() == null) return;
             CBMEvent event = data.getEvent().getText();
             if (event == null) return;
-            if (TYPE_VAD.equals(event.getType()) && VAD_EOS.equals(event.getKey())) {
+            String type = event.getType();
+            String key = event.getKey();
+            if (TYPE_VAD.equals(type) && (VAD_SILENCE.equals(key) || VAD_EOS.equals(key))) {
+                mEventData = EventData.Companion.withId(data.getId());
                 if (mEventData.getCbmSemantic() == null || mEventData.getCbmSemantic().getText() == null) return;
                 Answer answer = mEventData.getCbmSemantic().getText().getAnswer();
                 String semanticAnswer = answer != null ? answer.getText() : "";
                 if (data.getTag() == AIUITag.LAUNCH && TextUtils.isEmpty(mNplBuilder.toString()) && !TextUtils.isEmpty(semanticAnswer)) {
                     mSpeechInteraction.nlpAnswer(semanticAnswer);
                 }
+            } else if (TYPE_VAD.equals(type) && VAD_BOS.equals(key)) {
+                mEventData = EventData.Companion.withId(data.getId());
             }
-            mEventData = EventData.Companion.empty();
+            Timber.tag(TAG).d("event type = %s, key = %s, event id = %s", type, key, data.getId());
         }
     }
 

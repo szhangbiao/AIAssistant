@@ -6,6 +6,7 @@ import cn.booslink.llm.common.model.enums.Category
 import com.google.gson.annotations.SerializedName
 
 data class EventData(
+    var id: String?,
     val text: IATText?,
     @SerializedName("event") val event: SdkResponse<CBMEvent>?,
     @SerializedName("cbm_tidy") val cbmTidy: SdkResponse<CBMTidy>?,
@@ -18,19 +19,22 @@ data class EventData(
     var semanticHandled: Boolean = false,
 ) {
     companion object {
-        fun empty() = EventData(null, null, null, null, null, null, semanticHandled = false)
+        fun empty() = EventData(null, null, null, null, null, null, null, semanticHandled = false)
+
+        fun withId(id: String?) = EventData(id, null, null, null, null, null, null, semanticHandled = false)
     }
 
     fun isEmpty(): Boolean = text == null && cbmTidy == null && cbmSemantic == null && cbmToolPK == null && nlp == null
 
-    fun copyIat(text: IATText) = EventData(text, event, cbmTidy, cbmSemantic, cbmToolPK, nlp, sub, tag, response, semanticHandled)
+    fun copyIat(text: IATText) = EventData(id, text, event, cbmTidy, cbmSemantic, cbmToolPK, nlp, sub, tag, response, semanticHandled)
 
-    fun copyTidy(cbmTidy: SdkResponse<CBMTidy>) = EventData(text, event, cbmTidy, cbmSemantic, cbmToolPK, nlp, sub, tag, response, semanticHandled)
+    fun copyTidy(cbmTidy: SdkResponse<CBMTidy>) =
+        EventData(id, text, event, cbmTidy, cbmSemantic, cbmToolPK, nlp, sub, tag, response, semanticHandled)
 
     fun copySemantic(cbmSemantic: SdkResponse<CBMSemantic>, response: UIResponse) =
-        EventData(text, event, cbmTidy, cbmSemantic, cbmToolPK, nlp, sub, tag, response, semanticHandled)
+        EventData(id, text, event, cbmTidy, cbmSemantic, cbmToolPK, nlp, sub, tag, response, semanticHandled)
 
-    fun copyNlp(nlp: SdkResponse<String>) = EventData(text, event, cbmTidy, cbmSemantic, cbmToolPK, nlp, sub, tag, response, semanticHandled)
+    fun copyNlp(nlp: SdkResponse<String>) = EventData(id, text, event, cbmTidy, cbmSemantic, cbmToolPK, nlp, sub, tag, response, semanticHandled)
 }
 
 data class IATText(val ls: Boolean?, val pgs: String?, val rg: List<Int>?, val sn: Int?, val ws: List<WS>?) {
