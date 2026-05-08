@@ -22,6 +22,21 @@ public class VideoProcessImpl implements IVideoProcess {
 
     private static final String SLOT_CATEGORY = "category";
     private static final String SLOT_NAME = "name";
+    private static final String KEY_PAGE = "page";
+    private static final String KEY_NUMBER = "number";
+    private static final String KEY_SKIP_TYPE = "skipType";
+    private static final String KEY_SECOND = "second";
+    private static final String KEY_MINUTE = "minute";
+    private static final String KEY_HOUR = "hour";
+
+    private static final String PAGE_FAVORITE = "收藏";
+    private static final String PAGE_LOGIN = "登录";
+    private static final String PAGE_VIP_BUY = "收银台";
+    private static final String PAGE_HISTORY = "播放历史";
+    private static final String PAGE_SEARCH = "搜索";
+
+    private static final String SKIP_HEAD = "片头";
+    private static final String SKIP_TAIL = "片尾";
 
     private final String IQIYI_PACKAGE_NAME = "com.qiyi.video.iv";
 
@@ -40,8 +55,8 @@ public class VideoProcessImpl implements IVideoProcess {
     public boolean shouldVideoProcess(String foregroundPkgName, Category category, AIUIIntent intent) {
         boolean isAppOpened = IQIYI_PACKAGE_NAME.equals(foregroundPkgName);
         return category == Category.VIDEO || (isAppOpened && category == Category.CONTROL && (
-                //intent == AIUIIntent.XXX || // 打开搜索页面
-                intent == AIUIIntent.RESUME_PLAY || // 播放
+                intent == AIUIIntent.EXIT || // 退出应用
+                        intent == AIUIIntent.RESUME_PLAY || // 播放
                         intent == AIUIIntent.PAUSE || // 暂停
                         intent == AIUIIntent.REPLAY || // 重新播放
                         intent == AIUIIntent.CHOOSE_NEXT || // 下一集
@@ -65,7 +80,8 @@ public class VideoProcessImpl implements IVideoProcess {
 
     @Override
     public VoiceResult handleVideoIntent(String foregroundPkgName, AIUIIntent intent, @NotNull List<Slot> slots) {
-        if (intent == AIUIIntent.QUERY) {
+        boolean isVideoStartup = IQIYI_PACKAGE_NAME.equals(foregroundPkgName);
+        if (intent == AIUIIntent.QUERY && !isVideoStartup) {
             return populateActionBySlots(slots);
         }
         Intent actionIntent = populateByVideoAction(foregroundPkgName, intent, slots);
@@ -101,6 +117,12 @@ public class VideoProcessImpl implements IVideoProcess {
     private Intent populateByVideoAction(String foregroundPkgName, AIUIIntent intent, @NotNull List<Slot> slots) {
         IVideoAction videoAction = getVideoActionByPkgName(foregroundPkgName);
         switch (intent) {
+            case QUERY:
+                return populateActionInApp(slots);
+            case PAGE_BACK:
+                return videoAction.pageBack();
+            case PAGE_OPEN:
+                return getPageIntentBySlot(videoAction, slots);
             case EXIT:
                 return videoAction.exitApp();
             case RESUME_PLAY:
@@ -180,13 +202,48 @@ public class VideoProcessImpl implements IVideoProcess {
         return null;
     }
 
+    private Intent populateActionInApp(@NotNull List<Slot> slots) {
+        if (slots.isEmpty()) return null;
+        for (Slot slot : slots) {
+            if (SLOT_CATEGORY.equals(slot.getName())) {
+                String category = slot.getValue();
+                return mIQiYiVideoAction.openHomeChannel(category);
+            } else if (SLOT_NAME.equals(slot.getName())) {
+                String name = slot.getValue();
+                return mIQiYiVideoAction.openSearch(name);
+            }
+        }
+        return null;
+    }
+
+    private Intent getPageIntentBySlot(IVideoAction videoAction, @NotNull List<Slot> slots) {
+        for (Slot slot : slots) {
+            if (KEY_PAGE.equals(slot.getName())) {
+                if (TextUtils.isEmpty(slot.getValue())) return null;
+                switch (slot.getValue()) {
+                    case PAGE_FAVORITE:
+                        return videoAction.openFavorite();
+                    case PAGE_LOGIN:
+                        return videoAction.openLogin();
+                    case PAGE_VIP_BUY:
+                        return videoAction.openBuyVip();
+                    case PAGE_HISTORY:
+                        return videoAction.openHistory();
+                    case PAGE_SEARCH:
+                        return videoAction.openSearch("");
+                }
+            }
+        }
+        return null;
+    }
+
     private int getSkipValueBySlot(@NotNull List<Slot> slots) {
         if (slots.isEmpty()) return 0;
         for (Slot slot : slots) {
-            if ("skipType".equals(slot.getName())) {
-                if ("片头".equals(slot.getValue())) {
+            if (KEY_SKIP_TYPE.equals(slot.getName())) {
+                if (SKIP_HEAD.equals(slot.getValue())) {
                     return 1;
-                } else if ("片尾".equals(slot.getValue())) {
+                } else if (SKIP_TAIL.equals(slot.getValue())) {
                     return -1;
                 }
             }
@@ -206,7 +263,7 @@ public class VideoProcessImpl implements IVideoProcess {
 
     private String getPlayNumberBySlot(@NotNull List<Slot> slots) {
         for (Slot slot : slots) {
-            if ("number".equals(slot.getName())) {
+            if (KEY_NUMBER.equals(slot.getName())) {
                 return slot.getNormValue();
             }
         }
@@ -217,13 +274,13 @@ public class VideoProcessImpl implements IVideoProcess {
         if (slots.isEmpty()) return "10000"; // 10s
         int duration = 0;
         for (Slot slot : slots) {
-            if ("second".equals(slot.getName())) {
+            if (KEY_SECOND.equals(slot.getName())) {
                 int seconds = tryParseIntNum(slot.getNormValue());
                 duration += seconds;
-            } else if ("minute".equals(slot.getName())) {
+            } else if (KEY_MINUTE.equals(slot.getName())) {
                 int minutes = tryParseIntNum(slot.getNormValue());
                 duration += minutes * 60;
-            } else if ("hour".equals(slot.getName())) {
+            } else if (KEY_HOUR.equals(slot.getName())) {
                 int hours = tryParseIntNum(slot.getNormValue());
                 duration += hours * 3600;
             }

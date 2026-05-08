@@ -41,11 +41,14 @@ public class EventProcessorImpl implements IEventProcessor {
 
     private final static String KEY_TAG = "tag";
     private final static String KEY_STREAM_ID = "stream_id";
+    private final static String KEY_UID = "uid";
 
     private final static String TYPE_VAD = "Vad";
     private final static String VAD_BOS = "Bos";
     private final static String VAD_EOS = "Eos";
     private final static String VAD_SILENCE = "Silence";
+
+    private final static int RESULT_NETWORK_ERROR = 10120;
 
     private final Gson mGson;
     private final Handler mHandler;
@@ -84,12 +87,15 @@ public class EventProcessorImpl implements IEventProcessor {
                 safeEmitEvent(event);
                 break;
             case AIUIConstant.EVENT_WAKEUP: // 唤醒事件
-                Timber.tag(TAG).d("wakeup");
                 int type = event.arg1; // 0 （语音唤醒）, 1 （发送CMD_WAKEUP手动唤醒）
+                Timber.tag(TAG).d("wakeup, type = %d", type);
                 mHandler.post(mSpeechInteraction::UIWakeup);
                 if (type == 0) {
                     boolean shouldBlockSleepLogic = mAppManager.isPkgDownloading() || mAppManager.isPkgInstalling();
-                    if (shouldBlockSleepLogic) return;
+                    if (shouldBlockSleepLogic) {
+                        // TODO
+                        return;
+                    }
                     mSpeechInteraction.updateQuery(new VoiceQuery("bobo在听，有什么可以帮您~", QueryState.WAKE_UP));
                 }
                 break;
@@ -97,10 +103,13 @@ public class EventProcessorImpl implements IEventProcessor {
                 Timber.tag(TAG).d("prepare sleep");
                 break;
             case AIUIConstant.EVENT_SLEEP: // 休眠事件
-                int sleepType = event.arg1; // 0 （交互超时,自动休眠）, 1 （发送CMD_RESET_WAKEUP手动唤醒）
-                Timber.tag(TAG).d("sleep");
+                int sleepType = event.arg1; // 0 （交互超时,自动休眠）, 1 （发送CMD_RESET_WAKEUP手动休眠）
+                Timber.tag(TAG).d("sleep, type = %d", sleepType);
                 boolean shouldBlockSleepLogic = mAppManager.isPkgDownloading() || mAppManager.isPkgInstalling();
-                if (shouldBlockSleepLogic) return;
+                if (shouldBlockSleepLogic) {
+                    // TODO keep wakeup
+                    return;
+                }
                 boolean showLeaveConfirm = mSpeechStorage.shouldShowLeaveConfirm(sleepType);
                 if (showLeaveConfirm) {
                     mSpeechInteraction.semanticAnswer(UIResponse.Companion.withSleep(sleepType));
@@ -128,14 +137,19 @@ public class EventProcessorImpl implements IEventProcessor {
             case AIUIConstant.EVENT_TTS: // 语音合成事件
                 break;
             case AIUIConstant.EVENT_CONNECTED_TO_SERVER: // 与服务端建立连接
-                Timber.tag(TAG).d("connected to server");
+                String uid = event.data.getString(KEY_UID);
+                Timber.tag(TAG).d("connected to server, uid = %s", uid);
                 break;
             case AIUIConstant.EVENT_SERVER_DISCONNECTED: // 与服务端断开连接
                 Timber.tag(TAG).d("disconnect to server");
                 break;
             case AIUIConstant.EVENT_ERROR: // 出错事件
-                //mSpeechInteraction.updateQuery(new VoiceQuery(null, QueryState.ERROR));
-                Timber.tag(TAG).d("error = %s", event.info);
+                int code = event.arg1;
+                Timber.tag(TAG).d("error code = %d, info = %s", code, event.info);
+                if (RESULT_NETWORK_ERROR == code) {
+                    mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.ERROR));
+                    mSpeechInteraction.nlpAnswer("网络出错了！");
+                }
                 break;
         }
     }
@@ -216,10 +230,12 @@ public class EventProcessorImpl implements IEventProcessor {
             int status = data.getNlp().getStatus() != null ? data.getNlp().getStatus() : -1;
             switch (status) {
                 case 0:
+                    Timber.tag(TAG).d("nlp, start");
                     mNplBuilder.delete(0, mNplBuilder.length());
                     break;
                 case 1:
                     mNplBuilder.append(data.getNlp().getText());
+                    Timber.tag(TAG).d("nlp, content = %s", data.getNlp().getText());
                     if (mEventData.getResponse() != null && !mEventData.getResponse().isSemanticEmpty() && mEventData.getSemanticHandled()) return;
                     mSpeechInteraction.nlpAnswer(mNplBuilder.toString());
                     if (data.getTag() == AIUITag.LAUNCH) return;
@@ -273,6 +289,12 @@ public class EventProcessorImpl implements IEventProcessor {
                 }
             } else if (TYPE_VAD.equals(type) && VAD_BOS.equals(key)) {
                 mEventData = EventData.Companion.withId(data.getId());
+                if (mEventData.getCbmSemantic() == null || mEventData.getCbmSemantic().getText() == null) return;
+                Answer answer = mEventData.getCbmSemantic().getText().getAnswer();
+                String semanticAnswer = answer != null ? answer.getText() : "";
+                if (data.getTag() == AIUITag.LAUNCH && TextUtils.isEmpty(mNplBuilder.toString()) && !TextUtils.isEmpty(semanticAnswer)) {
+                    mSpeechInteraction.nlpAnswer(semanticAnswer);
+                }
             }
             Timber.tag(TAG).d("event type = %s, key = %s, event id = %s", type, key, data.getId());
         }

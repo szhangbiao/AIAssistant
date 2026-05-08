@@ -30,6 +30,16 @@ public class KSongProcessImpl implements IKSongProcess {
     private static final String SMART_PACKAGE_NAME = "com.huiaichang.sdm.desktop";
     private static final String LEIKA_PACKAGE_NAME = "com.huiaichang.mars.desktop";
 
+    private static final String KEY_NUMBER = "number";
+    private static final String KEY_PAGE = "page";
+    private static final String KEY_ARTIST = "artist";
+    private static final String KEY_SONG = "song";
+
+    private static final String PAGE_FAVORITE = "收藏";
+    private static final String PAGE_RECENT = "最近播放";
+    private static final String PAGE_LOCAL = "本地";
+    private static final String PAGE_FREQUENT = "常唱";
+
     @Inject
     @Named("quanmin")
     Lazy<IKSongAction> mQuanMinActionLazy;
@@ -168,10 +178,10 @@ public class KSongProcessImpl implements IKSongProcess {
         String artist = null;
         String song = null;
         for (Slot slot : slots) {
-            if ("artist".equals(slot.getName())) {
+            if (KEY_ARTIST.equals(slot.getName())) {
                 artist = slot.getValue();
             }
-            if ("song".equals(slot.getName())) {
+            if (KEY_SONG.equals(slot.getName())) {
                 song = slot.getValue();
             }
         }
@@ -210,7 +220,7 @@ public class KSongProcessImpl implements IKSongProcess {
 
     private int getChooseNumBySlot(@NotNull List<Slot> slots) {
         for (Slot slot : slots) {
-            if ("number".equals(slot.getName())) {
+            if (KEY_NUMBER.equals(slot.getName())) {
                 return tryParseIntNum(slot.getNormValue());
             }
         }
@@ -219,18 +229,18 @@ public class KSongProcessImpl implements IKSongProcess {
 
     private Intent getPageIntentBySlot(String foregroundPkgName, @NotNull List<Slot> slots) {
         for (Slot slot : slots) {
-            if ("page".equals(slot.getName())) {
+            if (KEY_PAGE.equals(slot.getName())) {
                 if (TextUtils.isEmpty(slot.getValue())) return null;
                 IKSongAction songAction = getKSongAction(foregroundPkgName);
                 if (songAction == null) return null;
                 switch (slot.getValue()) {
-                    case "收藏":
+                    case PAGE_FAVORITE:
                         return songAction.openFavorite();
-                    case "最近播放":
+                    case PAGE_RECENT:
                         return songAction.openRecent();
-                    case "本地":
+                    case PAGE_LOCAL:
                         return songAction.openLocal();
-                    case "常唱":
+                    case PAGE_FREQUENT:
                         return songAction.openFrequent();
                 }
             }

@@ -138,10 +138,6 @@ public class IQiYiVideoAction implements IVideoAction {
 
     @Override
     public Intent openSearch(String key) {
-        if (TextUtils.isEmpty(key)) {
-            Timber.tag(TAG).w("openSearch: key parameter is null or empty");
-            return null;
-        }
         String encodeKey = encodeParam("key", key);
         return getIntentWithParams(ACTION_OPEN_SEARCH, encodeKey);
     }
