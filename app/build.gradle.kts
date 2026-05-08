@@ -100,6 +100,14 @@ android {
     }
 }
 
+// 强制所有依赖使用 OkHttp 3.12.12 版本
+configurations.all {
+    resolutionStrategy {
+        force("com.squareup.okhttp3:okhttp:3.12.12")
+        force("com.squareup.okhttp3:logging-interceptor:3.12.12")
+    }
+}
+
 dependencies {
     implementation(libs.multidex)
     implementation(libs.boost.multidex)

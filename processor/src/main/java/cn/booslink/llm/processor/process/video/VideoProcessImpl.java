@@ -110,7 +110,7 @@ public class VideoProcessImpl implements IVideoProcess {
                 }
             } else if (SLOT_NAME.equals(slot.getName())) {
                 String name = slot.getValue();
-                Intent intent = mIQiYiVideoAction.search(name);
+                Intent intent = mIQiYiVideoAction.openSearch(name);
                 mAppProcess.launchAppWithIntent(IQIYI_PACKAGE_NAME, intent);
                 return VoiceResult.Companion.progress();
             }
@@ -220,7 +220,7 @@ public class VideoProcessImpl implements IVideoProcess {
                 return mIQiYiVideoAction.openHomeChannel(category);
             } else if (SLOT_NAME.equals(slot.getName())) {
                 String name = slot.getValue();
-                return mIQiYiVideoAction.openSearch(name);
+                return mIQiYiVideoAction.search(name);
             }
         }
         return null;

@@ -72,12 +72,12 @@ public class IQiYiVideoAction implements IVideoAction {
 
     @Override
     public Intent exitApp() {
-        return getIntent(ACTION_EXIT_APP);
+        return getAppIntent(ACTION_EXIT_APP);
     }
 
     @Override
     public Intent pageBack() {
-        return getIntent(ACTION_BACK);
+        return getAppIntent(ACTION_BACK);
     }
 
     @Override
@@ -88,22 +88,22 @@ public class IQiYiVideoAction implements IVideoAction {
 
     @Override
     public Intent openLogin() {
-        return getIntent(ACTION_OPEN_LOGIN);
+        return getAppIntent(ACTION_OPEN_LOGIN);
     }
 
     @Override
     public Intent openBuyVip() {
-        return getIntent(ACTION_OPEN_BUY_VIP);
+        return getAppIntent(ACTION_OPEN_BUY_VIP);
     }
 
     @Override
     public Intent openHistory() {
-        return getIntent(ACTION_OPEN_HISTORY);
+        return getAppIntent(ACTION_OPEN_HISTORY);
     }
 
     @Override
     public Intent openFavorite() {
-        return getIntent(ACTION_OPEN_SUBSCRIPT);
+        return getAppIntent(ACTION_OPEN_SUBSCRIPT);
     }
 
     @Override
@@ -119,7 +119,7 @@ public class IQiYiVideoAction implements IVideoAction {
             return null;
         }
         String encodeCid = encodeParam("cid", cid);
-        return getIntentWithParams(ACTION_OPEN_RANK_LIST, encodeCid);
+        return getAppIntentWithParams(ACTION_OPEN_RANK_LIST, encodeCid);
     }
 
     @Override
@@ -135,43 +135,39 @@ public class IQiYiVideoAction implements IVideoAction {
             return null;
         }
         String encodeCid = encodeParam("cid", cid);
-        return getIntentWithParams(ACTION_HOME_CHANNEL, encodeCid);
+        return getAppIntentWithParams(ACTION_HOME_CHANNEL, encodeCid);
     }
 
     @Override
     public Intent openSearch(String key) {
         String encodeKey = encodeParam("key", key);
-        return getIntentWithParams(ACTION_OPEN_SEARCH, encodeKey);
+        return getAppIntentWithParams(ACTION_OPEN_SEARCH, encodeKey);
     }
 
     @Override
     public Intent search(String key) {
-        if (TextUtils.isEmpty(key)) {
-            Timber.tag(TAG).w("search: key parameter is null or empty");
-            return null;
-        }
         String encodeKey = encodeParam("key", key);
-        return getIntentWithParams(ACTION_SEARCH, encodeKey);
+        return getAppIntentWithParams(ACTION_SEARCH, encodeKey);
     }
 
     @Override
     public Intent play() {
-        return getIntent(ACTION_PLAY);
+        return getPlayerIntent(ACTION_PLAY);
     }
 
     @Override
     public Intent pause() {
-        return getIntent(ACTION_PAUSE);
+        return getPlayerIntent(ACTION_PAUSE);
     }
 
     @Override
     public Intent replay() {
-        return getIntent(ACTION_REPLAY);
+        return getPlayerIntent(ACTION_REPLAY);
     }
 
     @Override
     public Intent next() {
-        return getIntent(ACTION_NEXT);
+        return getPlayerIntent(ACTION_NEXT);
     }
 
     /**
@@ -181,7 +177,7 @@ public class IQiYiVideoAction implements IVideoAction {
     @Override
     public Intent choosePlay(String value) {
         String encodeParams = encodeParam("value", value);
-        return getIntentWithParams(ACTION_EPISODE, encodeParams);
+        return getPlayerIntentWithParams(ACTION_EPISODE, encodeParams);
     }
 
     /**
@@ -193,13 +189,13 @@ public class IQiYiVideoAction implements IVideoAction {
     @Override
     public Intent fastForward(String duration) {
         String encodeDuration = encodeParam("value", duration);
-        return getIntentWithParams(ACTION_FAST_FORWARD, encodeDuration);
+        return getPlayerIntentWithParams(ACTION_FAST_FORWARD, encodeDuration);
     }
 
     @Override
     public Intent fastBackword(String duration) {
         String encodeDuration = encodeParam("value", duration);
-        return getIntentWithParams(ACTION_FAST_BACKWARD, encodeDuration);
+        return getPlayerIntentWithParams(ACTION_FAST_BACKWARD, encodeDuration);
     }
 
     /**
@@ -211,7 +207,7 @@ public class IQiYiVideoAction implements IVideoAction {
     @Override
     public Intent seekTo(String duration) {
         String encodeDuration = encodeParams(Pair.create("value", duration), Pair.create("allowOverflow", "1"));
-        return getIntentWithParams(ACTION_SEEK, encodeDuration);
+        return getPlayerIntentWithParams(ACTION_SEEK, encodeDuration);
     }
 
     /**
@@ -223,7 +219,7 @@ public class IQiYiVideoAction implements IVideoAction {
     @Override
     public Intent changeSpeed(String value) {
         String encodeValue = encodeParam("value", value);
-        return getIntentWithParams(ACTION_SPEED, encodeValue);
+        return getPlayerIntentWithParams(ACTION_SPEED, encodeValue);
     }
 
     /**
@@ -235,7 +231,7 @@ public class IQiYiVideoAction implements IVideoAction {
     @Override
     public Intent changeRate(String rate) {
         String encodeRate = encodeParams(Pair.create("rate", rate), Pair.create("autoPick", "1"));
-        return getIntentWithParams(ACTION_CHANGE_RATE, encodeRate);
+        return getPlayerIntentWithParams(ACTION_CHANGE_RATE, encodeRate);
     }
 
     /**
@@ -247,7 +243,7 @@ public class IQiYiVideoAction implements IVideoAction {
     @Override
     public Intent changeBright(String value) {
         String encodeValue = encodeParam("value", value);
-        return getIntentWithParams(ACTION_CHANGE_BRIGHT, encodeValue);
+        return getPlayerIntentWithParams(ACTION_CHANGE_BRIGHT, encodeValue);
     }
 
     /**
@@ -259,17 +255,17 @@ public class IQiYiVideoAction implements IVideoAction {
     @Override
     public Intent changeVolume(String value) {
         String encodeValue = encodeParam("value", value);
-        return getIntentWithParams(ACTION_CHANGE_VOLUME, encodeValue);
+        return getPlayerIntentWithParams(ACTION_CHANGE_VOLUME, encodeValue);
     }
 
     @Override
     public Intent skipHead() {
-        return getIntent(ACTION_SKIP_VIDEO_HEAD);
+        return getPlayerIntent(ACTION_SKIP_VIDEO_HEAD);
     }
 
     @Override
     public Intent skipTile() {
-        return getIntent(ACTION_SKIP_VIDEO_TILE);
+        return getPlayerIntent(ACTION_SKIP_VIDEO_TILE);
     }
 
     /**
@@ -281,7 +277,7 @@ public class IQiYiVideoAction implements IVideoAction {
     @Override
     public Intent changeFavorite(String value) {
         String encodeValue = encodeParam("value", value);
-        return getIntentWithParams(ACTION_CHANGE_FAVOR, encodeValue);
+        return getPlayerIntentWithParams(ACTION_CHANGE_FAVOR, encodeValue);
     }
 
     /**
@@ -293,7 +289,7 @@ public class IQiYiVideoAction implements IVideoAction {
     @Override
     public Intent changeDanMu(String value) {
         String encodeValue = encodeParam("value", value);
-        return getIntentWithParams(ACTION_CHANGE_DANMU_STATUS, encodeValue);
+        return getPlayerIntentWithParams(ACTION_CHANGE_DANMU_STATUS, encodeValue);
     }
 
     private String encodeParam(String key, String value) {
@@ -331,12 +327,28 @@ public class IQiYiVideoAction implements IVideoAction {
         }
     }
 
-    private Intent getIntent(String command) {
-        return getIntentWithParams(command, null);
+    private Intent getAppIntent(String command) {
+        return getAppIntentWithParams(command, null);
     }
 
-    private Intent getIntentWithParams(String command, String params) {
+    private Intent getAppIntentWithParams(String command, String params) {
         StringBuilder deeplink = new StringBuilder("iqiyi://com.qiyi.video.iv/v1/app?command=").append(command);
+        if (!TextUtils.isEmpty(params)) {
+            deeplink.append("&param=").append(params);
+        }
+        Uri uri = Uri.parse(deeplink.toString());
+        Timber.tag(TAG).d("getIntentWithParams: %s", deeplink.toString());
+        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        return intent;
+    }
+
+    private Intent getPlayerIntent(String command) {
+        return getPlayerIntentWithParams(command, null);
+    }
+
+    private Intent getPlayerIntentWithParams(String command, String params) {
+        StringBuilder deeplink = new StringBuilder("iqiyi://com.qiyi.video.iv/v1//player?command=").append(command);
         if (!TextUtils.isEmpty(params)) {
             deeplink.append("&param=").append(params);
         }
