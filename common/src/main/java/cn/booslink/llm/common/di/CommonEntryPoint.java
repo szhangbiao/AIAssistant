@@ -16,11 +16,7 @@ public interface CommonEntryPoint {
 
     OkHttpClient okHttpClient();
 
-    ImageLoader imageLoader();
-
-    ISpeechAgent speechAgent();
-
-    ISpeechStorage speechStorage();
+    Lazy<ImageLoader> lazyImageLoader();
 
     Lazy<ISpeechAgent> lazySpeechAgent();
 

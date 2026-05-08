@@ -127,7 +127,7 @@ public class AIRootLayout extends ConstraintLayout {
     private void changeUIWithState(EmoteState emoteState) {
         if (mCurrentEmoteState != null && mCurrentEmoteState == emoteState) return;
         mCurrentEmoteState = emoteState;
-        //Timber.tag(TAG).d("changeUIWithState, state = %s", emoteState);
+        Timber.tag(TAG).d("changeUIWithState, state = %s", emoteState);
         //processLoadingState(false);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             populateMascotAnimation(emoteState);

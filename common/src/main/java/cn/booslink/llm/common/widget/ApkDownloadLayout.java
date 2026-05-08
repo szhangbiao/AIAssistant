@@ -61,8 +61,10 @@ public class ApkDownloadLayout extends RelativeLayout {
         }
         if (download.getProgress() == 0 && !TextUtils.isEmpty(download.getIcon())) {
             CommonEntryPoint hiltEntryPoint = EntryPointAccessors.fromApplication(getContext().getApplicationContext(), CommonEntryPoint.class);
-            ImageLoader imageLoader = hiltEntryPoint.imageLoader();
-            imageLoader.loadImage(ivIcon, download.getIcon());
+            ImageLoader imageLoader = hiltEntryPoint.lazyImageLoader().get();
+            if (imageLoader != null) {
+                imageLoader.loadImage(ivIcon, download.getIcon());
+            }
         } else if (download.getApkIcon() != null) {
             ivIcon.setImageDrawable(download.getApkIcon());
         }

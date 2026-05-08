@@ -180,7 +180,7 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
     public void updateQuery(VoiceQuery query) {
         mVoiceInputLiveData.postValue(query);
         QueryState state = query.getState();
-        //Timber.tag(TAG).d("updateQuery, state = %s", state);
+        Timber.tag(TAG).d("updateQuery, state = %s", state);
         switch (state) {
             case IDLE:
                 mEmoteStateLiveData.postValue(EmoteState.IDLE);
@@ -200,6 +200,7 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
             case EMPTY:
             case ERROR:
                 mEmoteStateLiveData.postValue(EmoteState.CRYING);
+                break;
             case WAKE_UP:
             default:
                 mEmoteStateLiveData.postValue(EmoteState.NORMAL);

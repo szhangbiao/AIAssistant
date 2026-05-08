@@ -60,8 +60,10 @@ public class IQiYiVideoAction implements IVideoAction {
         mChannelIdMap.put("电视剧", "2");
         mChannelIdMap.put("纪录片", "3");
         mChannelIdMap.put("动漫", "4");
+        mChannelIdMap.put("微剧", "5");
         mChannelIdMap.put("综艺", "6");
         mChannelIdMap.put("儿童", "15");
+        mChannelIdMap.put("少儿", "15");
     }
 
     @Inject

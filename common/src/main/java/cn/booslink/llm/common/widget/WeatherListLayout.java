@@ -86,8 +86,6 @@ public class WeatherListLayout extends ConstraintLayout {
     }
 
     public void updateWeatherUI(WeatherUI weatherData) {
-        CommonEntryPoint hiltEntryPoint = EntryPointAccessors.fromApplication(getContext().getApplicationContext(), CommonEntryPoint.class);
-        ImageLoader imageLoader = hiltEntryPoint.imageLoader();
         if (weatherData == null) return;
         if (weatherData.getCurrent() != null) {
             tvDate.setText(weatherData.getCurrent().getDateForVoice());
@@ -100,7 +98,7 @@ public class WeatherListLayout extends ConstraintLayout {
             if (weatherRes != -1) {
                 ivWeatherIcon.setImageResource(weatherRes);
             } else if (!TextUtils.isEmpty(weatherData.getCurrent().getImg())) {
-                imageLoader.loadImage(ivWeatherIcon, weatherData.getCurrent().getImg());
+                loadNetworkIcon(ivWeatherIcon, weatherData.getCurrent().getImg());
             }
         }
         if (weatherData.getDay1() != null) {
@@ -110,7 +108,7 @@ public class WeatherListLayout extends ConstraintLayout {
             if (res1 != -1) {
                 ivIcon1.setImageResource(res1);
             } else if (!TextUtils.isEmpty(weatherData.getDay1().getImg())) {
-                imageLoader.loadImage(ivIcon1, weatherData.getDay1().getImg());
+                loadNetworkIcon(ivIcon1, weatherData.getDay1().getImg());
             }
         }
         if (weatherData.getDay2() != null) {
@@ -120,7 +118,7 @@ public class WeatherListLayout extends ConstraintLayout {
             if (res2 != -1) {
                 ivIcon2.setImageResource(res2);
             } else if (!TextUtils.isEmpty(weatherData.getDay2().getImg())) {
-                imageLoader.loadImage(ivIcon2, weatherData.getDay2().getImg());
+                loadNetworkIcon(ivIcon2, weatherData.getDay2().getImg());
             }
         }
         if (weatherData.getDay3() != null) {
@@ -130,7 +128,7 @@ public class WeatherListLayout extends ConstraintLayout {
             if (res3 != -1) {
                 ivIcon3.setImageResource(res3);
             } else if (!TextUtils.isEmpty(weatherData.getDay3().getImg())) {
-                imageLoader.loadImage(ivIcon3, weatherData.getDay3().getImg());
+                loadNetworkIcon(ivIcon3, weatherData.getDay3().getImg());
             }
         }
         if (weatherData.getDay4() != null) {
@@ -140,8 +138,17 @@ public class WeatherListLayout extends ConstraintLayout {
             if (res4 != -1) {
                 ivIcon4.setImageResource(res4);
             } else if (!TextUtils.isEmpty(weatherData.getDay4().getImg())) {
-                imageLoader.loadImage(ivIcon4, weatherData.getDay4().getImg());
+                loadNetworkIcon(ivIcon4, weatherData.getDay4().getImg());
             }
+        }
+    }
+
+
+    private void loadNetworkIcon(ImageView imageView, @NonNull String iconUrl) {
+        CommonEntryPoint hiltEntryPoint = EntryPointAccessors.fromApplication(getContext().getApplicationContext(), CommonEntryPoint.class);
+        ImageLoader imageLoader = hiltEntryPoint.lazyImageLoader().get();
+        if (imageLoader != null) {
+            imageLoader.loadImage(imageView, iconUrl);
         }
     }
 }

@@ -7,6 +7,8 @@ public enum AIUIIntent {
     // 页面跳转
     PAGE_BACK("PAGE_BACK"),
     PAGE_OPEN("PAGE_OPEN"),
+    OPEN_RANK("OPEN_RANK"),
+    OPEN_CHANNEL("OPEN_CHANNEL"),
     LAUNCH("LAUNCH"),
     DOWNLOAD("DOWNLOAD"),
     INSTALL("INSTALL"),

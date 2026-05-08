@@ -8,7 +8,6 @@ import org.joda.time.DateTime;
 
 import java.util.concurrent.TimeUnit;
 
-import javax.inject.Named;
 import javax.inject.Singleton;
 
 import cn.booslink.llm.common.model.CBMEvent;
@@ -78,7 +77,7 @@ public class CommonModule {
     @Singleton
     @Provides
     public OkHttpClient provideOkHttpClient() {
-        final OkHttpClient.Builder builder = HttpEngine.createClientBuilder(false, 10 * 1000, 10 * 1000);
+        final OkHttpClient.Builder builder = HttpEngine.createClientBuilder(false, 10 * 1000, 10 * 1000, 10 * 1000);
         HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor(message -> Timber.tag("OkHttp").d(message));
         interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
         builder.addInterceptor(interceptor);

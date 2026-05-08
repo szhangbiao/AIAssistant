@@ -1,7 +1,6 @@
 package cn.booslink.llm.common.utils;
 
 import android.os.Build;
-import android.util.Log;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -13,15 +12,14 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
 import okhttp3.OkHttpClient;
+import timber.log.Timber;
 
 public class HttpEngine {
     private static final String TAG = "HttpEngine";
@@ -34,17 +32,17 @@ public class HttpEngine {
      * @return
      */
     public static SSLContext getSSLContext() {
-        boolean tryTls12 = (Build.VERSION.SDK_INT >= 16 && Build.VERSION.SDK_INT < 22);
+        boolean tryTls12 = Build.VERSION.SDK_INT < 22;
         if (tryTls12) {
             try {
-                Log.d(TAG, "try to get SSLContext TLSv1.2");
+                Timber.tag(TAG).d("try to get SSLContext TLSv1.2");
                 return SSLContext.getInstance("TLSv1.2");
             } catch (NoSuchAlgorithmException e) {
-                Log.e(TAG, "fail to get SSLContext TLSv1.2 : " + e);
+                Timber.tag(TAG).e(e, "fail to get SSLContext TLSv1.2 ");
             }
         }
         try {
-            Log.d(TAG, "try get SSLContext TLS");
+            Timber.tag(TAG).d("try get SSLContext TLS");
             return SSLContext.getInstance("TLS");
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException("No TLS provider", e);
@@ -55,10 +53,10 @@ public class HttpEngine {
      * 创建HttpClient实例
      */
     public OkHttpClient createClient() {
-        return createClientBuilder(false, 10 * 1000, 10 * 1000).build();
+        return createClientBuilder(false, 10 * 1000, 10 * 1000, 10 * 1000).build();
     }
 
-    public static synchronized OkHttpClient.Builder createClientBuilder(boolean isTrustAll, int connectTimeoutMs, int readTimeoutMs) {
+    public static synchronized OkHttpClient.Builder createClientBuilder(boolean isTrustAll, int connectTimeoutMs, int readTimeoutMs, int writeTimeoutMs) {
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
         SSLSocketFactory sslSocketFactory = null;
         try {
@@ -77,8 +75,6 @@ public class HttpEngine {
             sslSocketFactory = new TLSCompatSocketFactory(sslContext.getSocketFactory());
             if (isTrustAll) {
                 builder.sslSocketFactory(sslSocketFactory, trustAllManager);
-            } else if (Build.VERSION.SDK_INT <= 19) {
-                builder.sslSocketFactory(sslSocketFactory);
             }
             if (connectTimeoutMs > 0) {
                 builder.connectTimeout(connectTimeoutMs, TimeUnit.MILLISECONDS);
@@ -86,14 +82,27 @@ public class HttpEngine {
             if (readTimeoutMs > 0) {
                 builder.readTimeout(readTimeoutMs, TimeUnit.MILLISECONDS);
             }
-            builder.hostnameVerifier(new HostnameVerifier() {
-                @Override
-                public boolean verify(String hostname, SSLSession session) {
-                    return true;
-                }
-            });
+            if (writeTimeoutMs > 0) {
+                builder.writeTimeout(writeTimeoutMs, TimeUnit.MILLISECONDS);
+            }
+            builder.hostnameVerifier((hostname, session) -> true);
         } catch (Throwable t) {
-            Log.e(TAG, "createHttpClientBuilder error: " + t);
+            Timber.tag(TAG).e(t, "createHttpClientBuilder error");
+            return backupOkHttpClientBuilder(connectTimeoutMs, readTimeoutMs, writeTimeoutMs);
+        }
+        return builder;
+    }
+
+    private static OkHttpClient.Builder backupOkHttpClientBuilder(int connectTimeoutMs, int readTimeoutMs, int writeTimeoutMs) {
+        OkHttpClient.Builder builder = new OkHttpClient.Builder();
+        if (connectTimeoutMs > 0) {
+            builder.connectTimeout(connectTimeoutMs, TimeUnit.MILLISECONDS);
+        }
+        if (readTimeoutMs > 0) {
+            builder.readTimeout(readTimeoutMs, TimeUnit.MILLISECONDS);
+        }
+        if (writeTimeoutMs > 0) {
+            builder.writeTimeout(writeTimeoutMs, TimeUnit.MILLISECONDS);
         }
         return builder;
     }
@@ -124,11 +133,7 @@ public class HttpEngine {
         private static volatile String[] FINAL_TLS_SUPPORT_VERSION;
 
         static {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                TLS_SUPPORT_VERSION = new String[]{"TLSv1", "TLSv1.1", "TLSv1.2", "TLSv1.3"};
-            } else {
-                TLS_SUPPORT_VERSION = new String[]{};
-            }
+            TLS_SUPPORT_VERSION = new String[]{"TLSv1", "TLSv1.1", "TLSv1.2", "TLSv1.3"};
         }
 
         final SSLSocketFactory delegate;
@@ -184,7 +189,7 @@ public class HttpEngine {
                 printSslSocketProtocols(s);
             } catch (Throwable e) {
                 //为保险，加一层保护。
-                Log.i(TAG, "setEnabledProtocols: " + e);
+                Timber.tag(TAG).i(e, "setEnabledProtocols ");
             }
             return s;
         }
@@ -202,18 +207,18 @@ public class HttpEngine {
                     }
                 }
                 String[] supportProtocolsArrays = supportProtocols.toArray(new String[0]);
-                if (supportProtocolsArrays != null && supportProtocolsArrays.length > 0) {
+                if (supportProtocolsArrays.length > 0) {
                     FINAL_TLS_SUPPORT_VERSION = supportProtocolsArrays;
                 }
             }
         }
 
         private boolean isSupportProtocol(String protocol, String[] supportedProtocols) {
-            if (supportedProtocols == null || supportedProtocols.length == 0) {
+            if (supportedProtocols == null) {
                 return false;
             }
-            for (int i = 0; i < supportedProtocols.length; i++) {
-                if (supportedProtocols[i].equals(protocol)) {
+            for (String supportedProtocol : supportedProtocols) {
+                if (supportedProtocol.equals(protocol)) {
                     return true;
                 }
             }
@@ -228,7 +233,7 @@ public class HttpEngine {
                 return;
             }
             SSLSocket sslSocket = ((SSLSocket) socket);
-            Log.e(TAG, "sslSocket impl = " + sslSocket.getClass());
+            Timber.tag(TAG).e("sslSocket impl = %s", sslSocket.getClass());
             printItem(sslSocket.getSupportedProtocols(), "supportProtocol", "不支持任何SSL或TLS协议");
             printItem(sslSocket.getEnabledProtocols(), "enabledProtocol", "没有可用的SSL或TLS协议");
         }
@@ -237,10 +242,10 @@ public class HttpEngine {
             try {
                 if (supportedProtocols != null) {
                     for (String protocol : supportedProtocols) {
-                        Log.e(TAG, tag + ": " + protocol);
+                        Timber.tag(TAG).e(tag + ": " + protocol);
                     }
                 } else {
-                    Log.e(TAG, tip);
+                    Timber.tag(TAG).d(tip);
                 }
             } catch (Exception e) {
                 e.printStackTrace();

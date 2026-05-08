@@ -49,6 +49,7 @@ public class EventProcessorImpl implements IEventProcessor {
     private final static String VAD_SILENCE = "Silence";
 
     private final static int RESULT_NETWORK_ERROR = 10120;
+    private final static int RESULT_NETWORK_TIMEOUT = 10114;
 
     private final Gson mGson;
     private final Handler mHandler;
@@ -149,6 +150,9 @@ public class EventProcessorImpl implements IEventProcessor {
                 if (RESULT_NETWORK_ERROR == code) {
                     mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.ERROR));
                     mSpeechInteraction.nlpAnswer("网络出错了！");
+                } else if (RESULT_NETWORK_TIMEOUT == code) {
+                    mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.ERROR));
+                    mSpeechInteraction.nlpAnswer("网络连接超时了！");
                 }
                 break;
         }

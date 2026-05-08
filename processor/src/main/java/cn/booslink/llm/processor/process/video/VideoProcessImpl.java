@@ -24,6 +24,7 @@ public class VideoProcessImpl implements IVideoProcess {
     private static final String SLOT_NAME = "name";
     private static final String KEY_PAGE = "page";
     private static final String KEY_NUMBER = "number";
+    private static final String KEY_CHANNEL = "channel";
     private static final String KEY_SKIP_TYPE = "skipType";
     private static final String KEY_SECOND = "second";
     private static final String KEY_MINUTE = "minute";
@@ -34,6 +35,7 @@ public class VideoProcessImpl implements IVideoProcess {
     private static final String PAGE_VIP_BUY = "收银台";
     private static final String PAGE_HISTORY = "播放历史";
     private static final String PAGE_SEARCH = "搜索";
+    private static final String PAGE_RANKING = "榜单";
 
     private static final String SKIP_HEAD = "片头";
     private static final String SKIP_TAIL = "片尾";
@@ -69,7 +71,9 @@ public class VideoProcessImpl implements IVideoProcess {
                         intent == AIUIIntent.SKIP_SET // 跳过片头， 跳过片尾
         )) || (isAppOpened && category == Category.PAGE_CONTROL && (
                 intent == AIUIIntent.PAGE_OPEN || // 打开登录、收银台、播放历史、收藏、xx频道榜单、首页XX频道
-                        intent == AIUIIntent.PAGE_BACK //返回到上一级页面
+                        intent == AIUIIntent.OPEN_RANK || // 打开xx频道榜单页面
+                        intent == AIUIIntent.OPEN_CHANNEL || // 打开首页XX频道
+                        intent == AIUIIntent.PAGE_BACK // 返回到上一级页面
         )) || (isAppOpened && category == Category.VIDEO_ENHANCE && (
                 intent == AIUIIntent.SPEED_DOWN || intent == AIUIIntent.SPEED_UP || intent == AIUIIntent.CHANGE_SPEED || // 切换倍速
                         intent == AIUIIntent.CLARITY_DOWN || intent == AIUIIntent.CLARITY_UP || intent == AIUIIntent.CHANGE_CLARITY || //  切换清晰度
@@ -117,14 +121,20 @@ public class VideoProcessImpl implements IVideoProcess {
     private Intent populateByVideoAction(String foregroundPkgName, AIUIIntent intent, @NotNull List<Slot> slots) {
         IVideoAction videoAction = getVideoActionByPkgName(foregroundPkgName);
         switch (intent) {
+            case EXIT:
+                return videoAction.exitApp();
             case QUERY:
                 return populateActionInApp(slots);
             case PAGE_BACK:
                 return videoAction.pageBack();
             case PAGE_OPEN:
                 return getPageIntentBySlot(videoAction, slots);
-            case EXIT:
-                return videoAction.exitApp();
+            case OPEN_RANK:
+                String rankChannel = getChannelBySlot(slots);
+                return videoAction.openRanking(rankChannel);
+            case OPEN_CHANNEL:
+                String homeChannel = getChannelBySlot(slots);
+                return videoAction.openHomeChannel(homeChannel);
             case RESUME_PLAY:
                 return videoAction.play();
             case PAUSE:
@@ -231,10 +241,22 @@ public class VideoProcessImpl implements IVideoProcess {
                         return videoAction.openHistory();
                     case PAGE_SEARCH:
                         return videoAction.openSearch("");
+                    case PAGE_RANKING:
+                        return videoAction.openRanking("总榜");
                 }
             }
         }
         return null;
+    }
+
+    private String getChannelBySlot(@NotNull List<Slot> slots) {
+        if (slots.isEmpty()) return "总榜";
+        for (Slot slot : slots) {
+            if (KEY_CHANNEL.equals(slot.getName())) {
+                return slot.getValue();
+            }
+        }
+        return "总榜";
     }
 
     private int getSkipValueBySlot(@NotNull List<Slot> slots) {
