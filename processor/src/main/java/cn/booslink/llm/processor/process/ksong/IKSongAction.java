@@ -72,4 +72,7 @@ public interface IKSongAction {
 
     @Nullable
     Intent openFrequent(); //打开常唱
+
+    @Nullable
+    Intent exit();
 }

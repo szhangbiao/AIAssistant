@@ -151,6 +151,12 @@ public class QuanMinKSongAction implements IKSongAction {
         return null;
     }
 
+    @Nullable
+    @Override
+    public Intent exit() {
+        return null;
+    }
+
     private Intent getIntentWithParams(int action) {
         return getIntentWithParams(action, -1);
     }

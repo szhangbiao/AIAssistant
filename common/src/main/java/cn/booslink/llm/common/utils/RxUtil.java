@@ -47,6 +47,12 @@ public class RxUtil {
                 .observeOn(AndroidSchedulers.mainThread());
     }
 
+    public static <T> FlowableTransformer<T, T> flowableOnIO() {
+        return upstream -> upstream
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io());
+    }
+
     public static CompletableTransformer completableOnMain() {
         return upstream -> upstream
                 .subscribeOn(Schedulers.io())

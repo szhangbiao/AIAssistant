@@ -136,4 +136,10 @@ public class LeiShiKSongAction implements IKSongAction{
     public Intent openFrequent() {
         return null;
     }
+
+    @Nullable
+    @Override
+    public Intent exit() {
+        return null;
+    }
 }

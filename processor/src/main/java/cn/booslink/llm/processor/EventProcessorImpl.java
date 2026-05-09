@@ -178,7 +178,7 @@ public class EventProcessorImpl implements IEventProcessor {
                 }, BackpressureStrategy.LATEST)
                 .map(this::parseEventData)
                 .map(this::processSemanticData)
-                .compose(RxUtil.flowableOnMain())
+                .compose(RxUtil.flowableOnIO())
                 .subscribe(this::populateEventResult, this::parseOrPopulateEventFailed);
     }
 

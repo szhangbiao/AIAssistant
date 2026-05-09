@@ -1,9 +1,11 @@
 package cn.booslink.llm.processor.process.ksong;
 
+import android.app.Instrumentation;
 import android.content.Context;
 import android.content.Intent;
 import android.text.TextUtils;
 import android.util.Pair;
+import android.view.KeyEvent;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -20,8 +22,11 @@ import cn.booslink.llm.common.model.enums.Category;
 import cn.booslink.llm.processor.process.app.IAppProcess;
 import dagger.Lazy;
 import dagger.hilt.android.qualifiers.ApplicationContext;
+import timber.log.Timber;
 
 public class KSongProcessImpl implements IKSongProcess {
+
+    private static final String TAG = "KSongProcess";
 
     private static final String BOOSLINK_QM_PACKAGE_NAME = "cn.booslink.kg";
     private static final String DUO_CHANG_PACKAGE_NAME = "com.evideo.kmbox";
@@ -69,7 +74,8 @@ public class KSongProcessImpl implements IKSongProcess {
                 intent == AIUIIntent.RANDOM_KSONG ||// 打开应用
                         intent == AIUIIntent.KSONG_ADD// 点歌
         )) || (isKSongAppStartup && category == Category.CONTROL && (
-                intent == AIUIIntent.RESUME_PLAY || // 播放
+                intent == AIUIIntent.EXIT || // 退出应用
+                        intent == AIUIIntent.RESUME_PLAY || // 播放
                         intent == AIUIIntent.PAUSE ||// 暂停
                         intent == AIUIIntent.CHOOSE_NEXT ||// 下一曲, 下一页
                         intent == AIUIIntent.REPLAY ||// 重播
@@ -124,6 +130,12 @@ public class KSongProcessImpl implements IKSongProcess {
         IKSongAction songAction = getKSongAction(foregroundPkgName);
         if (songAction == null) return null;
         switch (intent) {
+            case EXIT:
+                Intent exitIntent = songAction.exit();
+                if (isEmptyIntent(exitIntent)) {
+                    simulateHomePress();
+                }
+                return exitIntent;
             case RESUME_PLAY:
                 return songAction.play();
             case PAUSE:
@@ -145,7 +157,11 @@ public class KSongProcessImpl implements IKSongProcess {
             case CHOOSE_PREVIOUS:
                 return songAction.previousPage();
             case PAGE_BACK:
-                return songAction.closePage();
+                Intent backIntent = songAction.closePage();
+                if (isEmptyIntent(backIntent)) {
+                    simulateBackPress();
+                }
+                return backIntent;
             case PAGE_OPEN:
                 return getPageIntentBySlot(foregroundPkgName, slots);
             case KSONG_ORIGIN:
@@ -211,6 +227,7 @@ public class KSongProcessImpl implements IKSongProcess {
     }
 
     private void populateKSongIntent(String foregroundPkgName, Intent actionIntent) {
+        if (isEmptyIntent(actionIntent)) return;
         if (QUANMIN_PACKAGE_NAME.equals(foregroundPkgName)) {
             mContext.sendBroadcast(actionIntent);
         } else if (!DUO_CHANG_PACKAGE_NAME.equals(foregroundPkgName)) {
@@ -248,6 +265,26 @@ public class KSongProcessImpl implements IKSongProcess {
         return null;
     }
 
+    private void simulateBackPress() {
+        try {
+            Instrumentation inst = new Instrumentation();
+            inst.sendKeyDownUpSync(KeyEvent.KEYCODE_BACK);
+        } catch (Exception e) {
+            // 记录错误日志
+            Timber.tag(TAG).e(e, "Failed to simulate back press");
+        }
+    }
+
+    private void simulateHomePress() {
+        try {
+            Instrumentation inst = new Instrumentation();
+            inst.sendKeyDownUpSync(KeyEvent.KEYCODE_HOME);
+        } catch (Exception e) {
+            // 记录错误日志
+            Timber.tag(TAG).e(e, "Failed to simulate back press");
+        }
+    }
+
     private int tryParseIntNum(String value) {
         int intNum;
         try {
@@ -256,5 +293,14 @@ public class KSongProcessImpl implements IKSongProcess {
             intNum = 0;
         }
         return intNum;
+    }
+
+    private boolean isEmptyIntent(Intent intent) {
+        if (intent == null) return true;
+
+        // 如果没有action、component或package，基本上就是空Intent
+        return TextUtils.isEmpty(intent.getAction()) &&
+                intent.getComponent() == null &&
+                TextUtils.isEmpty(intent.getPackage());
     }
 }

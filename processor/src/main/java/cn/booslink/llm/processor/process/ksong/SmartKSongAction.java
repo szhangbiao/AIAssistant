@@ -168,6 +168,12 @@ public class SmartKSongAction implements IKSongAction {
         return getIntentWithParams(OPEN_SANG_ACTION);
     }
 
+    @Nullable
+    @Override
+    public Intent exit() {
+        return null;
+    }
+
     private Intent getIntentWithParams(String action) {
         return getIntentWithParams(action, null, null);
     }

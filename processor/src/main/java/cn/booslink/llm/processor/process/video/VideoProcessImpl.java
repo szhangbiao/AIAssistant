@@ -35,7 +35,8 @@ public class VideoProcessImpl implements IVideoProcess {
     private static final String PAGE_FAVORITE = "收藏";
     private static final String PAGE_LOGIN = "登录";
     private static final String PAGE_VIP_BUY = "收银台";
-    private static final String PAGE_HISTORY = "播放历史";
+    private static final String PAGE_PLAY_HISTORY = "播放历史";
+    private static final String PAGE_HISTORY = "历史";
     private static final String PAGE_SEARCH = "搜索";
     private static final String PAGE_RANKING = "榜单";
 
@@ -265,6 +266,7 @@ public class VideoProcessImpl implements IVideoProcess {
                     case PAGE_VIP_BUY:
                         return videoAction.openBuyVip();
                     case PAGE_HISTORY:
+                    case PAGE_PLAY_HISTORY:
                         return videoAction.openHistory();
                     case PAGE_SEARCH:
                         return videoAction.openSearch("");

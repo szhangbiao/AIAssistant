@@ -123,12 +123,6 @@ public class BslQmKSongAction implements IKSongAction {
 
     @Nullable
     @Override
-    public Intent closePage() {
-        return null;
-    }
-
-    @Nullable
-    @Override
     public Intent openRecent() {
         return getIntentWithParams(7);
     }
@@ -149,6 +143,18 @@ public class BslQmKSongAction implements IKSongAction {
     @Override
     public Intent openFrequent() {
         return getIntentWithParams(7);
+    }
+
+    @Nullable
+    @Override
+    public Intent closePage() {
+        return new Intent();
+    }
+
+    @Nullable
+    @Override
+    public Intent exit() {
+        return new Intent();
     }
 
     private Intent getIntentWithParams(int action) {
