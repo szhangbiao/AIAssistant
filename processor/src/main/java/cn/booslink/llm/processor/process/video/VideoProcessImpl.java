@@ -29,6 +29,8 @@ public class VideoProcessImpl implements IVideoProcess {
     private static final String KEY_SECOND = "second";
     private static final String KEY_MINUTE = "minute";
     private static final String KEY_HOUR = "hour";
+    private static final String KEY_SPEED = "speed";
+    private static final String KEY_CLARITY = "clarity";
 
     private static final String PAGE_FAVORITE = "收藏";
     private static final String PAGE_LOGIN = "登录";
@@ -70,7 +72,7 @@ public class VideoProcessImpl implements IVideoProcess {
                         intent == AIUIIntent.VOLUME_PLUS || intent == AIUIIntent.VOLUME_MINUS || intent == AIUIIntent.VOLUME_MAX || intent == AIUIIntent.VOLUME_MIN || intent == AIUIIntent.UNMUTE || intent == AIUIIntent.MUTE || // 修改音量
                         intent == AIUIIntent.SKIP_SET // 跳过片头， 跳过片尾
         )) || (isAppOpened && category == Category.PAGE_CONTROL && (
-                intent == AIUIIntent.PAGE_OPEN || // 打开登录、收银台、播放历史、收藏、xx频道榜单、首页XX频道
+                intent == AIUIIntent.PAGE_OPEN || // 打开登录、收银台、播放历史、收藏、榜单、搜索
                         intent == AIUIIntent.OPEN_RANK || // 打开xx频道榜单页面
                         intent == AIUIIntent.OPEN_CHANNEL || // 打开首页XX频道
                         intent == AIUIIntent.PAGE_BACK // 返回到上一级页面
@@ -191,15 +193,18 @@ public class VideoProcessImpl implements IVideoProcess {
             case SPEED_UP:
                 return videoAction.changeSpeed("UP");
             case CHANGE_SPEED:
-                // TODO get speed by slots
-                return null;
+                float speed = getSpeedBySlot(slots);
+                if (speed <= 0) return null;
+                int intSpeed = (int) (speed * 100);
+                return videoAction.changeSpeed(String.valueOf(intSpeed));
             case CLARITY_DOWN:
                 return videoAction.changeRate("DOWN");
             case CLARITY_UP:
                 return videoAction.changeRate("UP");
             case CHANGE_CLARITY:
-                // TODO get rate by slots
-                return null;
+                int clarity = getClarityBySlot(slots);
+                if (clarity <= 0) return null;
+                return videoAction.changeRate(clarity == 4 ? "4k" : String.valueOf(clarity));
             case FAVORITE_REMOVE:
                 return videoAction.changeFavorite("false");
             case FAVORITE_ADD:
@@ -210,6 +215,28 @@ public class VideoProcessImpl implements IVideoProcess {
                 return videoAction.changeDanMu("false");
         }
         return null;
+    }
+
+    private float getSpeedBySlot(@NotNull List<Slot> slots) {
+        if (slots.isEmpty()) return 0;
+        for (Slot slot : slots) {
+            if (KEY_SPEED.equals(slot.getName())) {
+                String speedStr = slot.getNormValue();
+                return adjustSpeed(speedStr);
+            }
+        }
+        return -1;
+    }
+
+    private int getClarityBySlot(@NotNull List<Slot> slots) {
+        if (slots.isEmpty()) return 0;
+        for (Slot slot : slots) {
+            if (KEY_CLARITY.equals(slot.getName())) {
+                String clarity = slot.getNormValue();
+                return adjustClarity(clarity);
+            }
+        }
+        return -1;
     }
 
     private Intent populateActionInApp(@NotNull List<Slot> slots) {
@@ -310,6 +337,31 @@ public class VideoProcessImpl implements IVideoProcess {
         return duration != 0 ? String.valueOf(duration * 1000) : "10000";
     }
 
+    private float adjustSpeed(String speedStr) {
+        float[] speeds = new float[]{0.75f, 1.0f, 1.25f, 1.5f, 2.0f, 3.0f};
+        float speed = tryParseFloatNum(speedStr);
+        if (speed <= 0) return 1.0f;
+        float closestSpeed = speeds[0];
+        float minDiff = Math.abs(speed - speeds[0]);
+        for (int i = 1; i < speeds.length; i++) {
+            float diff = Math.abs(speed - speeds[i]);
+            if (diff < minDiff) {
+                minDiff = diff;
+                closestSpeed = speeds[i];
+            }
+        }
+        return closestSpeed;
+    }
+
+    private int adjustClarity(String clarity) {
+        int[] clarities = new int[]{480, 720, 1080, 4};
+        int num = tryParseIntNum(clarity);
+        for (int c : clarities) {
+            if (num == c) return c;
+        }
+        return 0;
+    }
+
     private int tryParseIntNum(String value) {
         int intNum;
         try {
@@ -318,5 +370,15 @@ public class VideoProcessImpl implements IVideoProcess {
             intNum = 0;
         }
         return intNum;
+    }
+
+    private float tryParseFloatNum(String value) {
+        float num;
+        try {
+            num = Float.parseFloat(value);
+        } catch (NumberFormatException e) {
+            num = 0;
+        }
+        return num;
     }
 }

@@ -60,7 +60,7 @@ public class IQiYiVideoAction implements IVideoAction {
         mChannelIdMap.put("电视剧", "2");
         mChannelIdMap.put("纪录片", "3");
         mChannelIdMap.put("动漫", "4");
-        mChannelIdMap.put("微剧", "5");
+        //mChannelIdMap.put("微剧", "7");
         mChannelIdMap.put("综艺", "6");
         mChannelIdMap.put("儿童", "15");
         mChannelIdMap.put("少儿", "15");
@@ -118,6 +118,7 @@ public class IQiYiVideoAction implements IVideoAction {
             Timber.tag(TAG).w("openRanking: no channel mapping found for channel: %s", channel);
             return null;
         }
+        Timber.tag(TAG).d("openRanking channel = %s, id = %s", channel, cid);
         String encodeCid = encodeParam("cid", cid);
         return getAppIntentWithParams(ACTION_OPEN_RANK_LIST, encodeCid);
     }
@@ -134,6 +135,7 @@ public class IQiYiVideoAction implements IVideoAction {
             Timber.tag(TAG).w("openHomeChannel: no channel mapping found for channel: %s", channel);
             return null;
         }
+        Timber.tag(TAG).d("mChannelIdMap channel = %s, id = %s", channel, cid);
         String encodeCid = encodeParam("cid", cid);
         return getAppIntentWithParams(ACTION_HOME_CHANNEL, encodeCid);
     }
@@ -297,6 +299,7 @@ public class IQiYiVideoAction implements IVideoAction {
             JSONObject object = new JSONObject();
             object.put(key, value);
             String encodeCid;
+            Timber.tag(TAG).d("encodeParam, params = %s", object.toString());
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 encodeCid = URLEncoder.encode(object.toString(), StandardCharsets.UTF_8);
             } else {
@@ -316,6 +319,7 @@ public class IQiYiVideoAction implements IVideoAction {
                 object.put(param.first, param.second);
             }
             String encodeCid;
+            Timber.tag(TAG).d("encodeParam, params = %s", object.toString());
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 encodeCid = URLEncoder.encode(object.toString(), StandardCharsets.UTF_8);
             } else {
@@ -348,7 +352,7 @@ public class IQiYiVideoAction implements IVideoAction {
     }
 
     private Intent getPlayerIntentWithParams(String command, String params) {
-        StringBuilder deeplink = new StringBuilder("iqiyi://com.qiyi.video.iv/v1//player?command=").append(command);
+        StringBuilder deeplink = new StringBuilder("iqiyi://com.qiyi.video.iv/v1/player?command=").append(command);
         if (!TextUtils.isEmpty(params)) {
             deeplink.append("&param=").append(params);
         }

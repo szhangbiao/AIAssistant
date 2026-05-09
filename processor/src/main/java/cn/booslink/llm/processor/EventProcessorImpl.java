@@ -239,7 +239,7 @@ public class EventProcessorImpl implements IEventProcessor {
                     break;
                 case 1:
                     mNplBuilder.append(data.getNlp().getText());
-                    Timber.tag(TAG).d("nlp, content = %s", data.getNlp().getText());
+                    //Timber.tag(TAG).d("nlp, content = %s", data.getNlp().getText());
                     if (mEventData.getResponse() != null && !mEventData.getResponse().isSemanticEmpty() && mEventData.getSemanticHandled()) return;
                     mSpeechInteraction.nlpAnswer(mNplBuilder.toString());
                     if (data.getTag() == AIUITag.LAUNCH) return;
@@ -247,7 +247,7 @@ public class EventProcessorImpl implements IEventProcessor {
                     break;
                 case 2:
                     String nplContent = mNplBuilder.toString();
-                    Timber.tag(TAG).d("nlp, content = %s", nplContent);
+                    //Timber.tag(TAG).d("nlp, content = %s", nplContent);
                     mNplBuilder.delete(0, mNplBuilder.length());
                     mEventData = mEventData.copyNlp(data.getNlp());
                     if (mEventData.getResponse() != null && !mEventData.getResponse().isSemanticEmpty() && mEventData.getSemanticHandled()) return;
