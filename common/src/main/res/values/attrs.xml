@@ -23,4 +23,17 @@
         <attr name="enlargedRadiusScale" format="float" />
         <attr name="animationDuration" format="integer" />
     </declare-styleable>
+
+    <declare-styleable name="RoundConstraintLayout">
+        <!-- 圆角半径 -->
+        <attr name="cornerRadius" format="dimension" />
+        <!-- 左上角圆角半径 -->
+        <attr name="cornerRadiusTopLeft" format="dimension" />
+        <!-- 右上角圆角半径 -->
+        <attr name="cornerRadiusTopRight" format="dimension" />
+        <!-- 左下角圆角半径 -->
+        <attr name="cornerRadiusBottomLeft" format="dimension" />
+        <!-- 右下角圆角半径 -->
+        <attr name="cornerRadiusBottomRight" format="dimension" />
+    </declare-styleable>
 </resources>

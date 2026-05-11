@@ -297,7 +297,6 @@ public class KSongProcessImpl implements IKSongProcess {
 
     private boolean isEmptyIntent(Intent intent) {
         if (intent == null) return true;
-
         // 如果没有action、component或package，基本上就是空Intent
         return TextUtils.isEmpty(intent.getAction()) &&
                 intent.getComponent() == null &&
