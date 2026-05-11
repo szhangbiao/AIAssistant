@@ -24,6 +24,7 @@ import cn.booslink.llm.common.model.NetworkStatus;
 import cn.booslink.llm.common.model.UIResponse;
 import cn.booslink.llm.common.model.VoiceQuery;
 import cn.booslink.llm.common.model.VoiceResult;
+import cn.booslink.llm.common.model.enums.AIUIState;
 import cn.booslink.llm.common.model.enums.AIUITag;
 import cn.booslink.llm.common.model.enums.CBMSub;
 import cn.booslink.llm.common.model.enums.QueryState;
@@ -74,6 +75,7 @@ public class EventProcessorImpl implements IEventProcessor {
     private FlowableEmitter<AIUIEvent> mEventEmitter;
     private volatile boolean isSubscriptionActive = false;
     private volatile boolean isDestroyed = false;
+    private volatile int mSpeechStatus;
 
     private EventData mEventData = EventData.Companion.empty();
 
@@ -96,6 +98,7 @@ public class EventProcessorImpl implements IEventProcessor {
     public void processEvent(AIUIEvent event) {
         switch (event.eventType) {
             case AIUIConstant.EVENT_STATE: // 服务状态事件
+                mSpeechStatus = event.arg1;
                 break;
             case AIUIConstant.EVENT_RESULT: // 结果事件
                 //Timber.tag(TAG).d("result = %s", event.info);
@@ -171,6 +174,11 @@ public class EventProcessorImpl implements IEventProcessor {
                 }
                 break;
         }
+    }
+
+    @Override
+    public boolean isProcessActive() {
+        return mSpeechStatus == AIUIState.WORKING.getState();
     }
 
     @Override

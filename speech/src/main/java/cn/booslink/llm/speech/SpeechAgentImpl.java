@@ -91,7 +91,7 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
                 AIUIState aiuiState = state < AIUIState.values().length ? AIUIState.values()[state] : AIUIState.UNKNOWN;
                 Timber.tag(TAG).d("Event, state = %s, value = %d", aiuiState, state);
                 if (mIsFirstStartup && aiuiState == AIUIState.READ) {
-                    autoWakeUpsdkWhenFirst();
+                    autoWakeupSdkWhenFirst();
                 }
                 mIsAIUIWorking = aiuiState == AIUIState.WORKING;
                 break;
@@ -142,7 +142,7 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
         mCompositeDisposable.clear();
     }
 
-    private void autoWakeUpsdkWhenFirst() {
+    private void autoWakeupSdkWhenFirst() {
         sendMessage(new AIUIMessage(AIUIConstant.CMD_WAKEUP, 0, 0, null, null));
     }
 

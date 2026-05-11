@@ -31,6 +31,7 @@ import cn.booslink.llm.common.utils.RxUtil;
 import cn.booslink.llm.downloader.IAppManager;
 import cn.booslink.llm.downloader.listener.SimpleAppManagerListener;
 import cn.booslink.llm.downloader.utils.PkgUtils;
+import cn.booslink.llm.processor.IEventProcessor;
 import cn.booslink.llm.processor.repository.IAppRepository;
 import dagger.Lazy;
 import dagger.hilt.android.qualifiers.ApplicationContext;
@@ -52,14 +53,16 @@ public class AppProcessImpl implements IAppProcess {
     private final Lazy<IAppManager> mAppManagerLazy;
     private final ISpeechInteraction mSpeechInteraction;
     private final CompositeDisposable mCompositeDisposable;
+    private final Lazy<IEventProcessor> mEventProcessorLazy;
 
     @Inject
-    public AppProcessImpl(@ApplicationContext Context context, IToast toast, IAppRepository appRepository, Lazy<IAppManager> appManagerLazy, ISpeechInteraction speechInteraction) {
+    public AppProcessImpl(@ApplicationContext Context context, IToast toast, IAppRepository appRepository, Lazy<IAppManager> appManagerLazy, ISpeechInteraction speechInteraction, Lazy<IEventProcessor> eventProcessorLazy) {
         this.mToast = toast;
         this.mContext = context;
         this.mAppRepository = appRepository;
         this.mAppManagerLazy = appManagerLazy;
         this.mSpeechInteraction = speechInteraction;
+        this.mEventProcessorLazy = eventProcessorLazy;
         this.mCompositeDisposable = new CompositeDisposable();
     }
 
@@ -211,6 +214,8 @@ public class AppProcessImpl implements IAppProcess {
                 public void onAppFailed(boolean isDownloadFailed, ApkDownload download) {
                     super.onAppFailed(isDownloadFailed, download);
                     Timber.tag(TAG).d("populateAppDownload onAppFailed");
+                    IEventProcessor eventProcessor = mEventProcessorLazy.get();
+                    if (eventProcessor != null && !eventProcessor.isProcessActive()) return;
                     mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.FAILED));
                     mSpeechInteraction.nlpAnswer(download.getFailedReason());
                 }
@@ -231,6 +236,8 @@ public class AppProcessImpl implements IAppProcess {
             public void onAppInstalled(ApkDownload download) {
                 super.onAppInstalled(download);
                 Timber.tag(TAG).d("populateAppInstall onAppInstalled");
+                IEventProcessor eventProcessor = mEventProcessorLazy.get();
+                if (eventProcessor != null && !eventProcessor.isProcessActive()) return;
                 mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.DONE));
                 mSpeechInteraction.nlpAnswer("安装" + pkgInfo.getName() + "成功");
             }
@@ -239,6 +246,8 @@ public class AppProcessImpl implements IAppProcess {
             public void onAppFailed(boolean isDownloadFailed, ApkDownload download) {
                 super.onAppFailed(isDownloadFailed, download);
                 Timber.tag(TAG).d("populateAppInstall onAppFailed");
+                IEventProcessor eventProcessor = mEventProcessorLazy.get();
+                if (eventProcessor != null && !eventProcessor.isProcessActive()) return;
                 mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.FAILED));
                 mSpeechInteraction.nlpAnswer(download.getFailedReason());
             }
@@ -266,6 +275,8 @@ public class AppProcessImpl implements IAppProcess {
             public void onAppFailed(boolean isDownloadFailed, ApkDownload download) {
                 super.onAppFailed(isDownloadFailed, download);
                 Timber.tag(TAG).d("populateAppLaunchWithPkgInfo onAppFailed");
+                IEventProcessor eventProcessor = mEventProcessorLazy.get();
+                if (eventProcessor != null && !eventProcessor.isProcessActive()) return;
                 mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.FAILED));
                 mSpeechInteraction.nlpAnswer(download.getFailedReason());
             }
@@ -274,6 +285,8 @@ public class AppProcessImpl implements IAppProcess {
             public void onAppInstalled(ApkDownload download) {
                 super.onAppInstalled(download);
                 Timber.tag(TAG).d("populateAppLaunchWithPkgInfo onAppInstalled");
+                IEventProcessor eventProcessor = mEventProcessorLazy.get();
+                if (eventProcessor != null && !eventProcessor.isProcessActive()) return;
                 if (intent == null) {
                     PkgUtils.launchApp(mContext, download.getPkgName());
                     mSpeechInteraction.nlpAnswer("已为你打开应用");

@@ -6,5 +6,7 @@ public interface IEventProcessor {
 
     void processEvent(AIUIEvent event);
 
+    boolean isProcessActive();
+
     void release();
 }
