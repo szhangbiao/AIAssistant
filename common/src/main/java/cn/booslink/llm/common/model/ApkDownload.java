@@ -349,6 +349,10 @@ public class ApkDownload implements Cloneable {
         return (status == ApkStatus.DOWNLOAD_FAIL || status == ApkStatus.DOWNLOAD_PAUSE_WITH_ERROR) && retryCount == FLAG_APK_FAIL;
     }
 
+    public boolean isDownloadError() {
+        return status == ApkStatus.DOWNLOAD_FAIL || status == ApkStatus.DOWNLOAD_PAUSE_WITH_ERROR;
+    }
+
     public boolean isInstallFinish() {
         return status == ApkStatus.INSTALL_RANDOM || status == ApkStatus.INSTALL_SUCCESS;
     }

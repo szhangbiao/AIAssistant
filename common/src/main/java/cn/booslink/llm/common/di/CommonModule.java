@@ -20,6 +20,7 @@ import cn.booslink.llm.common.model.enums.CBMSub;
 import cn.booslink.llm.common.model.enums.Category;
 import cn.booslink.llm.common.model.enums.VideoTag;
 import cn.booslink.llm.common.network.ApiService;
+import cn.booslink.llm.common.network.NetworkMonitor;
 import cn.booslink.llm.common.network.adapter.AIUIIntentAdapter;
 import cn.booslink.llm.common.network.adapter.CBMEventAdapter;
 import cn.booslink.llm.common.network.adapter.CBMSemanticAdapter;
@@ -72,6 +73,12 @@ public class CommonModule {
                 .registerTypeAdapter(AIUIIntent.class, new AIUIIntentAdapter())
                 .registerTypeAdapter(CBMSemantic.class, new CBMSemanticAdapter())
                 .create();
+    }
+
+    @Singleton
+    @Provides
+    public NetworkMonitor provideNetworkMonitor(@ApplicationContext Context context) {
+        return new NetworkMonitor(context);
     }
 
     @Singleton

@@ -1,5 +1,6 @@
 package cn.booslink.llm.processor;
 
+import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
@@ -8,6 +9,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.iflytek.aiui.AIUIConstant;
 import com.iflytek.aiui.AIUIEvent;
+import com.iflytek.aiui.AIUIMessage;
 
 import java.nio.charset.StandardCharsets;
 
@@ -18,17 +20,23 @@ import cn.booslink.llm.common.model.CBMEvent;
 import cn.booslink.llm.common.model.CBMSemantic;
 import cn.booslink.llm.common.model.EventData;
 import cn.booslink.llm.common.model.EventInfo;
+import cn.booslink.llm.common.model.NetworkStatus;
 import cn.booslink.llm.common.model.UIResponse;
 import cn.booslink.llm.common.model.VoiceQuery;
 import cn.booslink.llm.common.model.VoiceResult;
 import cn.booslink.llm.common.model.enums.AIUITag;
 import cn.booslink.llm.common.model.enums.CBMSub;
 import cn.booslink.llm.common.model.enums.QueryState;
+import cn.booslink.llm.common.network.NetworkMonitor;
+import cn.booslink.llm.common.speech.ISpeechAgent;
 import cn.booslink.llm.common.storage.ISpeechStorage;
 import cn.booslink.llm.common.ui.ISpeechInteraction;
+import cn.booslink.llm.common.utils.NetworkUtils;
 import cn.booslink.llm.common.utils.RxUtil;
 import cn.booslink.llm.downloader.IAppManager;
 import cn.booslink.llm.processor.process.IIntentProcess;
+import dagger.Lazy;
+import dagger.hilt.android.qualifiers.ApplicationContext;
 import io.reactivex.rxjava3.core.BackpressureStrategy;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.FlowableEmitter;
@@ -53,13 +61,16 @@ public class EventProcessorImpl implements IEventProcessor {
 
     private final Gson mGson;
     private final Handler mHandler;
+    private final Context mContext;
     private final IAppManager mAppManager;
     private final StringBuilder mNplBuilder;
     private final ISpeechStorage mSpeechStorage;
     private final IIntentProcess mIntentProcess;
+    private final Lazy<ISpeechAgent> mSpeechAgentLazy;
     private final ISpeechInteraction mSpeechInteraction;
 
     private Disposable mEventDisposable;
+    private Disposable mNetworkDisposable;
     private FlowableEmitter<AIUIEvent> mEventEmitter;
     private volatile boolean isSubscriptionActive = false;
     private volatile boolean isDestroyed = false;
@@ -67,13 +78,16 @@ public class EventProcessorImpl implements IEventProcessor {
     private EventData mEventData = EventData.Companion.empty();
 
     @Inject
-    public EventProcessorImpl(Gson gson, IIntentProcess intentProcess, IAppManager appManager, ISpeechStorage speechStorage, ISpeechInteraction speechInteraction) {
+    public EventProcessorImpl(Gson gson, @ApplicationContext Context context, IIntentProcess intentProcess, IAppManager appManager, ISpeechStorage speechStorage, ISpeechInteraction speechInteraction, NetworkMonitor networkMonitor, Lazy<ISpeechAgent> speechAgentLazy) {
         this.mGson = gson;
+        this.mContext = context;
         this.mAppManager = appManager;
         this.mIntentProcess = intentProcess;
         this.mSpeechStorage = speechStorage;
         this.mNplBuilder = new StringBuilder();
+        this.mSpeechAgentLazy = speechAgentLazy;
         this.mSpeechInteraction = speechInteraction;
+        setupNetworkChangeObservable(networkMonitor);
         this.mHandler = new Handler(Looper.getMainLooper());
         createEventEmitter();
     }
@@ -107,8 +121,9 @@ public class EventProcessorImpl implements IEventProcessor {
                 int sleepType = event.arg1; // 0 （交互超时,自动休眠）, 1 （发送CMD_RESET_WAKEUP手动休眠）
                 Timber.tag(TAG).d("sleep, type = %d", sleepType);
                 boolean shouldBlockSleepLogic = mAppManager.isPkgDownloading() || mAppManager.isPkgInstalling();
-                if (shouldBlockSleepLogic) {
-                    // TODO keep wakeup
+                boolean isNetworkConnected = NetworkUtils.isConnected(mContext);
+                if (sleepType == 0 && shouldBlockSleepLogic && isNetworkConnected) {
+                    wakeupNetworkResumeOrDownloadContinue();
                     return;
                 }
                 boolean showLeaveConfirm = mSpeechStorage.shouldShowLeaveConfirm(sleepType);
@@ -167,6 +182,10 @@ public class EventProcessorImpl implements IEventProcessor {
             mEventDisposable.dispose();
         }
         mEventDisposable = null;
+        if (mNetworkDisposable != null) {
+            mNetworkDisposable.dispose();
+        }
+        mNetworkDisposable = null;
         mEventEmitter = null;
         isSubscriptionActive = false;
     }
@@ -336,5 +355,28 @@ public class EventProcessorImpl implements IEventProcessor {
         if (!isDestroyed) {
             recreateSubscription();
         }
+    }
+
+    private void setupNetworkChangeObservable(NetworkMonitor networkMonitor) {
+        mNetworkDisposable = networkMonitor.getNetworkObservable()
+                .distinctUntilChanged()
+                .compose(RxUtil.observableOnMain())
+                .subscribe(networkStatus -> {
+                    boolean isConnect = networkStatus == NetworkStatus.CONNECTED;
+                    if (isConnect) {
+                        mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.DONE));
+                        mSpeechInteraction.nlpAnswer("网络恢复了");
+                        wakeupNetworkResumeOrDownloadContinue();
+                    } else {
+                        mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.ERROR));
+                        mSpeechInteraction.nlpAnswer("网络断开连接了！");
+                    }
+                });
+    }
+
+    private void wakeupNetworkResumeOrDownloadContinue() {
+        ISpeechAgent speechAgent = mSpeechAgentLazy.get();
+        if (speechAgent == null) return;
+        speechAgent.sendMessage(new AIUIMessage(AIUIConstant.CMD_WAKEUP, 0, 0, null, null));
     }
 }

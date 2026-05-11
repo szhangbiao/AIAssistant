@@ -207,6 +207,7 @@ public class AppManagerImpl implements IAppManager {
         return new OnApkDownloadListener() {
             @Override
             public void onDownloadUpdate(String apkPath, ApkDownload downloadItem) {
+                Timber.tag(TAG).d("onDownloadUpdate");
                 if (downloadItem.getStatus() == ApkStatus.INSTALL_PADDING) {
                     if (mOnAppManagerListener != null) {
                         mOnAppManagerListener.onAppDownloaded(downloadItem);
@@ -216,7 +217,7 @@ public class AppManagerImpl implements IAppManager {
                     } else {
                         mApkDownloadMap.remove(downloadItem.getPkgName());
                     }
-                } else if (downloadItem.isDownloadFail()) {
+                } else if (downloadItem.isDownloadError()) {
                     Timber.tag(TAG).d("onDownloadUpdate, download fail");
                     mApkDownloadMap.remove(downloadItem.getPkgName());
                     if (mOnAppManagerListener != null) {
@@ -234,11 +235,12 @@ public class AppManagerImpl implements IAppManager {
 
             @Override
             public void onDownloadFailed(ApkDownload downloadItem) {
-                mRxApkBus.post(downloadItem);
                 // TODO mToast.get().showMessage(downloadItem.getFailedReason(), 10);
+                mApkDownloadMap.remove(downloadItem.getPkgName());
                 if (mOnAppManagerListener != null) {
                     mOnAppManagerListener.onAppFailed(true, downloadItem);
                 }
+                mRxApkBus.post(downloadItem);
             }
         };
     }
