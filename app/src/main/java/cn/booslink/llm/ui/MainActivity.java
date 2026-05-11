@@ -82,6 +82,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // 在设置内容视图之前切换回正常主题
+        setTheme(R.style.Theme_AIAssistant);
         Timber.tag(TAG).d("onCreate");
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         ScreenUtils.setupFullScreen(getWindow());
