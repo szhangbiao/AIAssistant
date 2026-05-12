@@ -3,7 +3,7 @@ package cn.booslink.llm.common.speech;
 import com.iflytek.aiui.AIUIMessage;
 
 public interface ISpeechAgent {
-    void createAgent();
+    void createAgent(Runnable aiuiCallback);
 
     void sendMessage(AIUIMessage message);
 

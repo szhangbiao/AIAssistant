@@ -54,7 +54,7 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
     }
 
     @Override
-    public void createAgent() {
+    public void createAgent(Runnable aiuiCallback) {
         if (mAIUIAgent == null) {
             Disposable disposable = mConfigRepository.readConfig()
                     .map(aiuiConfig -> {
@@ -67,6 +67,9 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
                         mAIUIAgent = AIUIAgent.createAgent(mContext, aiuiParams, this);
                         if (mAIUIAgent != null && mDevice.isAutoAudioRecord()) {
                             startRecordAudio();
+                        }
+                        if (aiuiCallback != null) {
+                            aiuiCallback.run();
                         }
                     });
             addDisposable(disposable);

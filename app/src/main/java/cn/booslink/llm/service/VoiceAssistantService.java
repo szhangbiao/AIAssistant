@@ -20,6 +20,8 @@ import cn.booslink.llm.common.model.DeviceInfo;
 import cn.booslink.llm.common.ui.ISpeechInteraction;
 import cn.booslink.llm.common.utils.ScreenAdapter;
 import cn.booslink.llm.common.speech.ISpeechAgent;
+import cn.booslink.llm.handler.MediaKeyHandler;
+import dagger.Lazy;
 import dagger.hilt.android.AndroidEntryPoint;
 import timber.log.Timber;
 
@@ -33,6 +35,8 @@ public class VoiceAssistantService extends Service {
     ISpeechAgent mSpeechAgent;
     @Inject
     ISpeechInteraction mSpeechInteraction;
+    @Inject
+    Lazy<MediaKeyHandler> mMediaKeyHandlerLazy;
 
     private final IBinder binder = new LocalBinder();
 
@@ -59,13 +63,14 @@ public class VoiceAssistantService extends Service {
             mSpeechInteraction.attachToWindow();
             keepServiceWithNotification();
         }
-        mSpeechAgent.createAgent();
+        mSpeechAgent.createAgent(this::populateMediaKeyListener);
+
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Timber.tag(TAG).d("onStartCommand");
-        return START_STICKY;
+        return START_NOT_STICKY;  // 避免服务重启时重启整个应用
     }
 
     @Override
@@ -81,6 +86,12 @@ public class VoiceAssistantService extends Service {
         mSpeechAgent.destroyAgent();
         if (mDevice.isSystemApp()) {
             mSpeechInteraction.detachFromWindow();
+        }
+        if (!mDevice.isAutoAudioRecord()) {
+            MediaKeyHandler mediaKeyHandler = mMediaKeyHandlerLazy.get();
+            if (mediaKeyHandler != null) {
+                mediaKeyHandler.cleanup();
+            }
         }
         mSpeechInteraction.destroyView();
     }
@@ -123,6 +134,14 @@ public class VoiceAssistantService extends Service {
             startForeground(10000, notification);
         } else {
             startForeground(123456, new Notification());
+        }
+    }
+
+    private void populateMediaKeyListener() {
+        if (mDevice.isAutoAudioRecord()) return;
+        MediaKeyHandler mediaKeyHandler = mMediaKeyHandlerLazy.get();
+        if (mediaKeyHandler != null) {
+            mediaKeyHandler.requestAudioFocus();
         }
     }
 }

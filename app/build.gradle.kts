@@ -131,6 +131,7 @@ dependencies {
     implementation(libs.bundles.android.widget)
 
     implementation(libs.bundles.jetpack)
+    implementation(libs.media)
     annotationProcessor(libs.lifecycle.compiler)
 
     implementation(libs.bundles.retrofit)

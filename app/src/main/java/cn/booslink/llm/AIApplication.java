@@ -20,6 +20,7 @@ import javax.inject.Inject;
 @HiltAndroidApp
 public class AIApplication extends Application {
 
+    private static final String TAG = "AIApplication";
     @Inject
     DeviceInfo mDeviceInfo;
 
@@ -40,6 +41,7 @@ public class AIApplication extends Application {
         if (mDeviceInfo.isDevMode()) {
             Timber.plant(new Timber.DebugTree());
         }
+        Timber.tag(TAG).d("onCreate");
     }
 
     @Override

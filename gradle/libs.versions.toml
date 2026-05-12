@@ -20,6 +20,7 @@ retrofit = "2.6.4"
 libpag = "4.5.46"
 # 更高版本不支持 DebugTree
 timber = "4.7.1"
+media = "1.7.0"
 
 [libraries]
 appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
@@ -61,6 +62,7 @@ datetime = { group = "net.danlew", name = "android.joda", version = "2.13.0" }
 utils-view = { group = "cn.booslink", name = "android-utils-view", version = "1.0.2" }
 libpag = { group = "com.tencent.tav", name = "libpag", version.ref = "libpag" }
 blur-view = { group = "com.github.Dimezis", name = "BlurView", version = "version-3.2.0" }
+media = { group = "androidx.media", name = "media", version.ref = "media" }
 
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
