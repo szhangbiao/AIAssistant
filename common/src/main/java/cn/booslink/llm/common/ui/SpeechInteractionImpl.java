@@ -43,11 +43,11 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
 
     private final Context mContext;
     private final FrameLayout mParentView;
+    private final MutableLiveData<String> mNplResponseLiveData;
     private final MutableLiveData<EmoteState> mEmoteStateLiveData;
     private final MutableLiveData<VoiceQuery> mVoiceInputLiveData;
-    private final MutableLiveData<String> mNplResponseLiveData;
-    private final MutableLiveData<ApkDownload> mApkDownloadLiveData;
     private final MutableLiveData<UIResponse> mUIResponseLiveData;
+    private final MutableLiveData<ApkDownload> mApkDownloadLiveData;
 
     private boolean isAttached = false;
     private boolean isActive = false;

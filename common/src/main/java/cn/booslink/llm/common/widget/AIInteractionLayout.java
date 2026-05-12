@@ -6,7 +6,6 @@ import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.ViewOutlineProvider;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -24,7 +23,6 @@ public class AIInteractionLayout extends LinearLayout {
 
     private TextView tvQuestion;
     private TextView tvResultTitle;
-    private ViewGroup flResult;
     private LoadingView loadingView;
     private ApkDownloadLayout apkDownloadLayout;
     private WeatherListLayout weatherListLayout;
@@ -107,13 +105,17 @@ public class AIInteractionLayout extends LinearLayout {
     }
 
     private void inflateLayout(Context context) {
-        LayoutInflater.from(context).inflate(R.layout.layout_speech_interaction, this, true);
+        int layoutRes = R.layout.layout_speech_interaction;
+        // 在构造函数中检查硬件加速状态，选择合适的布局
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP && !isHardwareAccelerated()) {
+            layoutRes = R.layout.layout_speech_interaction_unsupport_hardware_accelerate;
+        }
+        LayoutInflater.from(context).inflate(layoutRes, this, true);
     }
 
     private void initWidgets() {
         tvQuestion = findViewById(R.id.tv_question);
         tvResultTitle = findViewById(R.id.tv_result_title);
-        flResult = findViewById(R.id.fl_result);
         tvNplReply = findViewById(R.id.tv_npl);
         apkDownloadLayout = findViewById(R.id.fl_download_layout);
         weatherListLayout = findViewById(R.id.cl_weather_list);
@@ -124,6 +126,7 @@ public class AIInteractionLayout extends LinearLayout {
     private void setupBlurView() {
         BlurView blurView = findViewById(R.id.blurView);
         BlurTarget blurTarget = findViewById(R.id.blurTarget);
+        if (blurView == null || blurTarget == null) return;
         float radius = 20f; // 15f gives good medium blur effect
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT_WATCH) {
             blurView.setOutlineProvider(ViewOutlineProvider.BACKGROUND);

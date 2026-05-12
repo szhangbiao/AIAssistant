@@ -135,6 +135,7 @@ public class AppManagerImpl implements IAppManager {
                 .subscribe(installedApk -> {
                     handlePaddingInstallList(installedApk);
                     currentPackageName = null;
+                    if (installedApk.isEmpty()) return;
                     if (mOnAppManagerListener != null) {
                         mOnAppManagerListener.onAppInstalled(installedApk);
                     }

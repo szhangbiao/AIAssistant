@@ -46,6 +46,7 @@ import io.reactivex.rxjava3.disposables.Disposable;
 import timber.log.Timber;
 
 public class EventProcessorImpl implements IEventProcessor {
+
     private final static String TAG = "EventProcessor";
 
     private final static String KEY_TAG = "tag";
@@ -370,6 +371,7 @@ public class EventProcessorImpl implements IEventProcessor {
                 .distinctUntilChanged()
                 .compose(RxUtil.observableOnMain())
                 .subscribe(networkStatus -> {
+                    Timber.tag(TAG).d("Network changed, status = %s", networkMonitor);
                     boolean isConnect = networkStatus == NetworkStatus.CONNECTED;
                     if (isConnect) {
                         mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.DONE));
