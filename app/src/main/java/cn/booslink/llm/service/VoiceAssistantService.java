@@ -16,8 +16,8 @@ import androidx.annotation.Nullable;
 
 import javax.inject.Inject;
 
+import cn.booslink.llm.common.model.DeviceInfo;
 import cn.booslink.llm.common.ui.ISpeechInteraction;
-import cn.booslink.llm.common.utils.ContextUtils;
 import cn.booslink.llm.common.utils.ScreenAdapter;
 import cn.booslink.llm.common.speech.ISpeechAgent;
 import dagger.hilt.android.AndroidEntryPoint;
@@ -26,6 +26,9 @@ import timber.log.Timber;
 @AndroidEntryPoint
 public class VoiceAssistantService extends Service {
     private static final String TAG = VoiceAssistantService.class.getSimpleName();
+
+    @Inject
+    DeviceInfo mDevice;
     @Inject
     ISpeechAgent mSpeechAgent;
     @Inject
@@ -52,7 +55,7 @@ public class VoiceAssistantService extends Service {
         Timber.tag(TAG).d("onCreate");
         // 创建交互UIView
         // 把View添加到WindowManager
-        if (ContextUtils.isSystemApp(getApplicationContext())) {
+        if (mDevice.isSystemApp()) {
             mSpeechInteraction.attachToWindow();
             keepServiceWithNotification();
         }
@@ -76,7 +79,7 @@ public class VoiceAssistantService extends Service {
         super.onDestroy();
         Timber.tag(TAG).d("onDestroy");
         mSpeechAgent.destroyAgent();
-        if (ContextUtils.isSystemApp(getApplicationContext())) {
+        if (mDevice.isSystemApp()) {
             mSpeechInteraction.detachFromWindow();
         }
         mSpeechInteraction.destroyView();
@@ -101,12 +104,12 @@ public class VoiceAssistantService extends Service {
 
     // 供Activity调用的公共方法
     public void attachActivity(Activity activity) {
-        if (ContextUtils.isSystemApp(getApplicationContext())) return;
+        if (mDevice.isSystemApp()) return;
         mSpeechInteraction.attachToActivity(activity);
     }
 
     public void detachActivity(Activity activity) {
-        if (ContextUtils.isSystemApp(getApplicationContext())) return;
+        if (mDevice.isSystemApp()) return;
         mSpeechInteraction.detachFromActivity(activity);
     }
 

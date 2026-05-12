@@ -31,6 +31,7 @@ import cn.booslink.llm.common.network.adapter.CategoryAdapter;
 import cn.booslink.llm.common.network.adapter.DateTimeAdapter;
 import cn.booslink.llm.common.network.adapter.VideoTagAdapter;
 import cn.booslink.llm.common.utils.Constants;
+import cn.booslink.llm.common.utils.ContextUtils;
 import cn.booslink.llm.common.utils.GsonProvider;
 import cn.booslink.llm.common.utils.HttpEngine;
 import dagger.Module;
@@ -54,8 +55,8 @@ public class CommonModule {
     @Singleton
     @Provides
     public Device provideDevice(@ApplicationContext Context context) {
-        String channel = ""; // TODO channel
-        String version = ""; // TODO version
+        String channel = ContextUtils.getManifestChannel(context);
+        String version = ContextUtils.getVersionName(context);
         return Device.of(context, channel, version);
     }
 

@@ -9,6 +9,12 @@ android {
         version = release(36)
     }
 
+    val nonSystemLabel = "release"
+    val systemLabel = "system"
+    val channelSound = "sound"
+    val channelOtt = "ott"
+    val isDevMode = true
+
     defaultConfig {
         applicationId = "cn.booslink.llm"
         minSdk = 19
@@ -18,13 +24,13 @@ android {
 
         multiDexEnabled = true
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("Boolean", "DEBUG_MODE", isDevMode.toString())
     }
 
-    val nonSystemLabel = "release"
-    val systemLabel = "system"
-    val channelSound = "sound"
-    val channelOtt = "ott"
-    val isDevMode = true
+    buildFeatures {
+        buildConfig = true
+    }
 
     signingConfigs {
         // 正式环境非系统签名

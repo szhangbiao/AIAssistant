@@ -25,11 +25,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import javax.inject.Inject;
 
 import cn.booslink.llm.R;
+import cn.booslink.llm.common.model.DeviceInfo;
 import cn.booslink.llm.common.model.PkgInfo;
 import cn.booslink.llm.common.model.VoiceQuery;
 import cn.booslink.llm.common.model.enums.QueryState;
 import cn.booslink.llm.common.ui.ISpeechInteraction;
-import cn.booslink.llm.common.utils.ContextUtils;
 import cn.booslink.llm.common.utils.FileUtils;
 import cn.booslink.llm.common.utils.GsonProvider;
 import cn.booslink.llm.common.utils.ScreenAdapter;
@@ -42,6 +42,8 @@ import timber.log.Timber;
 @AndroidEntryPoint
 public class MainActivity extends AppCompatActivity {
 
+    @Inject
+    DeviceInfo mDevice;
     @Inject
     IAppManager mAppManager;
     @Inject
@@ -95,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startServiceDirectly() {
-        if (ContextUtils.isSystemApp(this)) {
+        if (mDevice.isSystemApp()) {
             startService(new Intent(this, VoiceAssistantService.class));
             finish();
             return;
@@ -107,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         Timber.tag(TAG).d("onStart");
-        if (ContextUtils.isSystemApp(this)) return;
+        if (mDevice.isSystemApp()) return;
         // 检查权限后再绑定Service
         if (hasRecordAudioPermission()) {
             bindVoiceAssistantService();
@@ -206,7 +208,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startVoiceAssistantService() {
-        if (!ContextUtils.isSystemApp(this)) {
+        if (!mDevice.isSystemApp()) {
             startService(new Intent(this, VoiceAssistantService.class));
         }
     }

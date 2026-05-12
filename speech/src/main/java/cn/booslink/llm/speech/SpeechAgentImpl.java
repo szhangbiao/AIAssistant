@@ -13,6 +13,7 @@ import com.iflytek.aiui.AIUISetting;
 import javax.inject.Inject;
 
 import cn.booslink.llm.common.model.Device;
+import cn.booslink.llm.common.model.DeviceInfo;
 import cn.booslink.llm.common.model.enums.AIUIState;
 import cn.booslink.llm.common.model.enums.AIUITag;
 import cn.booslink.llm.common.speech.ISpeechAgent;
@@ -31,6 +32,7 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
 
     private final Gson mGson;
     private final Context mContext;
+    private final DeviceInfo mDevice;
     private final IEventProcessor mEventProcessor;
     private final IConfigRepository mConfigRepository;
     private final CompositeDisposable mCompositeDisposable = new CompositeDisposable();
@@ -42,9 +44,10 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
     private volatile boolean mIsAIUIWorking = false;
 
     @Inject
-    public SpeechAgentImpl(@ApplicationContext Context context, Device device, Gson gson, IEventProcessor eventProcessor, IConfigRepository configRepository) {
+    public SpeechAgentImpl(@ApplicationContext Context context, Device device, DeviceInfo deviceInfo, Gson gson, IEventProcessor eventProcessor, IConfigRepository configRepository) {
         this.mGson = gson;
         this.mContext = context;
+        this.mDevice = deviceInfo;
         this.mEventProcessor = eventProcessor;
         this.mConfigRepository = configRepository;
         AIUISetting.setSystemInfo(AIUIConstant.KEY_SERIAL_NUM, device.sn);
@@ -52,7 +55,6 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
 
     @Override
     public void createAgent() {
-        // TODO WRITE_EXTERNAL_STORAGE 权限
         if (mAIUIAgent == null) {
             Disposable disposable = mConfigRepository.readConfig()
                     .map(aiuiConfig -> {
@@ -63,7 +65,7 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
                     .subscribe(aiuiParams -> {
                         // init aiui agent
                         mAIUIAgent = AIUIAgent.createAgent(mContext, aiuiParams, this);
-                        if (mAIUIAgent != null) {
+                        if (mAIUIAgent != null && mDevice.isAutoAudioRecord()) {
                             startRecordAudio();
                         }
                     });

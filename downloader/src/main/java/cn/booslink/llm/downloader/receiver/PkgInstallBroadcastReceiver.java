@@ -8,7 +8,7 @@ import android.text.TextUtils;
 
 import javax.inject.Inject;
 
-import cn.booslink.llm.common.utils.ContextUtils;
+import cn.booslink.llm.common.model.DeviceInfo;
 import cn.booslink.llm.common.utils.DeviceUtils;
 import cn.booslink.llm.downloader.IAppManager;
 import cn.booslink.llm.downloader.model.InstallState;
@@ -17,10 +17,13 @@ import dagger.Lazy;
 
 public class PkgInstallBroadcastReceiver extends BroadcastReceiver {
 
+    private final DeviceInfo mDevice;
     private final Lazy<IAppManager> mAppManagerProvider;
 
+
     @Inject
-    public PkgInstallBroadcastReceiver(Lazy<IAppManager> appManagerProvider) {
+    public PkgInstallBroadcastReceiver(DeviceInfo deviceInfo, Lazy<IAppManager> appManagerProvider) {
+        this.mDevice = deviceInfo;
         this.mAppManagerProvider = appManagerProvider;
     }
 
@@ -35,11 +38,10 @@ public class PkgInstallBroadcastReceiver extends BroadcastReceiver {
             if (intent.getData() != null) {
                 packageName = intent.getData().getSchemeSpecificPart();
             }
-            boolean isSystemApp = ContextUtils.isSystemApp(context);
             if (!TextUtils.isEmpty(packageName) && !context.getPackageName().equals(packageName)) {
                 IAppManager mAppManager = mAppManagerProvider.get();
                 if (mAppManager == null) return;
-                if (isSystemApp) {
+                if (mDevice.isSystemApp()) {
                     onAppInstalledBroadcast(mAppManager, packageName);
                 } else {
                     mAppManager.onAppInstalled(InstallState.SUCCESS, packageName);

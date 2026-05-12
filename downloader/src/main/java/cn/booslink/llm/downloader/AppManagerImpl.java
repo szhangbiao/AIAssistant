@@ -22,6 +22,7 @@ import javax.inject.Inject;
 
 import cn.booslink.llm.common.model.ApkDownload;
 import cn.booslink.llm.common.model.ApkInfo;
+import cn.booslink.llm.common.model.DeviceInfo;
 import cn.booslink.llm.common.model.PkgInfo;
 import cn.booslink.llm.common.model.enums.ApkStatus;
 import cn.booslink.llm.common.utils.ContextUtils;
@@ -54,6 +55,7 @@ public class AppManagerImpl implements IAppManager {
     private final static int DELAY_DOWNLOAD_RETRY = 200;
 
     private final Context mContext;
+    private final DeviceInfo mDevice;
     private final IRxApkBus mRxApkBus;
     private final CompositeDisposable mCompositeDisposable;
     private final ConcurrentHashMap<String, ApkDownload> mApkDownloadMap;
@@ -64,8 +66,9 @@ public class AppManagerImpl implements IAppManager {
     private OnAppManagerListener mOnAppManagerListener;
 
     @Inject
-    public AppManagerImpl(@ApplicationContext Context context, IRxApkBus rxApkBus, PkgInstallBroadcastReceiver receiver) {
+    public AppManagerImpl(@ApplicationContext Context context, DeviceInfo deviceInfo, IRxApkBus rxApkBus, PkgInstallBroadcastReceiver receiver) {
         this.mContext = context;
+        this.mDevice = deviceInfo;
         this.mRxApkBus = rxApkBus;
         this.mPkgInstallBroadcastReceiver = receiver;
         this.mApkDownloadMap = new ConcurrentHashMap<>();
@@ -330,7 +333,7 @@ public class AppManagerImpl implements IAppManager {
             downloadApk.installRePadding();
             mApkDownloadMap.put(downloadApk.getPkgName(), downloadApk);
         }
-        if (ContextUtils.isSystemApp(mContext)) {
+        if (mDevice.isSystemApp()) {
             installDownloadApk(downloadApk);
         } else {
             currentPackageName = null;

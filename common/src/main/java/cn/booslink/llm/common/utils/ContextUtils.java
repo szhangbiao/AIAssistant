@@ -2,14 +2,18 @@ package cn.booslink.llm.common.utils;
 
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Environment;
 import android.os.Process;
-import android.text.TextUtils;
 
 import java.io.File;
 
+import timber.log.Timber;
+
 public class ContextUtils {
+
+    private static final String TAG = "ContextUtils";
 
     public static boolean isSystemApp(Context context) {
         try {
@@ -64,16 +68,28 @@ public class ContextUtils {
         }
     }
 
-    public static boolean checkAppExits(Context context, String pkgName) {
-        if (pkgName != null && !TextUtils.isEmpty(pkgName)) {
-            try {
-                context.getPackageManager().getApplicationInfo(pkgName, 8192);
-                return true;
-            } catch (PackageManager.NameNotFoundException var3) {
-                return false;
+    public static String getVersionName(Context context) {
+        try {
+            // 获取PackageManager实例
+            PackageManager packageManager = context.getPackageManager();
+            // getPackageName()是你当前类的包名，0代表是获取版本信息
+            PackageInfo packageInfo = packageManager.getPackageInfo(context.getPackageName(), 0);
+            if (packageInfo != null) {
+                return packageInfo.versionName;
             }
-        } else {
-            return false;
+        } catch (PackageManager.NameNotFoundException e) {
+            Timber.tag(TAG).e(e, "query version name fail!");
         }
+        return "";
+    }
+
+    public static String getManifestChannel(Context context) {
+        try {
+            ApplicationInfo applicationInfo = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
+            return applicationInfo.metaData.getString("CHANNEL");
+        } catch (PackageManager.NameNotFoundException e) {
+            Timber.tag(TAG).e(e, "get market channel fail!");
+        }
+        return "";
     }
 }
