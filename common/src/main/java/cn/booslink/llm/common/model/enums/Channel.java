@@ -2,7 +2,7 @@ package cn.booslink.llm.common.model.enums;
 
 public enum Channel {
 
-    UNKNOWN("unknown"), SOUND("sound"), OTT("ott");
+    UNKNOWN("unknown"), PUB("pub"), BJBS("bjbs"), VOICE("voice");
 
     private final String channel;
 

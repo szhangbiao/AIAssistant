@@ -11,8 +11,9 @@ android {
 
     val nonSystemLabel = "release"
     val systemLabel = "system"
-    val channelSound = "sound"
-    val channelOtt = "ott"
+    val channelPub = "pub"
+    val channelBjbs = "bjbs"
+    val channelVoice = "voice"
     val isDevMode = true
 
     defaultConfig {
@@ -76,14 +77,18 @@ android {
 
     flavorDimensions += "version"
     productFlavors {
-        create(channelSound) {
+        create(channelPub) {
             dimension = "version"
-            manifestPlaceholders["channelValue"] = channelSound
+            manifestPlaceholders["channelValue"] = channelPub
         }
-        create(channelOtt) {
+        create(channelBjbs) {
+            dimension = "version"
+            manifestPlaceholders["channelValue"] = channelBjbs
+        }
+        create(channelVoice) {
             dimension = "version"
             applicationId = "com.booslink.aivoiceremote"
-            manifestPlaceholders["channelValue"] = channelOtt
+            manifestPlaceholders["channelValue"] = channelVoice
         }
     }
 

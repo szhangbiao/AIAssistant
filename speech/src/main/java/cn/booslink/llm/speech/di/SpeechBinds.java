@@ -6,6 +6,8 @@ import cn.booslink.llm.common.speech.ISpeechAgent;
 import cn.booslink.llm.speech.SpeechAgentImpl;
 import cn.booslink.llm.speech.repository.ConfigRepositoryImpl;
 import cn.booslink.llm.speech.repository.IConfigRepository;
+import cn.booslink.llm.speech.repository.IUpgradeRepository;
+import cn.booslink.llm.speech.repository.UpgradeRepositoryImpl;
 import dagger.Binds;
 import dagger.Module;
 import dagger.hilt.InstallIn;
@@ -20,4 +22,7 @@ public interface SpeechBinds {
 
     @Binds
     IConfigRepository bindConfigRepository(ConfigRepositoryImpl configRepositoryImpl);
+
+    @Binds
+    IUpgradeRepository bindUpgradeRepository(UpgradeRepositoryImpl upgradeRepositoryImpl);
 }

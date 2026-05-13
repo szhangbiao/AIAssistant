@@ -1,6 +1,7 @@
 package cn.booslink.llm.common.network;
 
 import cn.booslink.llm.common.model.ApiResponse;
+import cn.booslink.llm.common.model.AppUpgrade;
 import cn.booslink.llm.common.model.PkgInfo;
 import cn.booslink.llm.common.model.VideoConfig;
 import cn.booslink.llm.common.model.request.ApkRequest;
@@ -9,6 +10,7 @@ import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.Query;
+import retrofit2.http.Url;
 
 public interface ApiService {
 
@@ -20,4 +22,7 @@ public interface ApiService {
 
     @GET("http://ai.ottboxer.cn/api/yuyin/data")
     Single<ApiResponse<VideoConfig>> getVideoData(@Query("key") String key);
+
+    @GET
+    Single<AppUpgrade> getAppUpgradeInfo(@Url String url);
 }
