@@ -41,7 +41,7 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
     private AIUIAgent mAIUIAgent = null;
 
     private volatile boolean mIsFirstStartup = true;
-    private volatile boolean mIsAIUIWorking = false;
+    private volatile int mAIUIState = 0;
 
     @Inject
     public SpeechAgentImpl(@ApplicationContext Context context, Device device, DeviceInfo deviceInfo, Gson gson, IEventProcessor eventProcessor, IConfigRepository configRepository) {
@@ -54,7 +54,7 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
     }
 
     @Override
-    public void createAgent(Runnable aiuiCallback) {
+    public void createAgent() {
         if (mAIUIAgent == null) {
             Disposable disposable = mConfigRepository.readConfig()
                     .map(aiuiConfig -> {
@@ -67,9 +67,6 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
                         mAIUIAgent = AIUIAgent.createAgent(mContext, aiuiParams, this);
                         if (mAIUIAgent != null && mDevice.isAutoAudioRecord()) {
                             startRecordAudio();
-                        }
-                        if (aiuiCallback != null) {
-                            aiuiCallback.run();
                         }
                     });
             addDisposable(disposable);
@@ -84,7 +81,12 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
 
     @Override
     public boolean isAIUIWorking() {
-        return mIsAIUIWorking;
+        return mAIUIState == AIUIState.WORKING.getState();
+    }
+
+    @Override
+    public boolean isAIUIReady() {
+        return mAIUIState == AIUIState.READ.getState();
     }
 
     @Override
@@ -98,7 +100,7 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
                 if (mIsFirstStartup && aiuiState == AIUIState.READ) {
                     autoWakeupSdkWhenFirst();
                 }
-                mIsAIUIWorking = aiuiState == AIUIState.WORKING;
+                mAIUIState = state;
                 break;
             case AIUIConstant.EVENT_RESULT: // 结果事件
                 break;

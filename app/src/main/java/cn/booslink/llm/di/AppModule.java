@@ -8,7 +8,6 @@ import cn.booslink.llm.BuildConfig;
 import cn.booslink.llm.common.model.DeviceInfo;
 import cn.booslink.llm.common.model.enums.Channel;
 import cn.booslink.llm.common.utils.ContextUtils;
-import cn.booslink.llm.handler.MediaKeyHandler;
 import dagger.Module;
 import dagger.Provides;
 import dagger.hilt.InstallIn;
@@ -25,11 +24,5 @@ public class AppModule {
         boolean isSystemApp = ContextUtils.isSystemApp(context);
         boolean isDevMode = BuildConfig.DEBUG_MODE;
         return new DeviceInfo(isDevMode, isSystemApp, Channel.fromChannel(channel));
-    }
-
-    @Singleton
-    @Provides
-    public MediaKeyHandler provideMediaKeyHandler(@ApplicationContext Context context) {
-        return new MediaKeyHandler(context);
     }
 }
