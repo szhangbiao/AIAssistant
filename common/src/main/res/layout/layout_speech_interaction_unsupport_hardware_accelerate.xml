@@ -39,6 +39,7 @@
         android:layout_marginHorizontal="24dp"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="24dp"
+        android:background="@drawable/bg_answer_content"
         tools:minHeight="72dp">
 
         <TextView

@@ -26,7 +26,7 @@
 
     <!-- 自定义权限：控制对WakeUpService的访问 -->
     <permission
-        android:name="cn.booslink.llm.permission.WAKE_UP_SERVICE"
+        android:name="${applicationId}.permission.WAKE_UP_SERVICE"
         android:protectionLevel="signature" />
 
     <application
@@ -59,13 +59,20 @@
             android:name=".service.VoiceAssistantService"
             android:foregroundServiceType="mediaPlayback" />
 
+        <!-- 兼容 Framework 显式指定的 Service 名字 -->
+        <service
+            android:name="com.booslink.tmallvoiceremotecontrol.service.VoiceService"
+            android:exported="true"
+            tools:ignore="ExportedService" />
+
         <!-- 根据遥控器媒体按键Down/UP手动控制录音 -->
         <service
             android:name=".service.WakeUpService"
             android:exported="true"
-            android:permission="cn.booslink.llm.permission.WAKE_UP_SERVICE">
+            android:permission="${applicationId}.permission.WAKE_UP_SERVICE">
             <intent-filter>
-                <action android:name="cn.booslink.llm.service.WakeUpService" />
+                <action android:name="cn.booslink.llm.WakeUpService" />
+                <action android:name="com.booslink.aiui.voiceremote.RemoteControlService" />
             </intent-filter>
         </service>
 

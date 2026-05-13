@@ -34,6 +34,7 @@ public class ConfigRepositoryImpl implements IConfigRepository {
         return Single.fromCallable(() -> {
             String configJson = FileUtils.readJsonFromAsset(mContext, "cfg/aiui_config.json");
             AIUIConfig config = mGson.fromJson(configJson, AIUIConfig.class);
+            config.fixIvwResourcePath(mContext);
             LoginConfig loginConfig = new LoginConfig(APP_ID, APP_KEY, API_SECRET);
             File vtnFile = new File(config.getIvw().getResPath());
             if (!vtnFile.exists()) {

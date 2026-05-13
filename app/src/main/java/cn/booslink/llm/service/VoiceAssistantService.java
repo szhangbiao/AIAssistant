@@ -65,7 +65,7 @@ public class VoiceAssistantService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Timber.tag(TAG).d("onStartCommand");
-        return START_NOT_STICKY;  // 避免服务重启时重启整个应用
+        return START_STICKY;
     }
 
     @Override

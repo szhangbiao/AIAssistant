@@ -86,7 +86,7 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
 
     @Override
     public boolean isAIUIReady() {
-        return mAIUIState == AIUIState.READ.getState();
+        return mAIUIState == AIUIState.READ.getState() || mAIUIState == AIUIState.WORKING.getState();
     }
 
     @Override

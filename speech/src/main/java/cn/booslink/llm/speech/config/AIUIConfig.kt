@@ -1,5 +1,6 @@
 package cn.booslink.llm.speech.config
 
+import android.content.Context
 import com.google.gson.annotations.SerializedName
 
 data class AIUIConfig(
@@ -34,6 +35,16 @@ data class AIUIConfig(
         header,
         log
     )
+
+    fun fixIvwResourcePath(context: Context) {
+        val llmPkg = "cn.booslink.llm"
+        val aiVoicePkg = "com.booslink.aivoiceremote"
+        ivw.resPath = context.filesDir.absolutePath + when (context.packageName) {
+            llmPkg -> "/ivw/vtn/vtn_llm.ini"
+            aiVoicePkg -> "/ivw/vtn/vtn_ai_voice.ini"
+            else -> "/ivw/vtn/vtn.ini"
+        }
+    }
 }
 
 data class LoginConfig(
@@ -90,7 +101,7 @@ data class IvwConfig(
     @SerializedName("res_type")
     val resType: String,
     @SerializedName("res_path")
-    val resPath: String
+    var resPath: String
 )
 
 data class RecorderConfig(

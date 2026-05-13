@@ -82,6 +82,7 @@ android {
         }
         create(channelOtt) {
             dimension = "version"
+            applicationId = "com.booslink.aivoiceremote"
             manifestPlaceholders["channelValue"] = channelOtt
         }
     }
