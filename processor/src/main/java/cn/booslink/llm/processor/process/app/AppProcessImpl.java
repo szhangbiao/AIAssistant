@@ -4,6 +4,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.text.TextUtils;
 
+import com.iflytek.aiui.AIUIConstant;
+import com.iflytek.aiui.AIUIMessage;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -24,6 +27,7 @@ import cn.booslink.llm.common.model.VoiceResult;
 import cn.booslink.llm.common.model.enums.AIUIIntent;
 import cn.booslink.llm.common.model.enums.Category;
 import cn.booslink.llm.common.model.enums.QueryState;
+import cn.booslink.llm.common.speech.ISpeechAgent;
 import cn.booslink.llm.common.ui.ISpeechInteraction;
 import cn.booslink.llm.common.ui.IToast;
 import cn.booslink.llm.common.utils.ContextUtils;
@@ -51,16 +55,18 @@ public class AppProcessImpl implements IAppProcess {
     private final Context mContext;
     private final IAppRepository mAppRepository;
     private final Lazy<IAppManager> mAppManagerLazy;
+    private final Lazy<ISpeechAgent> mSpeechAgentLazy;
     private final ISpeechInteraction mSpeechInteraction;
     private final CompositeDisposable mCompositeDisposable;
     private final Lazy<IEventProcessor> mEventProcessorLazy;
 
     @Inject
-    public AppProcessImpl(@ApplicationContext Context context, IToast toast, IAppRepository appRepository, Lazy<IAppManager> appManagerLazy, ISpeechInteraction speechInteraction, Lazy<IEventProcessor> eventProcessorLazy) {
+    public AppProcessImpl(@ApplicationContext Context context, IToast toast, IAppRepository appRepository, Lazy<IAppManager> appManagerLazy, ISpeechInteraction speechInteraction, Lazy<ISpeechAgent> speechAgentLazy, Lazy<IEventProcessor> eventProcessorLazy) {
         this.mToast = toast;
         this.mContext = context;
         this.mAppRepository = appRepository;
         this.mAppManagerLazy = appManagerLazy;
+        this.mSpeechAgentLazy = speechAgentLazy;
         this.mSpeechInteraction = speechInteraction;
         this.mEventProcessorLazy = eventProcessorLazy;
         this.mCompositeDisposable = new CompositeDisposable();
@@ -238,8 +244,9 @@ public class AppProcessImpl implements IAppProcess {
                 Timber.tag(TAG).d("populateAppInstall onAppInstalled");
                 IEventProcessor eventProcessor = mEventProcessorLazy.get();
                 if (eventProcessor != null && !eventProcessor.isProcessActive()) return;
-                mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.DONE));
                 mSpeechInteraction.nlpAnswer("安装" + pkgInfo.getName() + "成功");
+                mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.DONE));
+                populateWakeupAfterAppInstall();
             }
 
             @Override
@@ -295,6 +302,7 @@ public class AppProcessImpl implements IAppProcess {
                     mSpeechInteraction.nlpAnswer("好的");
                 }
                 mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.DONE));
+                populateWakeupAfterAppInstall();
             }
         });
         if (pkgInfo.isDownloaded()) {
@@ -305,6 +313,12 @@ public class AppProcessImpl implements IAppProcess {
         } else {
             downloadManager.startDownloadPkg(pkgInfo);
         }
+    }
+
+    private void populateWakeupAfterAppInstall(){
+        ISpeechAgent speechAgent = mSpeechAgentLazy.get();
+        if (speechAgent == null) return;
+        speechAgent.sendMessage(new AIUIMessage(AIUIConstant.CMD_WAKEUP, 0, 0, null, null));
     }
 
     private void addDisposable(Disposable disposable) {
