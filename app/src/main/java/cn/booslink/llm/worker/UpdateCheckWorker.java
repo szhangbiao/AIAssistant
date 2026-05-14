@@ -19,6 +19,7 @@ import cn.booslink.llm.common.model.AppUpgrade;
 import cn.booslink.llm.common.model.DeviceInfo;
 import cn.booslink.llm.downloader.AppUpgradeManager;
 import cn.booslink.llm.speech.repository.IUpgradeRepository;
+import dagger.Lazy;
 import dagger.assisted.Assisted;
 import dagger.assisted.AssistedInject;
 import timber.log.Timber;
@@ -31,15 +32,15 @@ public class UpdateCheckWorker extends Worker {
     private static final String STARTUP_WORK_NAME = "StartupUpdateCheck";
 
     private final DeviceInfo mDevice;
-    private final AppUpgradeManager mAppUpgradeManager;
     private final IUpgradeRepository mUpgradeRepository;
+    private final Lazy<AppUpgradeManager> mAppUpgradeManagerLazy;
 
     @AssistedInject
-    public UpdateCheckWorker(@Assisted @NonNull Context context, @Assisted @NonNull WorkerParameters workerParams, DeviceInfo deviceInfo, IUpgradeRepository upgradeRepository, AppUpgradeManager appUpgradeManager) {
+    public UpdateCheckWorker(@Assisted @NonNull Context context, @Assisted @NonNull WorkerParameters workerParams, DeviceInfo deviceInfo, IUpgradeRepository upgradeRepository, Lazy<AppUpgradeManager> appUpgradeManagerLazy) {
         super(context, workerParams);
         this.mDevice = deviceInfo;
         this.mUpgradeRepository = upgradeRepository;
-        this.mAppUpgradeManager = appUpgradeManager;
+        this.mAppUpgradeManagerLazy = appUpgradeManagerLazy;
     }
 
     /**
@@ -90,7 +91,9 @@ public class UpdateCheckWorker extends Worker {
         int currentVersion = mDevice.getVersionCode();
         if (remoteVersion > currentVersion) {
             Timber.tag(TAG).i("New version found, starting download...");
-            mAppUpgradeManager.startDownload(upgrade);
+            AppUpgradeManager upgradeManager = mAppUpgradeManagerLazy.get();
+            if (upgradeManager == null) return false;
+            upgradeManager.startDownload(upgrade);
             return true;
         }
         return false;

@@ -8,6 +8,7 @@ import java.io.File;
 
 import javax.inject.Inject;
 
+import cn.booslink.llm.common.model.DeviceInfo;
 import cn.booslink.llm.common.utils.FileUtils;
 import cn.booslink.llm.speech.config.AIUIConfig;
 import cn.booslink.llm.speech.config.LoginConfig;
@@ -20,13 +21,15 @@ public class ConfigRepositoryImpl implements IConfigRepository {
     private final String APP_KEY = "1c871f468479745d81d486be9852f275";
     private final String API_SECRET = "NjQwZWJjZGUxOTJjOGI3MmE1ODViZWE0";
 
-    private final Context mContext;
     private final Gson mGson;
+    private final Context mContext;
+    private final DeviceInfo mDevice;
 
     @Inject
-    public ConfigRepositoryImpl(@ApplicationContext Context context, Gson gson) {
+    public ConfigRepositoryImpl(@ApplicationContext Context context, Gson gson, DeviceInfo deviceInfo) {
         this.mGson = gson;
         this.mContext = context;
+        this.mDevice = deviceInfo;
     }
 
     @Override
@@ -35,6 +38,7 @@ public class ConfigRepositoryImpl implements IConfigRepository {
             String configJson = FileUtils.readJsonFromAsset(mContext, "cfg/aiui_config.json");
             AIUIConfig config = mGson.fromJson(configJson, AIUIConfig.class);
             config.fixIvwResourcePath(mContext);
+            config.updateLogConfig(mDevice.isDevMode());
             LoginConfig loginConfig = new LoginConfig(APP_ID, APP_KEY, API_SECRET);
             File vtnFile = new File(config.getIvw().getResPath());
             if (!vtnFile.exists()) {

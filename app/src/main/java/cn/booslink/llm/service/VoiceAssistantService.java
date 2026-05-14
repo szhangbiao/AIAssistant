@@ -61,7 +61,7 @@ public class VoiceAssistantService extends Service {
         }
         mSpeechAgent.createAgent();
         // 调度每日检查更新任务
-        UpdateCheckWorker.schedule(this);
+        //UpdateCheckWorker.schedule(this);
     }
 
     @Override

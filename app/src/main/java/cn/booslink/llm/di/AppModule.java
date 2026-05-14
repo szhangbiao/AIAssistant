@@ -8,6 +8,7 @@ import cn.booslink.llm.BuildConfig;
 import cn.booslink.llm.common.model.DeviceInfo;
 import cn.booslink.llm.common.model.enums.Channel;
 import cn.booslink.llm.common.utils.ContextUtils;
+import cn.booslink.llm.downloader.AppUpgradeManager;
 import cn.booslink.llm.record.IVoiceInput;
 import cn.booslink.llm.record.VoiceInputImpl;
 import dagger.Binds;
@@ -31,6 +32,12 @@ public class AppModule {
         int versionCode = ContextUtils.getVersionCode(context);
         boolean isDevMode = BuildConfig.DEBUG_MODE;
         return new DeviceInfo(isDevMode, isSystemApp, appName, pkgName, versionName, versionCode, Channel.fromChannel(channel));
+    }
+
+    @Singleton
+    @Provides
+    public AppUpgradeManager provideAppUpgradeManager(@ApplicationContext Context context, DeviceInfo deviceInfo) {
+        return new AppUpgradeManager(context, deviceInfo);
     }
 
     @Module

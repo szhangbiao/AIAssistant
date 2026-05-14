@@ -14,7 +14,7 @@ android {
     val channelPub = "pub"
     val channelBjbs = "bjbs"
     val channelVoice = "voice"
-    val isDevMode = true
+    val isDevMode = false
 
     defaultConfig {
         applicationId = "cn.booslink.llm"

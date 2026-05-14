@@ -20,6 +20,7 @@ data class AIUIConfig(
     val header: HeaderConfig,
     val log: LogConfig
 ) {
+
     fun newLogin(login: LoginConfig): AIUIConfig = AIUIConfig(
         login,
         global,
@@ -44,6 +45,10 @@ data class AIUIConfig(
             aiVoicePkg -> "/ivw/vtn/vtn_ai_voice.ini"
             else -> "/ivw/vtn/vtn.ini"
         }
+    }
+
+    fun updateLogConfig(isDevMode: Boolean) {
+        log.debugLog = if (isDevMode) "1" else "0"
     }
 }
 
@@ -154,7 +159,7 @@ data class HeaderConfig(
 
 data class LogConfig(
     @SerializedName("debug_log")
-    val debugLog: String,
+    var debugLog: String,
     @SerializedName("save_datalog")
     val saveDatalog: String,
     @SerializedName("datalog_path")
