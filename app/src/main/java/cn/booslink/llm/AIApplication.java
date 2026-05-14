@@ -5,7 +5,10 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.os.Build;
 
+import androidx.annotation.NonNull;
+import androidx.hilt.work.HiltWorkerFactory;
 import androidx.multidex.MultiDex;
+import androidx.work.Configuration;
 
 import cn.booslink.llm.common.model.DeviceInfo;
 import cn.booslink.llm.common.utils.ScreenAdapter;
@@ -18,11 +21,22 @@ import com.bytedance.boost_multidex.BoostMultiDex;
 import javax.inject.Inject;
 
 @HiltAndroidApp
-public class AIApplication extends Application {
+public class AIApplication extends Application implements Configuration.Provider {
 
     private static final String TAG = "AIApplication";
     @Inject
     DeviceInfo mDeviceInfo;
+
+    @Inject
+    HiltWorkerFactory workerFactory;
+
+    @NonNull
+    @Override
+    public Configuration getWorkManagerConfiguration() {
+        return new Configuration.Builder()
+                .setWorkerFactory(workerFactory)
+                .build();
+    }
 
     @Override
     protected void attachBaseContext(Context base) {

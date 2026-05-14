@@ -38,6 +38,17 @@ public class PkgInfo {
         return pkgInfo;
     }
 
+    public static PkgInfo createForAppUpgrade(AppUpgrade checkUpdate, DeviceInfo deviceInfo) {
+        PkgInfo pkgInfo = new PkgInfo();
+        pkgInfo.setName(deviceInfo.getAppName());
+        pkgInfo.setPkgName(deviceInfo.getPackageName());
+        pkgInfo.setApkIcon(checkUpdate.getIconUrl());
+        pkgInfo.setDownloadUrl(checkUpdate.getUrl());
+        pkgInfo.setVersionCode(checkUpdate.getVersion());
+        pkgInfo.setApkMd5(checkUpdate.getMd5());
+        return pkgInfo;
+    }
+
     public PkgInfo() {
 
     }

@@ -18,12 +18,15 @@ public class BootReceiver extends BroadcastReceiver {
         if (intent != null) {
             String action = intent.getAction();
             Timber.tag(TAG).d("Received broadcast: %s", action);
-            if (Intent.ACTION_BOOT_COMPLETED.equals(action) || "android.intent.action.QUICKBOOT_POWERON".equals(action) || "com.htc.intent.action.QUICKBOOT_POWERON".equals(action)) {
-                Timber.tag(TAG).d("Device boot completed, starting app auto-start process");
+            if (Intent.ACTION_BOOT_COMPLETED.equals(action)
+                    || Intent.ACTION_MY_PACKAGE_REPLACED.equals(action)
+                    || "android.intent.action.QUICKBOOT_POWERON".equals(action)
+                    || "com.htc.intent.action.QUICKBOOT_POWERON".equals(action)) {
+                Timber.tag(TAG).d("Device boot completed or app upgraded, starting app auto-start process");
                 // 延迟启动，确保系统完全启动
                 new Handler(Looper.getMainLooper()).postDelayed(() -> {
                     startMainActivity(context);
-                }, 2000); // 延迟3秒
+                }, 2000); // 延迟2秒
             }
         }
     }

@@ -20,6 +20,7 @@ import cn.booslink.llm.common.model.DeviceInfo;
 import cn.booslink.llm.common.ui.ISpeechInteraction;
 import cn.booslink.llm.common.utils.ScreenAdapter;
 import cn.booslink.llm.common.speech.ISpeechAgent;
+import cn.booslink.llm.worker.UpdateCheckWorker;
 import dagger.hilt.android.AndroidEntryPoint;
 import timber.log.Timber;
 
@@ -59,7 +60,8 @@ public class VoiceAssistantService extends Service {
             keepServiceWithNotification();
         }
         mSpeechAgent.createAgent();
-
+        // 调度每日检查更新任务
+        UpdateCheckWorker.schedule(this);
     }
 
     @Override

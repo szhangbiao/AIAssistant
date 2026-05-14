@@ -148,6 +148,9 @@ dependencies {
     annotationProcessor(libs.glide.compiler)
 
     implementation(libs.timber)
+    implementation(libs.work.runtime)
+    implementation(libs.hilt.work)
+    annotationProcessor(libs.hilt.work.compiler)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

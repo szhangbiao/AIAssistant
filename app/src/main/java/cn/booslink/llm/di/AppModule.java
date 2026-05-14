@@ -25,8 +25,12 @@ public class AppModule {
     public DeviceInfo provideDeviceInfo(@ApplicationContext Context context) {
         String channel = ContextUtils.getManifestChannel(context);
         boolean isSystemApp = ContextUtils.isSystemApp(context);
+        String appName = ContextUtils.getAppName(context);
+        String pkgName = context.getPackageName();
+        String versionName = ContextUtils.getVersionName(context);
+        int versionCode = ContextUtils.getVersionCode(context);
         boolean isDevMode = BuildConfig.DEBUG_MODE;
-        return new DeviceInfo(isDevMode, isSystemApp, Channel.fromChannel(channel));
+        return new DeviceInfo(isDevMode, isSystemApp, appName, pkgName, versionName, versionCode, Channel.fromChannel(channel));
     }
 
     @Module

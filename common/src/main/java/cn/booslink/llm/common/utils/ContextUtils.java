@@ -68,6 +68,19 @@ public class ContextUtils {
         }
     }
 
+    public static String getAppName(Context context) {
+        try {
+            // 获取PackageManager实例
+            PackageManager packageManager = context.getPackageManager();
+            // getPackageName()是你当前类的包名，0代表是获取版本信息
+            ApplicationInfo applicationInfo = packageManager.getApplicationInfo(context.getPackageName(), 0);
+            return packageManager.getApplicationLabel(applicationInfo).toString();
+        } catch (PackageManager.NameNotFoundException e) {
+            Timber.tag(TAG).e(e, "query version name fail!");
+        }
+        return "";
+    }
+
     public static String getVersionName(Context context) {
         try {
             // 获取PackageManager实例
@@ -81,6 +94,21 @@ public class ContextUtils {
             Timber.tag(TAG).e(e, "query version name fail!");
         }
         return "";
+    }
+
+    public static int getVersionCode(Context context) {
+        try {
+            // 获取PackageManager实例
+            PackageManager packageManager = context.getPackageManager();
+            // getPackageName()是你当前类的包名，0代表是获取版本信息
+            PackageInfo packageInfo = packageManager.getPackageInfo(context.getPackageName(), 0);
+            if (packageInfo != null) {
+                return packageInfo.versionCode;
+            }
+        } catch (PackageManager.NameNotFoundException e) {
+            Timber.tag(TAG).e(e, "query version name fail!");
+        }
+        return 0;
     }
 
     public static String getManifestChannel(Context context) {
