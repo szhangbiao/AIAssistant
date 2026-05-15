@@ -93,7 +93,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         startServiceDirectly();
-        testDownload();
     }
 
     private void startServiceDirectly() {
@@ -216,23 +215,5 @@ public class MainActivity extends AppCompatActivity {
     private void bindVoiceAssistantService() {
         Intent intent = new Intent(this, VoiceAssistantService.class);
         bindService(intent, connection, BIND_AUTO_CREATE);
-    }
-
-    private void testDownload() {
-        Button button = findViewById(R.id.btn_download);
-        button.setOnClickListener(v -> {
-            String pkgJson = FileUtils.readJsonFromAsset(this, "test_pkg_details.json");
-            PkgInfo pkgInfo = GsonProvider.instance().fromJson(pkgJson, PkgInfo.class);
-            mAppManager.startDownloadPkg(pkgInfo);
-        });
-        Button btnShow = findViewById(R.id.btn_show);
-        btnShow.setOnClickListener(v -> {
-            mSpeechInteraction.UIWakeup();
-            mSpeechInteraction.updateQuery(new VoiceQuery("bobo在听，有什么可以帮您~", QueryState.WAKE_UP));
-        });
-        Button btnHide = findViewById(R.id.btn_hide);
-        btnHide.setOnClickListener(v -> {
-            mSpeechInteraction.UISleep();
-        });
     }
 }

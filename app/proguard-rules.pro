@@ -270,6 +270,14 @@
 -dontoptimize
 -keep class com.iflytek.** { *; }
 
+# 4. WorkManager & Room (修复 WorkDatabase 实例化失败)
+-keep class androidx.work.impl.** { *; }
+-keep class * extends androidx.room.RoomDatabase {
+    <init>(...);
+}
+-keep class androidx.room.** { *; }
+-keep class androidx.startup.** { *; }
+
 # 12. PAGLib
 -keep class org.libpag.** { *; }
 -keep class androidx.exifinterface.** { *; }

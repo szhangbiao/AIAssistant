@@ -47,6 +47,7 @@ dependencies {
     annotationProcessor(libs.hilt.compiler)
 
     implementation(libs.bundles.rxjava)
+    implementation(libs.datetime)
     implementation(libs.timber)
     implementation(libs.gson)
 

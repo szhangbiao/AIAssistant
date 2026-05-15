@@ -16,11 +16,13 @@ import androidx.annotation.Nullable;
 
 import javax.inject.Inject;
 
+import cn.booslink.llm.common.cache.IAppCache;
 import cn.booslink.llm.common.model.DeviceInfo;
 import cn.booslink.llm.common.ui.ISpeechInteraction;
 import cn.booslink.llm.common.utils.ScreenAdapter;
 import cn.booslink.llm.common.speech.ISpeechAgent;
 import cn.booslink.llm.worker.UpdateCheckWorker;
+import dagger.Lazy;
 import dagger.hilt.android.AndroidEntryPoint;
 import timber.log.Timber;
 
@@ -34,6 +36,9 @@ public class VoiceAssistantService extends Service {
     ISpeechAgent mSpeechAgent;
     @Inject
     ISpeechInteraction mSpeechInteraction;
+    @Inject
+    Lazy<IAppCache> mAppCacheLazy;
+
     private final IBinder binder = new LocalBinder();
 
     public class LocalBinder extends Binder {
@@ -61,7 +66,7 @@ public class VoiceAssistantService extends Service {
         }
         mSpeechAgent.createAgent();
         // 调度每日检查更新任务
-        //UpdateCheckWorker.schedule(this);
+        UpdateCheckWorker.schedule(this);
     }
 
     @Override
@@ -91,6 +96,10 @@ public class VoiceAssistantService extends Service {
     public void onLowMemory() {
         super.onLowMemory();
         Timber.tag(TAG).d("onLowMemory");
+        IAppCache appCache = mAppCacheLazy.get();
+        if (appCache != null) {
+            appCache.clearCache();
+        }
     }
 
     @Override

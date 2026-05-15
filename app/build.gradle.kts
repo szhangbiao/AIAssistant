@@ -14,18 +14,21 @@ android {
     val channelPub = "pub"
     val channelBjbs = "bjbs"
     val channelVoice = "voice"
-    val isDevMode = false
+    val isDevMode = true
 
     defaultConfig {
         applicationId = "cn.booslink.llm"
         minSdk = 19
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.0.0"
 
         multiDexEnabled = true
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
+        ndk {
+            // 使用 += 或 addAll 添加你需要的架构
+            abiFilters += if (isDevMode) listOf("armeabi", "armeabi-v7a", "arm64-v8a", "x86", "x86_64") else listOf("armeabi-v7a", "arm64-v8a")
+        }
         buildConfigField("Boolean", "DEBUG_MODE", isDevMode.toString())
     }
 

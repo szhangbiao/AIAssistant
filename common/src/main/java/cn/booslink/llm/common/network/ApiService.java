@@ -1,6 +1,9 @@
 package cn.booslink.llm.common.network;
 
+import java.util.List;
+
 import cn.booslink.llm.common.model.ApiResponse;
+import cn.booslink.llm.common.model.AppSummary;
 import cn.booslink.llm.common.model.AppUpgrade;
 import cn.booslink.llm.common.model.PkgInfo;
 import cn.booslink.llm.common.model.VideoConfig;
@@ -25,4 +28,7 @@ public interface ApiService {
 
     @GET
     Single<AppUpgrade> getAppUpgradeInfo(@Url String url);
+
+    @GET
+    Single<List<AppSummary>> getPackageConfigs(@Url String url);
 }

@@ -2,6 +2,8 @@ package cn.booslink.llm.common.di;
 
 import javax.inject.Singleton;
 
+import cn.booslink.llm.common.cache.IAppCache;
+import cn.booslink.llm.common.cache.MemoryCacheImpl;
 import cn.booslink.llm.common.image.ImageLoader;
 import cn.booslink.llm.common.image.ImageLoaderImpl;
 import cn.booslink.llm.common.storage.ISpeechStorage;
@@ -33,4 +35,8 @@ public interface CommonBinds {
     @Binds
     @Singleton
     IToast bindToast(ToastImpl toastImpl);
+
+    @Binds
+    @Singleton
+    IAppCache bindAppCache(MemoryCacheImpl memoryCacheImpl);
 }
