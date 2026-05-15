@@ -1,7 +1,18 @@
+import com.android.build.api.variant.impl.VariantOutputImpl
+import java.text.SimpleDateFormat
+import java.util.Date
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.hilt)
 }
+
+val nonSystemLabel = "release"
+val systemLabel = "system"
+val channelPub = "pub"
+val channelBjbs = "bjbs"
+val channelVoice = "voice"
+val isDevMode = false
 
 android {
     namespace = "cn.booslink.llm"
@@ -9,19 +20,12 @@ android {
         version = release(36)
     }
 
-    val nonSystemLabel = "release"
-    val systemLabel = "system"
-    val channelPub = "pub"
-    val channelBjbs = "bjbs"
-    val channelVoice = "voice"
-    val isDevMode = true
-
     defaultConfig {
         applicationId = "cn.booslink.llm"
         minSdk = 19
         targetSdk = 36
         versionCode = 2
-        versionName = "1.0.0"
+        versionName = "1.0.1"
 
         multiDexEnabled = true
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -111,6 +115,19 @@ android {
         named("main") {
             assets.directories.add("../iflytek/assets")
             jniLibs.directories.add("../iflytek/jniLibs")
+        }
+    }
+
+    androidComponents.onVariants { variant ->
+        variant.outputs.forEach { output ->
+            val projectName = "VoiceHelper"
+            val flavor = (variant.flavorName ?: "").uppercase()
+            val versionName = output.versionName.get()
+            val date = SimpleDateFormat("yyyyMMdd").format(Date())
+            val appEnv = if (isDevMode) "DEV" else "PROD"
+            val suffix = if (flavor == "PUB") "pub" else flavor.lowercase()
+            var fileName = "${projectName}_${suffix.uppercase()}_${appEnv}_${date}_V${versionName}.apk"
+            (output as? VariantOutputImpl)?.outputFileName?.set(fileName)
         }
     }
 }
