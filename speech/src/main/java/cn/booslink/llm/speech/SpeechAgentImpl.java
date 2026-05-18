@@ -14,13 +14,20 @@ import javax.inject.Inject;
 
 import cn.booslink.llm.common.model.Device;
 import cn.booslink.llm.common.model.DeviceInfo;
+import cn.booslink.llm.common.model.NetworkStatus;
 import cn.booslink.llm.common.model.enums.AIUIState;
 import cn.booslink.llm.common.model.enums.AIUITag;
+import cn.booslink.llm.common.network.NetworkMonitor;
+import cn.booslink.llm.common.network.exception.DeviceAuthException;
 import cn.booslink.llm.common.speech.ISpeechAgent;
+import cn.booslink.llm.common.storage.ISpeechStorage;
+import cn.booslink.llm.common.ui.ISpeechInteraction;
+import cn.booslink.llm.common.utils.NetworkUtils;
 import cn.booslink.llm.common.utils.RxUtil;
 import cn.booslink.llm.processor.IEventProcessor;
 import cn.booslink.llm.speech.config.AIUIConfig;
 import cn.booslink.llm.speech.repository.IConfigRepository;
+import dagger.Lazy;
 import dagger.hilt.android.qualifiers.ApplicationContext;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.disposables.Disposable;
@@ -33,43 +40,41 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
     private final Gson mGson;
     private final Context mContext;
     private final DeviceInfo mDevice;
+    private final ISpeechStorage mSpeechStorage;
     private final IEventProcessor mEventProcessor;
     private final IConfigRepository mConfigRepository;
+    private final Lazy<ISpeechInteraction> mSpeechInteractionLazy;
     private final CompositeDisposable mCompositeDisposable = new CompositeDisposable();
 
     private AIUIConfig mAIUIConfig = null;
     private AIUIAgent mAIUIAgent = null;
 
+    private volatile boolean mIsDeviceAuthed = false;
     private volatile boolean mIsFirstStartup = true;
     private volatile int mAIUIState = 0;
 
     @Inject
-    public SpeechAgentImpl(@ApplicationContext Context context, Device device, DeviceInfo deviceInfo, Gson gson, IEventProcessor eventProcessor, IConfigRepository configRepository) {
+    public SpeechAgentImpl(@ApplicationContext Context context, Gson gson, Device device, DeviceInfo deviceInfo, ISpeechStorage speechStorage, IEventProcessor eventProcessor, IConfigRepository configRepository, Lazy<ISpeechInteraction> speechInteractionLazy, NetworkMonitor networkMonitor) {
         this.mGson = gson;
         this.mContext = context;
         this.mDevice = deviceInfo;
+        this.mSpeechStorage = speechStorage;
         this.mEventProcessor = eventProcessor;
         this.mConfigRepository = configRepository;
-        AIUISetting.setSystemInfo(AIUIConstant.KEY_SERIAL_NUM, device.sn);
+        this.mSpeechInteractionLazy = speechInteractionLazy;
+        setupNetworkChangeObservable(networkMonitor);
+        AIUISetting.setSystemInfo(AIUIConstant.KEY_SERIAL_NUM, device.serialNo);
     }
 
     @Override
     public void createAgent() {
-        if (mAIUIAgent == null) {
-            Disposable disposable = mConfigRepository.readConfig()
-                    .map(aiuiConfig -> {
-                        mAIUIConfig = aiuiConfig;
-                        return mGson.toJson(aiuiConfig);
-                    })
-                    .compose(RxUtil.singleOnMain())
-                    .subscribe(aiuiParams -> {
-                        // init aiui agent
-                        mAIUIAgent = AIUIAgent.createAgent(mContext, aiuiParams, this);
-                        if (mAIUIAgent != null && mDevice.isAutoAudioRecord()) {
-                            startRecordAudio();
-                        }
-                    });
-            addDisposable(disposable);
+        Timber.tag(TAG).d("createAgent");
+        boolean isNetworkConnected = NetworkUtils.isConnected(mContext);
+        if (!isNetworkConnected) return;
+        boolean isAuthSuccessBefore = mSpeechStorage.isAuthSuccess();
+        startDeviceAuth();
+        if (isAuthSuccessBefore) {
+            initAIUIAgent();
         }
     }
 
@@ -128,17 +133,81 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
             case AIUIConstant.EVENT_ERROR: // 出错事件
                 break;
         }
-        mEventProcessor.processEvent(event);
+        if (mIsDeviceAuthed) {
+            mEventProcessor.processEvent(event);
+        }
     }
 
     @Override
     public void destroyAgent() {
+        Timber.tag(TAG).d("destroyAgent");
         clear();
+        stopRecordAudio();
         if (null != mAIUIAgent) {
             mAIUIAgent.destroy();
             mAIUIAgent = null;
         }
+        mAIUIState = 0;
+        mIsFirstStartup = true;
+        mIsDeviceAuthed = false;
         mEventProcessor.release();
+    }
+
+    private void startDeviceAuth() {
+        Disposable disposable = mConfigRepository.deviceAuth()
+                .compose(RxUtil.singleOnMain())
+                .subscribe(flag -> {
+                    Timber.tag(TAG).d("deviceAuth success %b", flag);
+                    mIsDeviceAuthed = flag;
+                    boolean isAuthSuccessBefore = mSpeechStorage.isAuthSuccess();
+                    if (isAuthSuccessBefore && flag) return;
+                    if (!isAuthSuccessBefore && flag) {
+                        mSpeechStorage.setAuthSuccess(true);
+                        initAIUIAgent();
+                    }
+                }, throwable -> {
+                    Timber.tag(TAG).e(throwable, "deviceAuth failed");
+                    if (throwable instanceof DeviceAuthException) {
+                        boolean isAuthSuccessBefore = mSpeechStorage.isAuthSuccess();
+                        if (isAuthSuccessBefore) {
+                            resetAgentParams();
+                        }
+                        ISpeechInteraction speechInteraction = mSpeechInteractionLazy.get();
+                        if (speechInteraction != null) {
+                            speechInteraction.authFailed(throwable.getMessage());
+                        }
+                        mSpeechStorage.setAuthSuccess(false);
+                    } else {
+                        // TODO 检查是否是网络错误
+                    }
+                });
+        addDisposable(disposable);
+    }
+
+    private void initAIUIAgent() {
+        if (mAIUIAgent == null) {
+            Disposable disposable = mConfigRepository.readConfig()
+                    .map(aiuiConfig -> {
+                        mAIUIConfig = aiuiConfig;
+                        return mGson.toJson(aiuiConfig);
+                    })
+                    .compose(RxUtil.singleOnMain())
+                    .subscribe(aiuiParams -> {
+                        // init aiui agent
+                        mAIUIAgent = AIUIAgent.createAgent(mContext, aiuiParams, this);
+                        if (mAIUIAgent != null && mDevice.isAutoAudioRecord()) {
+                            startRecordAudio();
+                        }
+                    });
+            addDisposable(disposable);
+        }
+    }
+
+    private void resetAgentParams() {
+        stopRecordAudio();
+        mAIUIState = 0;
+        mIsFirstStartup = true;
+        mIsDeviceAuthed = false;
     }
 
     private void addDisposable(Disposable disposable) {
@@ -163,14 +232,36 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
     }
 
     private void startRecordAudio() {
+        if (mAIUIAgent == null) return;
         String params = "sample_rate=16000,data_type=audio";
         AIUIMessage startRecord = new AIUIMessage(AIUIConstant.CMD_START_RECORD, 0, 0, params, null);
         mAIUIAgent.sendMessage(startRecord);
     }
 
     private void stopRecordAudio() {
+        if (mAIUIAgent == null) return;
         String params = "sample_rate=16000,data_type=audio";
         AIUIMessage stopRecord = new AIUIMessage(AIUIConstant.CMD_STOP_RECORD, 0, 0, params, null);
         mAIUIAgent.sendMessage(stopRecord);
+    }
+
+    private void setupNetworkChangeObservable(NetworkMonitor networkMonitor) {
+        Disposable disposable = networkMonitor.getNetworkObservable()
+                .distinctUntilChanged()
+                .compose(RxUtil.observableOnMain())
+                .subscribe(networkStatus -> {
+                    Timber.tag(TAG).d("Network changed, status = %s", networkMonitor);
+                    if (isAIUIReady()) return;
+                    boolean isConnect = networkStatus == NetworkStatus.CONNECTED;
+                    if (isConnect && !mIsDeviceAuthed) {
+                        createAgent();
+                    } else if (!isConnect && !mIsDeviceAuthed) {
+                        ISpeechInteraction speechInteraction = mSpeechInteractionLazy.get();
+                        if (speechInteraction != null) {
+                            speechInteraction.showWaitingAuth();
+                        }
+                    }
+                });
+        addDisposable(disposable);
     }
 }

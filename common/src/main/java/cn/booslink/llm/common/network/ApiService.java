@@ -5,6 +5,7 @@ import java.util.List;
 import cn.booslink.llm.common.model.ApiResponse;
 import cn.booslink.llm.common.model.AppSummary;
 import cn.booslink.llm.common.model.AppUpgrade;
+import cn.booslink.llm.common.model.Device;
 import cn.booslink.llm.common.model.PkgInfo;
 import cn.booslink.llm.common.model.VideoConfig;
 import cn.booslink.llm.common.model.request.ApkRequest;
@@ -31,4 +32,7 @@ public interface ApiService {
 
     @GET
     Single<List<AppSummary>> getPackageConfigs(@Url String url);
+
+    @POST
+    Single<ApiResponse<String>> deviceAuth(@Url String url, @Query("tm") long tm, @Query("sign") String sign, @Body Device device);
 }

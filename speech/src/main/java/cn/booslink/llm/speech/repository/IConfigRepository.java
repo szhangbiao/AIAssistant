@@ -4,5 +4,7 @@ import cn.booslink.llm.speech.config.AIUIConfig;
 import io.reactivex.rxjava3.core.Single;
 
 public interface IConfigRepository {
+
+    Single<Boolean> deviceAuth();
     Single<AIUIConfig> readConfig();
 }

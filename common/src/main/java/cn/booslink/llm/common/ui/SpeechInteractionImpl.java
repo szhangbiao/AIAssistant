@@ -50,7 +50,7 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
     private final MutableLiveData<ApkDownload> mApkDownloadLiveData;
 
     private boolean isAttached = false;
-    private boolean isActive = false;
+    private volatile boolean isActive = false;
 
     @Inject
     public SpeechInteractionImpl(@ApplicationContext Context context) {
@@ -188,9 +188,6 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
             case QUERYING:
                 mEmoteStateLiveData.postValue(EmoteState.THINKING);
                 break;
-            case DOWNLOADING:
-                mEmoteStateLiveData.postValue(EmoteState.NORMAL);
-                break;
             case DONE:
                 UIResponse response = mUIResponseLiveData.getValue();
                 if (response != null && !response.isEmpty()) return;
@@ -202,6 +199,7 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
                 mEmoteStateLiveData.postValue(EmoteState.CRYING);
                 break;
             case WAKE_UP:
+            case DOWNLOADING:
             default:
                 mEmoteStateLiveData.postValue(EmoteState.NORMAL);
                 break;
@@ -237,10 +235,11 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
 
     @Override
     public void UIWakeup() {
+        if (!isAttached || isActive) return;
+        Timber.tag(TAG).d("UIWakeup");
         boolean isViewVisible = mParentView.getVisibility() == View.VISIBLE;
-        if (!isAttached || (isActive && isViewVisible)) return;
         AIRootLayout rootLayout = mRootLayoutRef.get();
-        if (rootLayout != null) {
+        if (rootLayout != null && !isViewVisible) {
             rootLayout.startWakeupAnimation();
         }
         mParentView.setVisibility(View.VISIBLE);
@@ -250,11 +249,40 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
     @Override
     public void UISleep() {
         if (!isAttached || !isActive) return;
+        Timber.tag(TAG).d("UISleep");
         AIRootLayout rootLayout = mRootLayoutRef.get();
         if (rootLayout != null) {
             rootLayout.startHideAnimation(() -> mParentView.setVisibility(View.GONE));
         }
         isActive = false;
+    }
+
+    @Override
+    public void authFailed(String failReason) {
+        if (!isAttached) return;
+        Timber.tag(TAG).d("authFailed");
+        boolean isViewVisible = mParentView.getVisibility() == View.VISIBLE;
+        AIRootLayout rootLayout = mRootLayoutRef.get();
+        if (rootLayout != null && !isViewVisible) {
+            rootLayout.startWakeupAnimation();
+        }
+        mParentView.setVisibility(View.VISIBLE);
+        updateQuery(VoiceQuery.Companion.stateOnly(QueryState.FAILED));
+        nlpAnswer(failReason);
+    }
+
+    @Override
+    public void showWaitingAuth() {
+        if (!isAttached) return;
+        Timber.tag(TAG).d("showWaitingAuth");
+        boolean isViewVisible = mParentView.getVisibility() == View.VISIBLE;
+        AIRootLayout rootLayout = mRootLayoutRef.get();
+        if (rootLayout != null && !isViewVisible) {
+            rootLayout.startWakeupAnimation();
+        }
+        mParentView.setVisibility(View.VISIBLE);
+        updateQuery(VoiceQuery.Companion.stateOnly(QueryState.IDLE));
+        nlpAnswer("等待联网鉴权");
     }
 
     /**

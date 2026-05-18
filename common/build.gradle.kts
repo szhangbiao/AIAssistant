@@ -56,7 +56,7 @@ dependencies {
     implementation(libs.bundles.rxjava)
 
     implementation(libs.timber)
-    implementation(libs.utils.view)
+    implementation(libs.utils.core)
     implementation(libs.libpag)
     implementation(libs.blur.view)
     implementation(libs.datetime)

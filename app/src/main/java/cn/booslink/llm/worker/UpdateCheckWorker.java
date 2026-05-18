@@ -14,11 +14,13 @@ import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import cn.booslink.llm.common.model.AppUpgrade;
 import cn.booslink.llm.common.model.DeviceInfo;
 import cn.booslink.llm.downloader.AppUpgradeManager;
 import cn.booslink.llm.speech.repository.IUpgradeRepository;
+import cn.booslink.llm.common.storage.ISpeechStorage;
 import dagger.Lazy;
 import dagger.assisted.Assisted;
 import dagger.assisted.AssistedInject;
@@ -31,14 +33,18 @@ public class UpdateCheckWorker extends Worker {
     private static final String PERIODIC_WORK_NAME = "DailyUpdateCheck";
     private static final String STARTUP_WORK_NAME = "StartupUpdateCheck";
 
+    private static final AtomicBoolean sIsChecking = new AtomicBoolean(false);
+
     private final DeviceInfo mDevice;
+    private final ISpeechStorage mSpeechStorage;
     private final IUpgradeRepository mUpgradeRepository;
     private final Lazy<AppUpgradeManager> mAppUpgradeManagerLazy;
 
     @AssistedInject
-    public UpdateCheckWorker(@Assisted @NonNull Context context, @Assisted @NonNull WorkerParameters workerParams, DeviceInfo deviceInfo, IUpgradeRepository upgradeRepository, Lazy<AppUpgradeManager> appUpgradeManagerLazy) {
+    public UpdateCheckWorker(@Assisted @NonNull Context context, @Assisted @NonNull WorkerParameters workerParams, DeviceInfo deviceInfo, ISpeechStorage speechStorage, IUpgradeRepository upgradeRepository, Lazy<AppUpgradeManager> appUpgradeManagerLazy) {
         super(context, workerParams);
         this.mDevice = deviceInfo;
+        this.mSpeechStorage = speechStorage;
         this.mUpgradeRepository = upgradeRepository;
         this.mAppUpgradeManagerLazy = appUpgradeManagerLazy;
     }
@@ -75,13 +81,32 @@ public class UpdateCheckWorker extends Worker {
     @Override
     public Result doWork() {
         Timber.tag(TAG).d("Starting update check task...");
+
+        // 1. 进程内并发控制：同一时刻只允许一个检查更新任务执行
+        if (!sIsChecking.compareAndSet(false, true)) {
+            Timber.tag(TAG).d("Skip update check: another task is already checking");
+            return Result.success();
+        }
+
         try {
+            // 2. 时间防抖校验：5分钟内不重复执行
+            long lastCheckTime = mSpeechStorage.getLastUpdateCheckTime();
+            long currentTime = System.currentTimeMillis();
+            if (currentTime - lastCheckTime < TimeUnit.MINUTES.toMillis(5)) {
+                Timber.tag(TAG).d("Skip update check: too recent (last check was %d ms ago)", currentTime - lastCheckTime);
+                return Result.success();
+            }
+
             boolean hasNewVersion = checkUpgrade();
+            mSpeechStorage.setLastUpdateCheckTime(currentTime);
             Timber.tag(TAG).d("Update check task finished, hasNewVersion: %b", hasNewVersion);
             return Result.success();
         } catch (Exception e) {
             Timber.tag(TAG).e(e, "Error during update check");
             return Result.retry();
+        } finally {
+            // 3. 释放锁
+            sIsChecking.set(false);
         }
     }
 

@@ -4,9 +4,9 @@ import com.google.gson.annotations.SerializedName;
 
 public class ApiResponse<T> {
 
-    @SerializedName("err_code")
+    @SerializedName(value = "code", alternate = "err_code")
     private int code;
-    @SerializedName("err_msg")
+    @SerializedName(value = "message", alternate = "err_msg")
     private String message;
     private T data;
 
@@ -32,6 +32,6 @@ public class ApiResponse<T> {
     }
 
     public boolean isSuccess() {
-        return code == 0;
+        return code == 0 || code == 200;
     }
 }

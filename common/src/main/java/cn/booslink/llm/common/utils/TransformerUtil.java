@@ -15,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 
 import cn.booslink.llm.common.model.ApiResponse;
 import cn.booslink.llm.common.network.exception.ApiException;
+import cn.booslink.llm.common.network.exception.DeviceAuthException;
 import cn.booslink.llm.common.network.exception.NoConnectivityException;
 import cn.booslink.llm.common.network.exception.PingPublicNetException;
 import cn.booslink.llm.common.network.exception.RetryFailException;
@@ -150,7 +151,7 @@ public class TransformerUtil {
         if (e instanceof NoConnectivityException || e instanceof PingPublicNetException || e instanceof ServerUnReachableException) {
             return false;
         }
-        if (e instanceof ConnectException || e instanceof UnknownHostException) {
+        if (e instanceof ConnectException || e instanceof UnknownHostException || e instanceof DeviceAuthException) {
             return false;
         }
         // TODO add other exception judgement

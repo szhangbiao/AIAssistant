@@ -55,9 +55,7 @@ public class CommonModule {
     @Singleton
     @Provides
     public Device provideDevice(@ApplicationContext Context context) {
-        String channel = ContextUtils.getManifestChannel(context);
-        String version = ContextUtils.getVersionName(context);
-        return Device.of(context, channel, version);
+        return Device.of(context);
     }
 
     @Singleton

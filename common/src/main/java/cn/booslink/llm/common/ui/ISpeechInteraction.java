@@ -29,4 +29,8 @@ public interface ISpeechInteraction {
     void UIWakeup();
 
     void UISleep();
+
+    void authFailed(String failReason);
+
+    void showWaitingAuth();
 }

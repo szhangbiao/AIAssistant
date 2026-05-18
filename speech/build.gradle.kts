@@ -49,6 +49,7 @@ dependencies {
 
     implementation(libs.bundles.rxjava)
 
+    implementation(libs.utils.core)
     implementation(libs.gson)
     implementation(libs.timber)
 

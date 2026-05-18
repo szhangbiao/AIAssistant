@@ -130,6 +130,7 @@ public class EventProcessorImpl implements IEventProcessor {
                     wakeupNetworkResumeOrDownloadContinue();
                     return;
                 }
+                if (!isNetworkConnected) return;
                 boolean showLeaveConfirm = mSpeechStorage.shouldShowLeaveConfirm(sleepType);
                 if (showLeaveConfirm) {
                     mSpeechInteraction.semanticAnswer(UIResponse.Companion.withSleep(sleepType));
@@ -372,6 +373,8 @@ public class EventProcessorImpl implements IEventProcessor {
                 .compose(RxUtil.observableOnMain())
                 .subscribe(networkStatus -> {
                     Timber.tag(TAG).d("Network changed, status = %s", networkMonitor);
+                    ISpeechAgent speechAgent = mSpeechAgentLazy.get();
+                    if (speechAgent == null || !speechAgent.isAIUIWorking()) return;
                     boolean isConnect = networkStatus == NetworkStatus.CONNECTED;
                     if (isConnect) {
                         mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.DONE));
