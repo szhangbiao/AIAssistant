@@ -373,7 +373,7 @@ public class EventProcessorImpl implements IEventProcessor {
                 .distinctUntilChanged()
                 .compose(RxUtil.observableOnMain())
                 .subscribe(networkStatus -> {
-                    Timber.tag(TAG).d("Network changed, status = %s", networkMonitor);
+                    Timber.tag(TAG).d("Network changed, status = %s", networkStatus);
                     ISpeechAgent speechAgent = mSpeechAgentLazy.get();
                     if (speechAgent == null || !speechAgent.isAIUIWorking()) return;
                     boolean isConnect = networkStatus == NetworkStatus.CONNECTED;

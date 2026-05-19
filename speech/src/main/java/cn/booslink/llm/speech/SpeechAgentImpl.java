@@ -52,6 +52,7 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
     private volatile boolean mIsDeviceAuthed = false;
     private volatile boolean mIsFirstStartup = true;
     private volatile int mAIUIState = 0;
+    private volatile boolean mIsAuthenticating = false;
 
     @Inject
     public SpeechAgentImpl(@ApplicationContext Context context, Gson gson, Device device, DeviceInfo deviceInfo, ISpeechStorage speechStorage, IEventProcessor eventProcessor, IConfigRepository configRepository, Lazy<ISpeechInteraction> speechInteractionLazy, NetworkMonitor networkMonitor) {
@@ -69,9 +70,11 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
     @Override
     public void createAgent() {
         Timber.tag(TAG).d("createAgent");
+        if (mIsAuthenticating || mAIUIAgent != null) return;
         boolean isNetworkConnected = NetworkUtils.isConnected(mContext);
         if (!isNetworkConnected) return;
         boolean isAuthSuccessBefore = mSpeechStorage.isAuthSuccess();
+        mIsAuthenticating = true;
         startDeviceAuth();
         if (isAuthSuccessBefore) {
             initAIUIAgent();
@@ -102,7 +105,7 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
                 int state = event.arg1;
                 AIUIState aiuiState = state < AIUIState.values().length ? AIUIState.values()[state] : AIUIState.UNKNOWN;
                 Timber.tag(TAG).d("Event, state = %s, value = %d", aiuiState, state);
-                if (mIsFirstStartup && aiuiState == AIUIState.READ) {
+                if (mIsFirstStartup && aiuiState == AIUIState.READ && mIsDeviceAuthed) {
                     autoWakeupSdkWhenFirst();
                 }
                 mAIUIState = state;
@@ -111,7 +114,7 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
                 break;
             case AIUIConstant.EVENT_WAKEUP: // 唤醒事件
                 int type = event.arg1; // 0 （语音唤醒）, 1 （发送CMD_WAKEUP手动唤醒）
-                if (type == 1 && mIsFirstStartup) {
+                if (type == 1 && mIsFirstStartup && mIsDeviceAuthed) {
                     sendMessageAfterInit();
                     mIsFirstStartup = false;
                 }
@@ -133,9 +136,8 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
             case AIUIConstant.EVENT_ERROR: // 出错事件
                 break;
         }
-        if (mIsDeviceAuthed) {
-            mEventProcessor.processEvent(event);
-        }
+        if (!mIsDeviceAuthed) return;
+        mEventProcessor.processEvent(event);
     }
 
     @Override
@@ -157,15 +159,19 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
         Disposable disposable = mConfigRepository.deviceAuth()
                 .compose(RxUtil.singleOnMain())
                 .subscribe(flag -> {
+                    mIsAuthenticating = false;
                     Timber.tag(TAG).d("deviceAuth success %b", flag);
                     mIsDeviceAuthed = flag;
                     boolean isAuthSuccessBefore = mSpeechStorage.isAuthSuccess();
-                    if (isAuthSuccessBefore && flag) return;
+                    //if (isAuthSuccessBefore && flag) return;
                     if (!isAuthSuccessBefore && flag) {
                         mSpeechStorage.setAuthSuccess(true);
                         initAIUIAgent();
+                    } else if (mIsFirstStartup && mAIUIState == AIUIState.READ.getState()) {
+                        autoWakeupSdkWhenFirst();
                     }
                 }, throwable -> {
+                    mIsAuthenticating = false;
                     Timber.tag(TAG).e(throwable, "deviceAuth failed");
                     if (throwable instanceof DeviceAuthException) {
                         boolean isAuthSuccessBefore = mSpeechStorage.isAuthSuccess();
@@ -219,10 +225,12 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
     }
 
     private void autoWakeupSdkWhenFirst() {
+        Timber.tag(TAG).d("autoWakeupSdkWhenFirst");
         sendMessage(new AIUIMessage(AIUIConstant.CMD_WAKEUP, 0, 0, null, null));
     }
 
     private void sendMessageAfterInit() {
+        Timber.tag(TAG).d("sendMessageAfterInit");
         // 第一步：获取需要请求的文本，转成字节流
         byte[] content = "今天天气怎么样".getBytes();
         // 第二步：构建CMD_WRITE事件，直接发送。
@@ -250,7 +258,7 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
                 .distinctUntilChanged()
                 .compose(RxUtil.observableOnMain())
                 .subscribe(networkStatus -> {
-                    Timber.tag(TAG).d("Network changed, status = %s", networkMonitor);
+                    Timber.tag(TAG).d("Network changed, status = %s", networkStatus);
                     if (isAIUIReady()) return;
                     boolean isConnect = networkStatus == NetworkStatus.CONNECTED;
                     if (isConnect && !mIsDeviceAuthed) {
