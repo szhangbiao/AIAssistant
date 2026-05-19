@@ -21,8 +21,8 @@ libpag = "4.5.46"
 # 更高版本不支持 DebugTree
 timber = "4.7.1"
 media = "1.7.0"
-work = "2.6.0"
-hiltWork = "1.0.0"
+work = "2.9.1"
+hiltWork = "1.2.0"
 
 [libraries]
 appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }

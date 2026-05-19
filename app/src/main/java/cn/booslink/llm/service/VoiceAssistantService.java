@@ -16,6 +16,7 @@ import androidx.annotation.Nullable;
 
 import javax.inject.Inject;
 
+import cn.booslink.llm.R;
 import cn.booslink.llm.common.cache.IAppCache;
 import cn.booslink.llm.common.model.DeviceInfo;
 import cn.booslink.llm.common.ui.ISpeechInteraction;
@@ -125,15 +126,20 @@ public class VoiceAssistantService extends Service {
     }
 
     private void keepServiceWithNotification() {
+        Notification.Builder builder;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(VoiceAssistantService.class.getName(), TAG, NotificationManager.IMPORTANCE_HIGH);
             NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-            if (manager == null) return;
-            manager.createNotificationChannel(channel);
-            Notification notification = new Notification.Builder(this, VoiceAssistantService.class.getName()).build();
-            startForeground(10000, notification);
+            if (manager != null) {
+                manager.createNotificationChannel(channel);
+            }
+            builder = new Notification.Builder(this, VoiceAssistantService.class.getName());
         } else {
-            startForeground(123456, new Notification());
+            builder = new Notification.Builder(this);
         }
+        Notification notification = builder
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .build();
+        startForeground(10000, notification);
     }
 }

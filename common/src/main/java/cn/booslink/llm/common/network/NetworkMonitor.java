@@ -21,7 +21,7 @@ import cn.booslink.llm.common.model.ConnectType;
 import cn.booslink.llm.common.model.NetworkStatus;
 import cn.booslink.llm.common.utils.NetworkUtils;
 import io.reactivex.rxjava3.core.Observable;
-import io.reactivex.rxjava3.subjects.PublishSubject;
+import io.reactivex.rxjava3.subjects.BehaviorSubject;
 import timber.log.Timber;
 
 public class NetworkMonitor {
@@ -31,7 +31,7 @@ public class NetworkMonitor {
 
     private final Context mContext;
     private final WeakReference<ConnectivityManager> mConnectivityRef;
-    private final PublishSubject<NetworkStatus> mNetworkPublish;
+    private final BehaviorSubject<NetworkStatus> mNetworkPublish;
     private ConnectType mConnectType;
     private volatile int mContinueNetworkFailCount = 0;
 
@@ -39,7 +39,8 @@ public class NetworkMonitor {
         this.mContext = context;
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         mConnectivityRef = new WeakReference<>(connectivityManager);
-        mNetworkPublish = PublishSubject.create();
+        boolean isConnected = NetworkUtils.isConnected(context);
+        mNetworkPublish = BehaviorSubject.createDefault(isConnected ? NetworkStatus.CONNECTED : NetworkStatus.DISCONNECTED);
         registerNetworkCallback(context);
     }
 

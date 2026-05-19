@@ -167,6 +167,7 @@ public class EventProcessorImpl implements IEventProcessor {
             case AIUIConstant.EVENT_ERROR: // 出错事件
                 int code = event.arg1;
                 Timber.tag(TAG).d("error code = %d, info = %s", code, event.info);
+                mSpeechInteraction.semanticAnswer(UIResponse.Companion.empty());
                 if (RESULT_NETWORK_ERROR == code) {
                     mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.ERROR));
                     mSpeechInteraction.nlpAnswer("网络出错了！");
