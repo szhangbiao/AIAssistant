@@ -58,7 +58,6 @@ dependencies {
     implementation(libs.timber)
     implementation(libs.utils.core)
     implementation(libs.libpag)
-    implementation(libs.blur.view)
     implementation(libs.datetime)
 
     testImplementation(libs.junit)

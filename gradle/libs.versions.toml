@@ -64,7 +64,6 @@ datetime = { group = "net.danlew", name = "android.joda", version = "2.14.2" }
 
 utils-core = { group = "cn.booslink", name = "android-utils-core", version = "1.0.3" }
 libpag = { group = "com.tencent.tav", name = "libpag", version.ref = "libpag" }
-blur-view = { group = "com.github.Dimezis", name = "BlurView", version = "version-3.2.0" }
 media = { group = "androidx.media", name = "media", version.ref = "media" }
 
 junit = { group = "junit", name = "junit", version.ref = "junit" }

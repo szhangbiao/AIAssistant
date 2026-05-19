@@ -115,7 +115,7 @@ public class EventProcessorImpl implements IEventProcessor {
                         // TODO
                         return;
                     }
-                    mSpeechInteraction.updateQuery(new VoiceQuery("bobo在听，有什么可以帮您~", QueryState.WAKE_UP));
+                    mSpeechInteraction.updateQuery(new VoiceQuery("Bobo在听，有什么可以帮您~", QueryState.WAKE_UP));
                 }
                 break;
             case AIUIConstant.EVENT_PRE_SLEEP: // 准备休眠事件

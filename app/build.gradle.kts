@@ -12,7 +12,7 @@ val systemLabel = "system"
 val channelPub = "pub"
 val channelBjbs = "bjbs"
 val channelVoice = "voice"
-val isDevMode = false
+val isDevMode = true
 val isLogPrint = true
 
 android {
@@ -26,7 +26,7 @@ android {
         minSdk = 19
         targetSdk = 36
         versionCode = 2
-        versionName = "1.0.1"
+        versionName = "1.0.0"
 
         multiDexEnabled = true
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

@@ -6,7 +6,6 @@ import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewOutlineProvider;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -16,8 +15,6 @@ import androidx.annotation.Nullable;
 import cn.booslink.llm.common.R;
 import cn.booslink.llm.common.model.ApkDownload;
 import cn.booslink.llm.common.model.WeatherUI;
-import eightbitlab.com.blurview.BlurTarget;
-import eightbitlab.com.blurview.BlurView;
 
 public class AIInteractionLayout extends LinearLayout {
 
@@ -42,7 +39,6 @@ public class AIInteractionLayout extends LinearLayout {
         setOrientation(LinearLayout.VERTICAL);
         inflateLayout(context);
         initWidgets();
-        setupBlurView();
         showLoading(true);
     }
 
@@ -105,12 +101,7 @@ public class AIInteractionLayout extends LinearLayout {
     }
 
     private void inflateLayout(Context context) {
-        int layoutRes = R.layout.layout_speech_interaction;
-        // 在构造函数中检查硬件加速状态，选择合适的布局
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP && !isHardwareAccelerated()) {
-            layoutRes = R.layout.layout_speech_interaction_unsupport_hardware_accelerate;
-        }
-        LayoutInflater.from(context).inflate(layoutRes, this, true);
+        LayoutInflater.from(context).inflate(R.layout.layout_speech_interaction, this, true);
     }
 
     private void initWidgets() {
@@ -121,19 +112,5 @@ public class AIInteractionLayout extends LinearLayout {
         weatherListLayout = findViewById(R.id.cl_weather_list);
         loadingView = findViewById(R.id.loadingView);
         llWakeup = findViewById(R.id.ll_wakeup);
-    }
-
-    private void setupBlurView() {
-        BlurView blurView = findViewById(R.id.blurView);
-        BlurTarget blurTarget = findViewById(R.id.blurTarget);
-        if (blurView == null || blurTarget == null) return;
-        float radius = 20f; // 15f gives good medium blur effect
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT_WATCH) {
-            blurView.setOutlineProvider(ViewOutlineProvider.BACKGROUND);
-            blurView.setClipToOutline(true);
-        }
-        blurView.setupWith(blurTarget)
-                //.setFrameClearDrawable(windowBackground) // Optional. Useful when your root has a lot of transparent background, which results in semi-transparent blurred content. This will make the background opaque
-                .setBlurRadius(radius);
     }
 }
