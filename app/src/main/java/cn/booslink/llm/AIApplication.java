@@ -52,7 +52,7 @@ public class AIApplication extends Application implements Configuration.Provider
     @Override
     public void onCreate() {
         super.onCreate();
-        if (mDeviceInfo.isDevMode()) {
+        if (mDeviceInfo.getLogSwitch()) {
             Timber.plant(new Timber.DebugTree());
         }
         Timber.tag(TAG).d("onCreate");

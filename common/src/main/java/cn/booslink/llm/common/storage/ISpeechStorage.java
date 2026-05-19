@@ -1,9 +1,9 @@
 package cn.booslink.llm.common.storage;
 
 public interface ISpeechStorage {
-    boolean shouldShowLeaveConfirm(int type);
+    boolean shouldShowLeaveConfirm();
 
-    void setShowLeaveConfirm(int type, boolean show);
+    void setShowLeaveConfirm(boolean show);
 
     long getLastUpdateCheckTime();
 

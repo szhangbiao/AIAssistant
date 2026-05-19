@@ -28,13 +28,13 @@ public class SpeechStorageImpl implements ISpeechStorage {
     }
 
     @Override
-    public boolean shouldShowLeaveConfirm(int type) {
-        return mPrefs.getBoolean(KEY_SHOW_LEAVE_CONFIRM + type, true);
+    public boolean shouldShowLeaveConfirm() {
+        return mPrefs.getBoolean(KEY_SHOW_LEAVE_CONFIRM, true);
     }
 
     @Override
-    public void setShowLeaveConfirm(int type, boolean show) {
-        mEditor.putBoolean(KEY_SHOW_LEAVE_CONFIRM + type, show).apply();
+    public void setShowLeaveConfirm(boolean show) {
+        mEditor.putBoolean(KEY_SHOW_LEAVE_CONFIRM, show).apply();
     }
 
     @Override

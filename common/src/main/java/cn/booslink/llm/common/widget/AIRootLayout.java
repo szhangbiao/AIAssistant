@@ -194,10 +194,9 @@ public class AIRootLayout extends ConstraintLayout {
                 llInteraction.showWeatherList(weatherUI);
                 break;
             case SLEEP:
-                int sleepType = response.getSleepType() != null ? response.getSleepType() : 0;
+                //int sleepType = response.getSleepType() != null ? response.getSleepType() : 0;
                 llInteraction.setVisibility(View.GONE);
                 flLeave.setVisibility(View.VISIBLE);
-                flLeave.updateByType(sleepType);
             default:
                 break;
         }

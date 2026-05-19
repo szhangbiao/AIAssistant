@@ -222,8 +222,9 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
             Weather weather = response.getWeathers().get(0);
             mEmoteStateLiveData.postValue(WeatherExtKt.getEmoteState(weather));
         } else if (response.getCategory() == Category.SLEEP) {
-            int sleepType = response.getSleepType() != null ? response.getSleepType() : 0;
-            mEmoteStateLiveData.postValue(sleepType == 0 ? EmoteState.CRYING : EmoteState.NORMAL);
+//            int sleepType = response.getSleepType() != null ? response.getSleepType() : 0;
+//            mEmoteStateLiveData.postValue(sleepType == 0 ? EmoteState.CRYING : EmoteState.NORMAL);
+            mEmoteStateLiveData.postValue(EmoteState.NORMAL);
         }
     }
 

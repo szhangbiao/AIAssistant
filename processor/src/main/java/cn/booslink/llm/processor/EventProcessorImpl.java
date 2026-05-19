@@ -131,7 +131,7 @@ public class EventProcessorImpl implements IEventProcessor {
                     return;
                 }
                 if (!isNetworkConnected) return;
-                boolean showLeaveConfirm = mSpeechStorage.shouldShowLeaveConfirm(sleepType);
+                boolean showLeaveConfirm = mSpeechStorage.shouldShowLeaveConfirm();
                 if (showLeaveConfirm) {
                     mSpeechInteraction.semanticAnswer(UIResponse.Companion.withSleep(sleepType));
                 } else {

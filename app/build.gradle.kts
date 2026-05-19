@@ -12,7 +12,8 @@ val systemLabel = "system"
 val channelPub = "pub"
 val channelBjbs = "bjbs"
 val channelVoice = "voice"
-val isDevMode = true
+val isDevMode = false
+val isLogPrint = true
 
 android {
     namespace = "cn.booslink.llm"
@@ -34,6 +35,7 @@ android {
             abiFilters += if (isDevMode) listOf("armeabi", "armeabi-v7a", "arm64-v8a", "x86", "x86_64") else listOf("armeabi-v7a", "arm64-v8a")
         }
         buildConfigField("Boolean", "DEBUG_MODE", isDevMode.toString())
+        buildConfigField("Boolean", "LOG_SWITCH", isLogPrint.toString())
     }
 
     buildFeatures {

@@ -31,7 +31,8 @@ public class AppModule {
         String versionName = ContextUtils.getVersionName(context);
         int versionCode = ContextUtils.getVersionCode(context);
         boolean isDevMode = BuildConfig.DEBUG_MODE;
-        return new DeviceInfo(isDevMode, isSystemApp, appName, pkgName, versionName, versionCode, Channel.fromChannel(channel));
+        boolean logSwitch = BuildConfig.LOG_SWITCH;
+        return new DeviceInfo(isDevMode, logSwitch, isSystemApp, appName, pkgName, versionName, versionCode, Channel.fromChannel(channel));
     }
 
     @Singleton
