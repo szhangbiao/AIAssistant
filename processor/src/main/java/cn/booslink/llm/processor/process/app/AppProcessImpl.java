@@ -127,6 +127,7 @@ public class AppProcessImpl implements IAppProcess {
     }
 
     private void findMatchApp(AIUIIntent intent, String appName) {
+        Timber.tag(TAG).d("findMatchApp, intent = %s, name = %s", intent, appName);
         Disposable disposable = mAppRepository.getAppSummaryList()
                 .flatMap((Function<List<AppSummary>, SingleSource<PkgInfo>>)
                         appSummaries -> Observable.fromIterable(appSummaries)
@@ -154,6 +155,7 @@ public class AppProcessImpl implements IAppProcess {
     }
 
     private boolean populateAppInstalledWithSummary(AIUIIntent intent, AppSummary summary) {
+        Timber.tag(TAG).d("populateAppInstalledWithSummary, intent = %s, package name = %s", intent, summary.getPkgName());
         String foregroundPkgName = PkgUtils.getForegroundPkgName(mContext);
         if (foregroundPkgName.equals(summary.getPkgName())) return true;
         AppInfo appInfo = PkgUtils.getAppInfo(mContext, summary.getPkgName());
@@ -202,6 +204,7 @@ public class AppProcessImpl implements IAppProcess {
     }
 
     private void populateAppDownload(PkgInfo pkgInfo) {
+        Timber.tag(TAG).d("populateAppDownload, package name = %s", pkgInfo.getPkgName());
         if (pkgInfo.isDownloaded()) {
             ApkInfo apkInfo = PkgUtils.getApkInfoByFile(mContext, new File(pkgInfo.getLocalPath()));
             if (apkInfo != null) {
@@ -231,6 +234,7 @@ public class AppProcessImpl implements IAppProcess {
     }
 
     private void populateAppInstall(PkgInfo pkgInfo) {
+        Timber.tag(TAG).d("populateAppInstall, package name = %s", pkgInfo.getPkgName());
         IAppManager downloadManager = mAppManagerLazy.get();
         if (downloadManager == null) return;
         if (downloadManager.isPkgDownloading() || downloadManager.isPkgInstalling()) {
@@ -270,6 +274,7 @@ public class AppProcessImpl implements IAppProcess {
     }
 
     private void populateAppLaunchWithPkgInfo(PkgInfo pkgInfo, @Nullable Intent intent) {
+        Timber.tag(TAG).d("populateAppLaunchWithPkgInfo, package name = %s", pkgInfo.getPkgName());
         if (pkgInfo.isIgnore()) return;
         IAppManager downloadManager = mAppManagerLazy.get();
         if (downloadManager == null) return;
@@ -315,7 +320,7 @@ public class AppProcessImpl implements IAppProcess {
         }
     }
 
-    private void populateWakeupAfterAppInstall(){
+    private void populateWakeupAfterAppInstall() {
         ISpeechAgent speechAgent = mSpeechAgentLazy.get();
         if (speechAgent == null) return;
         speechAgent.sendMessage(new AIUIMessage(AIUIConstant.CMD_WAKEUP, 0, 0, null, null));

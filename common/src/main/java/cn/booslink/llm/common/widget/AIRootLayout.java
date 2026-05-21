@@ -188,7 +188,7 @@ public class AIRootLayout extends ConstraintLayout {
         switch (response.getCategory()) {
             case WEATHER:
                 if (response.getWeathers() == null) return;
-                WeatherUI weatherUI = WeatherUI.Companion.fromWeatherList(response.getWeathers());
+                WeatherUI weatherUI = WeatherUI.Companion.fromWeatherList(response.getQueryDate(), response.getWeathers());
                 flLeave.setVisibility(View.GONE);
                 llInteraction.setVisibility(View.VISIBLE);
                 llInteraction.showWeatherList(weatherUI);
@@ -196,6 +196,10 @@ public class AIRootLayout extends ConstraintLayout {
             case SLEEP:
                 //int sleepType = response.getSleepType() != null ? response.getSleepType() : 0;
                 llInteraction.setVisibility(View.GONE);
+                if (pagLoading != null && pagLoading.getVisibility() == View.VISIBLE) {
+                    pagLoading.setVisibility(View.GONE);
+                    pagLoading.pause();
+                }
                 flLeave.setVisibility(View.VISIBLE);
             default:
                 break;

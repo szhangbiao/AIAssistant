@@ -27,8 +27,6 @@
         android:layout_marginStart="48dp"
         android:layout_marginBottom="24dp"
         android:background="@drawable/bg_button_negative"
-        android:clickable="true"
-        android:focusable="true"
         android:text="@string/leave_button_negative"
         android:textColor="#1D2543"
         android:textSize="26sp" />
@@ -41,8 +39,6 @@
         android:layout_marginEnd="48dp"
         android:layout_marginBottom="24dp"
         android:background="@drawable/bg_button_positive"
-        android:clickable="true"
-        android:focusable="true"
         android:text="@string/leave_button_positive"
         android:textColor="@android:color/white"
         android:textSize="26sp" />

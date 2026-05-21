@@ -5,6 +5,7 @@ import cn.booslink.llm.common.model.enums.Category
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
 import com.google.gson.reflect.TypeToken
+import java.util.Collections
 
 data class CBMSemantic(
     val answer: Answer?,
@@ -32,7 +33,8 @@ data class CBMSemantic(
             when (val categoryEnum: Category = Category.fromString(category)) {
                 Category.WEATHER -> {
                     val weatherList = gson.fromJson<List<Weather>>(resultJson, object : TypeToken<List<Weather>>() {}.type)
-                    UIResponse.weatherData(categoryEnum, weatherList)
+                    Collections.swap(weatherList, 0, 1)
+                    UIResponse.weatherData(categoryEnum, semantic?.firstOrNull(), weatherList)
                 }
                 Category.CONTROL, Category.MUSIC, Category.APP, Category.VIDEO, Category.VIDEO_ENHANCE, Category.KSONG, Category.PAGE_CONTROL -> UIResponse.withCategory(categoryEnum)
                 else -> UIResponse.empty()

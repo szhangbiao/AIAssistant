@@ -76,6 +76,7 @@ public class ConfigRepositoryImpl implements IConfigRepository {
             AIUIConfig config = mGson.fromJson(configJson, AIUIConfig.class);
             config.fixIvwResourcePath(mContext);
             config.updateLogConfig(mDeviceInfo.getLogSwitch());
+            config.updateGlobalScene(mDeviceInfo.isDevMode());
             LoginConfig loginConfig = new LoginConfig(APP_ID, APP_KEY, API_SECRET);
             File vtnFile = new File(config.getIvw().getResPath());
             if (!vtnFile.exists()) {

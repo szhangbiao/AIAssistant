@@ -21,8 +21,11 @@ import cn.booslink.llm.processor.process.music.IMusicProcess;
 import cn.booslink.llm.processor.process.video.IVideoProcess;
 import cn.booslink.llm.processor.process.volume.IVolumeProcess;
 import dagger.hilt.android.qualifiers.ApplicationContext;
+import timber.log.Timber;
 
 public class IntentProcessProxy implements IIntentProcess {
+
+    private static final String TAG = "IntentProcess";
 
     private final Context mContext;
     private final IAppProcess mAppProcess;
@@ -48,6 +51,7 @@ public class IntentProcessProxy implements IIntentProcess {
     @Override
     public VoiceResult processIntent(Category category, @Nullable List<Semantic> semantics) {
         if (semantics == null || semantics.isEmpty()) return VoiceResult.Companion.failure();
+        Timber.tag(TAG).d("processIntent, semantic count = %d", semantics.size());
         for (Semantic semantic : semantics) {
             VoiceResult handleResult = processIntent(category, semantic);
             if (handleResult.getHandled()) {

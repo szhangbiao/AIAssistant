@@ -190,7 +190,7 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
                 break;
             case DONE:
                 UIResponse response = mUIResponseLiveData.getValue();
-                if (response != null && !response.isEmpty()) return;
+                if (response != null && !response.isWeatherEmpty()) return;
                 mEmoteStateLiveData.postValue(EmoteState.LAUGHING);
                 break;
             case FAILED:
@@ -210,20 +210,25 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
     public void nlpAnswer(String nlpReply) {
         if (TextUtils.isEmpty(nlpReply)) return;
         UIResponse response = mUIResponseLiveData.getValue();
-        if (response != null && !response.isEmpty()) return;
+        if (response != null && !response.isWeatherEmpty()) return;
         mNplResponseLiveData.postValue(nlpReply);
     }
 
     @Override
     public void semanticAnswer(UIResponse response) {
-        mUIResponseLiveData.postValue(response);
+        Timber.tag(TAG).d("semanticAnswer, category = %s", response.getCategory());
         if (response.getCategory() == Category.WEATHER) {
-            if (response.getWeathers() == null || response.getWeathers().isEmpty()) return;
+            if (response.getWeathers() == null || response.getWeathers().isEmpty() || response.queryWeatherInvalid()) {
+                Timber.tag(TAG).d("weather invalid");
+                nlpAnswer("未找到相关内容");
+                mEmoteStateLiveData.postValue(EmoteState.CRYING);
+                return;
+            }
+            mUIResponseLiveData.postValue(response);
             Weather weather = response.getWeathers().get(0);
             mEmoteStateLiveData.postValue(WeatherExtKt.getEmoteState(weather));
         } else if (response.getCategory() == Category.SLEEP) {
-//            int sleepType = response.getSleepType() != null ? response.getSleepType() : 0;
-//            mEmoteStateLiveData.postValue(sleepType == 0 ? EmoteState.CRYING : EmoteState.NORMAL);
+            mUIResponseLiveData.postValue(response);
             mEmoteStateLiveData.postValue(EmoteState.NORMAL);
         }
     }

@@ -106,7 +106,9 @@ public class AppManagerImpl implements IAppManager {
 
     @Override
     public boolean isPkgDownloading() {
-        return !mApkDownloadMap.isEmpty() && mDownloadingTask != null && OkDownload.with().downloadDispatcher().isRunning(mDownloadingTask);
+        boolean isDownloading = !mApkDownloadMap.isEmpty() && mDownloadingTask != null && OkDownload.with().downloadDispatcher().isRunning(mDownloadingTask);
+        Timber.tag(TAG).d("isPkgDownloading = %b", isDownloading);
+        return isDownloading;
     }
 
     @Override

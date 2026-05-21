@@ -168,12 +168,9 @@ public class EventProcessorImpl implements IEventProcessor {
                 int code = event.arg1;
                 Timber.tag(TAG).d("error code = %d, info = %s", code, event.info);
                 mSpeechInteraction.semanticAnswer(UIResponse.Companion.empty());
-                if (RESULT_NETWORK_ERROR == code) {
+                if (RESULT_NETWORK_ERROR == code || RESULT_NETWORK_TIMEOUT == code) {
                     mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.ERROR));
-                    mSpeechInteraction.nlpAnswer("网络出错了！");
-                } else if (RESULT_NETWORK_TIMEOUT == code) {
-                    mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.ERROR));
-                    mSpeechInteraction.nlpAnswer("网络连接超时了！");
+                    mSpeechInteraction.nlpAnswer("网络出现错误");
                 }
                 break;
         }
@@ -243,6 +240,7 @@ public class EventProcessorImpl implements IEventProcessor {
             Timber.tag(TAG).d("processSemanticData, category = %s", cbmSemantic.getCategory());
             try {
                 UIResponse response = cbmSemantic.getResponse(mGson);
+                mEventData.setSemanticHandled(!response.isWeatherEmpty());
                 eventData.setResponse(response);
             } catch (JsonSyntaxException e) {
                 Timber.tag(TAG).e(e, "Parse semantic result failed");
@@ -269,18 +267,18 @@ public class EventProcessorImpl implements IEventProcessor {
                     break;
                 case 1:
                     mNplBuilder.append(data.getNlp().getText());
-                    //Timber.tag(TAG).d("nlp, content = %s", data.getNlp().getText());
-                    if (mEventData.getResponse() != null && !mEventData.getResponse().isSemanticEmpty() && mEventData.getSemanticHandled()) return;
+                    Timber.tag(TAG).d("nlp, content = %s, semanticHandled = %b", data.getNlp().getText(), mEventData.getSemanticHandled());
+                    if (data.getTag() != AIUITag.LAUNCH && mEventData.getSemanticHandled()) return;
                     mSpeechInteraction.nlpAnswer(mNplBuilder.toString());
                     if (data.getTag() == AIUITag.LAUNCH) return;
                     mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.DONE));
                     break;
                 case 2:
                     String nplContent = mNplBuilder.toString();
-                    //Timber.tag(TAG).d("nlp, content = %s", nplContent);
+                    Timber.tag(TAG).d("nlp, content = %s, semanticHandled = %b", nplContent, mEventData.getSemanticHandled());
                     mNplBuilder.delete(0, mNplBuilder.length());
                     mEventData = mEventData.copyNlp(data.getNlp());
-                    if (mEventData.getResponse() != null && !mEventData.getResponse().isSemanticEmpty() && mEventData.getSemanticHandled()) return;
+                    if (data.getTag() != AIUITag.LAUNCH && mEventData.getSemanticHandled()) return;
                     mSpeechInteraction.nlpAnswer(nplContent);
                     if (data.getTag() == AIUITag.LAUNCH || TextUtils.isEmpty(nplContent)) return;
                     mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.DONE));
@@ -300,7 +298,9 @@ public class EventProcessorImpl implements IEventProcessor {
             CBMSemantic cbmSemantic = data.getCbmSemantic().getText();
             if (cbmSemantic != null && cbmSemantic.getSemantic() != null) {
                 VoiceResult voiceResult = mIntentProcess.processIntent(data.getResponse().getCategory(), cbmSemantic.getSemantic());
-                mEventData.setSemanticHandled(voiceResult.getHandled());
+                if (data.getResponse().isWeatherEmpty()) {
+                    mEventData.setSemanticHandled(voiceResult.getHandled());
+                }
                 if (cbmSemantic.getSemantic().isEmpty()) return;
                 Timber.tag(TAG).d("cbm semantic category = %s, intent = %s", data.getResponse().getCategory(), cbmSemantic.getSemantic().get(0).getIntent());
             }
@@ -375,7 +375,7 @@ public class EventProcessorImpl implements IEventProcessor {
                 .subscribe(networkStatus -> {
                     Timber.tag(TAG).d("Network changed, status = %s", networkStatus);
                     ISpeechAgent speechAgent = mSpeechAgentLazy.get();
-                    if (speechAgent == null || !speechAgent.isAIUIWorking()) return;
+                    if (speechAgent == null || !speechAgent.isAIUIReady()) return;
                     boolean isConnect = networkStatus == NetworkStatus.CONNECTED;
                     if (isConnect) {
                         mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.DONE));
@@ -383,7 +383,7 @@ public class EventProcessorImpl implements IEventProcessor {
                         wakeupNetworkResumeOrDownloadContinue();
                     } else {
                         mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.ERROR));
-                        mSpeechInteraction.nlpAnswer("网络断开连接了！");
+                        mSpeechInteraction.nlpAnswer("网络出现错误");
                     }
                 });
     }

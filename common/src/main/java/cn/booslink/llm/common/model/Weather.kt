@@ -2,6 +2,7 @@ package cn.booslink.llm.common.model
 
 import com.google.gson.annotations.SerializedName
 import org.joda.time.DateTime
+import org.joda.time.Days
 import java.util.Locale
 
 /**
@@ -110,15 +111,33 @@ data class Weather(
     }
 }
 
-data class WeatherUI(val current: Weather?, val day1: Weather?, val day2: Weather?, val day3: Weather?, val day4: Weather?) {
+data class WeatherUI(val fiveWeather: List<Weather>) {
+
+    val current: Weather? = fiveWeather.firstOrNull()
+    val day1: Weather? = fiveWeather.getOrNull(1)
+    val day2: Weather? = fiveWeather.getOrNull(2)
+    val day3: Weather? = fiveWeather.getOrNull(3)
+    val day4: Weather? = fiveWeather.getOrNull(4)
+
     companion object {
-        fun fromWeatherList(weatherList: List<Weather>): WeatherUI {
-            val current = weatherList.firstOrNull()
-            val day1 = weatherList.getOrNull(2)
-            val day2 = weatherList.getOrNull(3)
-            val day3 = weatherList.getOrNull(4)
-            val day4 = weatherList.getOrNull(5)
-            return WeatherUI(current, day1, day2, day3, day4)
+        fun fromWeatherList(voiceDate: String?, weatherList: List<Weather>): WeatherUI {
+            val firstIndex: Int =
+                weatherList.firstOrNull { weather -> voiceDate?.equals(weather.date?.toString("yyyy-MM-dd")) == true }
+                    ?.let { weatherList.indexOf(it) } ?: 0
+            val fiveDayWeather: List<Weather> = if (firstIndex > weatherList.size - 5) {
+                val tailFive = weatherList.takeLast(5).toMutableList();
+                val matchItem: Weather = weatherList[firstIndex]
+                val targetIndex = tailFive.indexOf(matchItem)
+                if (targetIndex != -1) {
+                    val target = tailFive.removeAt(targetIndex)
+                    listOf(target) + tailFive
+                } else {
+                    tailFive
+                }
+            } else {
+                weatherList.slice(firstIndex until (firstIndex + 5))
+            }
+            return WeatherUI(fiveDayWeather)
         }
     }
 }

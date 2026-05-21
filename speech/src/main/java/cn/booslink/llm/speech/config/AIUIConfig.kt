@@ -47,8 +47,12 @@ data class AIUIConfig(
         }
     }
 
-    fun updateLogConfig(isDevMode: Boolean) {
-        log.debugLog = if (isDevMode) "1" else "0"
+    fun updateLogConfig(logSwitch: Boolean) {
+        log.debugLog = "0"//if (logSwitch) "1" else "0"
+    }
+
+    fun updateGlobalScene(isDevMode: Boolean) {
+        global.scene = if(isDevMode) "test" else "main"
     }
 }
 
@@ -61,7 +65,7 @@ data class LoginConfig(
 )
 
 data class GlobalConfig(
-    val scene: String,
+    var scene: String,
     @SerializedName("clean_dialog_history")
     val cleanDialogHistory: String,
     @SerializedName("aiui_ver")

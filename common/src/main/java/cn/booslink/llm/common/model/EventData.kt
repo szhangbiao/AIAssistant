@@ -3,7 +3,15 @@ package cn.booslink.llm.common.model
 import cn.booslink.llm.common.model.enums.AIUITag
 import cn.booslink.llm.common.model.enums.CBMSub
 import cn.booslink.llm.common.model.enums.Category
+import com.google.gson.JsonParser
 import com.google.gson.annotations.SerializedName
+import org.joda.time.DateTime
+import org.joda.time.Days
+import org.joda.time.format.DateTimeFormat
+import org.joda.time.format.DateTimeFormatter
+import org.joda.time.format.ISODateTimeFormat
+import java.util.regex.Matcher
+import java.util.regex.Pattern
 
 data class EventData(
     var id: String?,
@@ -32,7 +40,7 @@ data class EventData(
         EventData(id, text, event, cbmTidy, cbmSemantic, cbmToolPK, nlp, sub, tag, response, semanticHandled)
 
     fun copySemantic(cbmSemantic: SdkResponse<CBMSemantic>, response: UIResponse) =
-        EventData(id, text, event, cbmTidy, cbmSemantic, cbmToolPK, nlp, sub, tag, response, semanticHandled)
+        EventData(id, text, event, cbmTidy, cbmSemantic, cbmToolPK, nlp, sub, tag, response, !response.isWeatherEmpty())
 
     fun copyNlp(nlp: SdkResponse<String>) = EventData(id, text, event, cbmTidy, cbmSemantic, cbmToolPK, nlp, sub, tag, response, semanticHandled)
 }
@@ -78,22 +86,39 @@ data class PKSource(val domain: String?)
 
 data class UIResponse(
     val category: Category,
+    val queryDate: String? = null,
     val weathers: List<Weather>? = null,
     val sleepType: Int? = -1
 ) {
     companion object {
         fun empty() = UIResponse(Category.UNKNOWN)
         fun withCategory(category: Category) = UIResponse(category)
-        fun withSleep(sleepType: Int) = UIResponse(Category.SLEEP, null, sleepType)
-        fun weatherData(category: Category, weathers: List<Weather>?) = UIResponse(category, weathers)
+        fun withSleep(sleepType: Int) = UIResponse(Category.SLEEP, null, null, sleepType)
+        fun weatherData(category: Category, semantic: Semantic?, weathers: List<Weather>?): UIResponse {
+            var queryDate: String? = null
+            if (semantic?.slots?.isNotEmpty() == true) {
+                val dateJson: String? = semantic.slots.firstOrNull { slot -> slot.name == "datetime" }?.normValue
+                val rawDate = dateJson?.let { JsonParser.parseString(it).asJsonObject.get("datetime")?.asString }
+                if (rawDate?.isNotEmpty() == true) {
+                    val pattern: Pattern = Pattern.compile("(\\d{4}-\\d{2}-\\d{2})")
+                    val matcher: Matcher = pattern.matcher(rawDate)
+                    if (matcher.find()) {
+                        queryDate = matcher.group(1)
+                    }
+                }
+            }
+            return UIResponse(category, queryDate, weathers)
+        }
     }
 
-    fun isEmpty(): Boolean {
+    fun isWeatherEmpty(): Boolean {
         return weathers == null || weathers.isEmpty()
     }
 
-    fun isSemanticEmpty(): Boolean {
-        return category == Category.UNKNOWN
+    fun queryWeatherInvalid(): Boolean {
+        if (queryDate.isNullOrEmpty() || isWeatherEmpty()) return true
+        val dateTime: DateTime = DateTimeFormat.forPattern("yyyy-MM-dd").parseDateTime(queryDate)
+        return dateTime < weathers?.firstOrNull()?.date || dateTime > weathers?.lastOrNull()?.date
     }
 }
 
