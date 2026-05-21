@@ -6,10 +6,7 @@ import cn.booslink.llm.common.model.enums.Category
 import com.google.gson.JsonParser
 import com.google.gson.annotations.SerializedName
 import org.joda.time.DateTime
-import org.joda.time.Days
 import org.joda.time.format.DateTimeFormat
-import org.joda.time.format.DateTimeFormatter
-import org.joda.time.format.ISODateTimeFormat
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
@@ -117,8 +114,12 @@ data class UIResponse(
 
     fun queryWeatherInvalid(): Boolean {
         if (queryDate.isNullOrEmpty() || isWeatherEmpty()) return true
-        val dateTime: DateTime = DateTimeFormat.forPattern("yyyy-MM-dd").parseDateTime(queryDate)
-        return dateTime < weathers?.firstOrNull()?.date || dateTime > weathers?.lastOrNull()?.date
+        try {
+            val dateTime: DateTime = DateTimeFormat.forPattern("yyyy-MM-dd").parseDateTime(queryDate)
+            return dateTime < weathers?.firstOrNull()?.date || dateTime > weathers?.lastOrNull()?.date
+        } catch (e: IllegalArgumentException) {
+            return true
+        }
     }
 }
 

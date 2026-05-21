@@ -73,7 +73,7 @@ public class VolumeProcessImpl implements IVolumeProcess {
         } else if (newVolume > mMaxVolume) {
             newVolume = mMaxVolume;
         }
-        mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, newVolume, 0);
+        mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, newVolume, AudioManager.FLAG_SHOW_UI);
         Timber.tag(TAG).d("volumeChange, num = %d, volume = %d", volumeNum, getVolume());
         return VoiceResult.Companion.success("已为你" + (volumeNum > 0 ? "增大" : "减小") + "音量");
     }
@@ -84,7 +84,7 @@ public class VolumeProcessImpl implements IVolumeProcess {
             return VoiceResult.Companion.success("当前已是" + (isVolumeMax ? "最大" : "最小") + "音量");
         }
         int targetVolume = isVolumeMax ? mMaxVolume : mMinVolume;
-        mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, targetVolume, 0);
+        mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, targetVolume, AudioManager.FLAG_SHOW_UI);
         Timber.tag(TAG).d("volumeMaxOrMin, volume = %d", getVolume());
         return VoiceResult.Companion.success("已调整音量为" + (isVolumeMax ? "最大" : "最小"));
     }
@@ -96,14 +96,14 @@ public class VolumeProcessImpl implements IVolumeProcess {
                 return VoiceResult.Companion.success("当前已是静音");
             }
             // For STREAM_MUSIC, mute means setting volume to 0
-            mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 0, 0);
+            mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 0, AudioManager.FLAG_SHOW_UI);
         } else {
             // Unmute - restore to a reasonable volume (50% of max)
             if (currentVolume != mMinVolume) {
                 return VoiceResult.Companion.success("当前不是静音状态");
             }
             int restoreVolume = mMaxVolume / 2;
-            mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, restoreVolume, 0);
+            mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, restoreVolume, AudioManager.FLAG_SHOW_UI);
         }
         Timber.tag(TAG).d("volumeMuteOrUnmute, volume = %d", getVolume());
         return VoiceResult.Companion.success(isMute ? "已静音" : "已解除静音");

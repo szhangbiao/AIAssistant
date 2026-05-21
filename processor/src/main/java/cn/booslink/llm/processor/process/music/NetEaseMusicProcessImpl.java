@@ -34,6 +34,10 @@ public class NetEaseMusicProcessImpl implements IMusicProcess {
 
     @Override
     public VoiceResult handleMusicIntent(String foregroundPkgName, AIUIIntent aiuiIntent, @NotNull List<Slot> slots) {
+        boolean isNetEaseStartup = NETEASE_PACKAGE_NAME.equals(foregroundPkgName);
+        if ((aiuiIntent == AIUIIntent.RANDOM_SEARCH || aiuiIntent == AIUIIntent.PLAY) && isNetEaseStartup) {
+            return VoiceResult.Companion.success("当前已处于应用内");
+        }
         switch (aiuiIntent) {
             case RANDOM_SEARCH:
                 mAppProcess.launchAppWithIntent(NETEASE_PACKAGE_NAME, null);

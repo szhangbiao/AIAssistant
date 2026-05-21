@@ -221,7 +221,7 @@ public class EventProcessorImpl implements IEventProcessor {
             String cntJsonRaw = new String(bytes, StandardCharsets.UTF_8);
             String tag = event.data.getString(KEY_TAG);
             String streamId = event.data.getString(KEY_STREAM_ID);
-            //Timber.tag(TAG).d("parseEventData, cnt json = %s", cntJsonRaw);
+            Timber.tag(TAG).d("parseEventData, cnt json = %s", cntJsonRaw);
             EventData data = mGson.fromJson(cntJsonRaw, EventData.class);
             data.setId(streamId);
             data.setTag(AIUITag.fromTag(tag));

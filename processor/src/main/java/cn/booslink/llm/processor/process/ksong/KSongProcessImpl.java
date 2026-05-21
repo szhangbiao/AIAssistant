@@ -115,7 +115,7 @@ public class KSongProcessImpl implements IKSongProcess {
                 mAppProcess.launchAppWithIntent(BOOSLINK_QM_PACKAGE_NAME, launchIntent);
                 return VoiceResult.Companion.progress();
             } else if (intent == AIUIIntent.RANDOM_KSONG) {
-                return VoiceResult.Companion.success("当前正处于唱歌类应用");
+                return VoiceResult.Companion.success("当前已处于应用内");
             }
         }
         Intent actionIntent = getActualIntent(foregroundPkgName, intent, slots);

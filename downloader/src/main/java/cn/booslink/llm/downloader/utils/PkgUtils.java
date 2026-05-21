@@ -69,41 +69,6 @@ public class PkgUtils {
         return null;
     }
 
-    public static AppInfo getAppInfo2(Context context, String pkgName) {
-        List<ResolveInfo> allApps = getAllApps(context);
-        if (!allApps.isEmpty()) {
-            for (ResolveInfo info : allApps) {
-                if (info.activityInfo.packageName.equals(pkgName)) {
-                    return getAppInfo(context, info);
-                }
-            }
-        }
-        return null;
-    }
-
-    private static AppInfo getAppInfo(Context context, ResolveInfo res) {
-        String launchActivity = res.activityInfo.name;
-        String pkgName = res.activityInfo.packageName;
-        String appName = res.loadLabel(context.getPackageManager()).toString();
-        int versionCode = 0;
-        String versionName = "";
-        try {
-            PackageInfo packageInfo = context.getPackageManager().getPackageInfo(pkgName, 0);
-            versionCode = packageInfo.versionCode;
-            versionName = packageInfo.versionName;
-        } catch (PackageManager.NameNotFoundException e) {
-            Timber.tag(TAG).e(e, "get app info error");
-        }
-        return new AppInfo(pkgName, appName, versionName, versionCode, launchActivity);
-    }
-
-    private static List<ResolveInfo> getAllApps(Context context) {
-        Intent appIntent = new Intent("android.intent.action.MAIN");
-        appIntent.setAction("android.intent.action.MAIN");
-        appIntent.addCategory("android.intent.category.LAUNCHER");
-        return context.getPackageManager().queryIntentActivities(appIntent, 0);
-    }
-
     public static AppInfo getAppInfo(Context context, String pkgName) {
         try {
             PackageManager pm = context.getPackageManager();
