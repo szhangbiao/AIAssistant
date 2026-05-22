@@ -202,7 +202,7 @@ public class EventProcessorImpl implements IEventProcessor {
         mEventDisposable = Flowable.create((FlowableOnSubscribe<AIUIEvent>) emitter -> {
                     mEventEmitter = emitter;
                     isSubscriptionActive = true;
-                }, BackpressureStrategy.LATEST)
+                }, BackpressureStrategy.BUFFER)
                 .map(this::parseEventData)
                 .map(this::processSemanticData)
                 .compose(RxUtil.flowableOnIO())
@@ -279,7 +279,12 @@ public class EventProcessorImpl implements IEventProcessor {
                     mNplBuilder.delete(0, mNplBuilder.length());
                     mEventData = mEventData.copyNlp(data.getNlp());
                     if (data.getTag() != AIUITag.LAUNCH && mEventData.getSemanticHandled()) return;
-                    mSpeechInteraction.nlpAnswer(nplContent);
+                    if (!TextUtils.isEmpty(nplContent)) {
+                        mSpeechInteraction.nlpAnswer(nplContent);
+                    } else {
+                        mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.EMPTY));
+                        mSpeechInteraction.nlpAnswer("未找到相关内容");
+                    }
                     if (data.getTag() == AIUITag.LAUNCH || TextUtils.isEmpty(nplContent)) return;
                     mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.DONE));
                     break;
@@ -378,6 +383,7 @@ public class EventProcessorImpl implements IEventProcessor {
                     if (speechAgent == null || !speechAgent.isAIUIReady()) return;
                     boolean isConnect = networkStatus == NetworkStatus.CONNECTED;
                     if (isConnect) {
+                        if (!speechAgent.isAIUIWorking()) return;
                         mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.DONE));
                         mSpeechInteraction.nlpAnswer("网络恢复了");
                         wakeupNetworkResumeOrDownloadContinue();

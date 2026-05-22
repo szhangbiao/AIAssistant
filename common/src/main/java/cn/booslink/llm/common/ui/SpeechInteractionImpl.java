@@ -189,8 +189,6 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
                 mEmoteStateLiveData.postValue(EmoteState.THINKING);
                 break;
             case DONE:
-                UIResponse response = mUIResponseLiveData.getValue();
-                if (response != null && !response.isWeatherEmpty()) return;
                 mEmoteStateLiveData.postValue(EmoteState.LAUGHING);
                 break;
             case FAILED:
@@ -209,8 +207,6 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
     @Override
     public void nlpAnswer(String nlpReply) {
         if (TextUtils.isEmpty(nlpReply)) return;
-        UIResponse response = mUIResponseLiveData.getValue();
-        if (response != null && !response.isWeatherEmpty()) return;
         mNplResponseLiveData.postValue(nlpReply);
     }
 

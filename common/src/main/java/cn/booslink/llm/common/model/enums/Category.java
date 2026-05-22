@@ -3,8 +3,9 @@ package cn.booslink.llm.common.model.enums;
 public enum Category {
     UNKNOWN(""),
     APP("IFLYTEK.app"),
+    APP_PLUS("BOOSLINK.app_plus"),
     WEATHER("IFLYTEK.weather"),
-    MUSIC("IFLYTEK.musicX"),
+    MUSIC("BOOSLINK.music"),
     VIDEO("IFLYTEK.video@2"),
     VIDEO_ENHANCE("BOOSLINK.video_control"),
     DRAMA("IFLYTEK.drama"),

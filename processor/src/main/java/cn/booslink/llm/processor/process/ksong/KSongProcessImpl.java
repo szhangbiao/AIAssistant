@@ -44,6 +44,7 @@ public class KSongProcessImpl implements IKSongProcess {
     private static final String PAGE_RECENT = "最近播放";
     private static final String PAGE_LOCAL = "本地";
     private static final String PAGE_FREQUENT = "常唱";
+    private static final String PAGE_FREQUENT_2 = "尝尝";
 
     @Inject
     @Named("quanmin")
@@ -95,7 +96,8 @@ public class KSongProcessImpl implements IKSongProcess {
                         intent == AIUIIntent.KSONG_REMOVE ||// 移除点歌
                         intent == AIUIIntent.KSONG_TOP ||// 置顶
                         intent == AIUIIntent.OPEN_SCORE ||// 打开评分
-                        intent == AIUIIntent.CLOSE_SCORE // 关闭评分);
+                        intent == AIUIIntent.CLOSE_SCORE ||// 关闭评分
+                        intent == AIUIIntent.EXIT_APP // 关闭应用
         ));
     }
 
@@ -131,6 +133,7 @@ public class KSongProcessImpl implements IKSongProcess {
         if (songAction == null) return null;
         switch (intent) {
             case EXIT:
+            case EXIT_APP:
                 Intent exitIntent = songAction.exit();
                 if (isEmptyIntent(exitIntent)) {
                     simulateHomePress();
@@ -196,8 +199,7 @@ public class KSongProcessImpl implements IKSongProcess {
         for (Slot slot : slots) {
             if (KEY_ARTIST.equals(slot.getName())) {
                 artist = slot.getValue();
-            }
-            if (KEY_SONG.equals(slot.getName())) {
+            }else if (KEY_SONG.equals(slot.getName())) {
                 song = slot.getValue();
             }
         }
@@ -258,6 +260,7 @@ public class KSongProcessImpl implements IKSongProcess {
                     case PAGE_LOCAL:
                         return songAction.openLocal();
                     case PAGE_FREQUENT:
+                    case PAGE_FREQUENT_2:
                         return songAction.openFrequent();
                 }
             }

@@ -79,6 +79,8 @@ public class IntentProcessProxy implements IIntentProcess {
         }
         switch (intent) {
             case EXIT:
+            case EXIT_AGENT:
+            case SETTING_CLOSE:
                 mControlProcess.speechSleep();
                 return VoiceResult.Companion.success("好的");
         }

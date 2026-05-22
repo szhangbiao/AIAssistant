@@ -82,7 +82,7 @@ public class VideoProcessImpl implements IVideoProcess {
                         intent == AIUIIntent.CLARITY_DOWN || intent == AIUIIntent.CLARITY_UP || intent == AIUIIntent.CHANGE_CLARITY || //  切换清晰度
                         intent == AIUIIntent.FAVORITE_REMOVE || intent == AIUIIntent.FAVORITE_ADD || // 收藏/取消收藏
                         intent == AIUIIntent.CLOSE_DANMU || intent == AIUIIntent.OPEN_DANMU // 开启/关闭弹幕
-        ));
+        )) || (isAppOpened && category == Category.APP_PLUS && intent == AIUIIntent.EXIT_APP);
     }
 
     @Override
@@ -125,6 +125,7 @@ public class VideoProcessImpl implements IVideoProcess {
         IVideoAction videoAction = getVideoActionByPkgName(foregroundPkgName);
         switch (intent) {
             case EXIT:
+            case EXIT_APP:
                 return videoAction.exitApp();
             case QUERY:
                 return populateActionInApp(slots);

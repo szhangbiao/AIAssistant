@@ -40,6 +40,7 @@ public class VolumeProcessImpl implements IVolumeProcess {
                 intent == AIUIIntent.VOLUME_MIN ||
                 intent == AIUIIntent.VOLUME_PLUS ||
                 intent == AIUIIntent.VOLUME_MINUS ||
+                intent == AIUIIntent.VOLUME_SET ||
                 intent == AIUIIntent.MUTE ||
                 intent == AIUIIntent.UNMUTE
         );
@@ -55,11 +56,18 @@ public class VolumeProcessImpl implements IVolumeProcess {
             case VOLUME_MINUS:
                 int volumeNum = slots != null && !slots.isEmpty() ? parseSlotValue(slots) : 1;
                 return volumeChange(intent == AIUIIntent.VOLUME_PLUS ? volumeNum : -volumeNum);
+            case VOLUME_SET:
+                int setNum = slots != null && !slots.isEmpty() ? parseSlotValue(slots) : 1;
+                return volumeSet(setNum);
             case MUTE:
             case UNMUTE:
                 return volumeMuteOrUnmute(intent == AIUIIntent.MUTE);
         }
         return VoiceResult.Companion.failure();
+    }
+
+    private VoiceResult volumeSet(int setNum) {
+        return null;
     }
 
     private VoiceResult volumeChange(int volumeNum) {
