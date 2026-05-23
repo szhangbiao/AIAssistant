@@ -33,6 +33,7 @@ public enum AIUIIntent {
     RANDOM_KSONG("RANDOM_KSONG"),
     PLAY("PLAY"),
     QUERY("QUERY"),
+    RECOMMEND("RECOMMEND"),
     RESUME_PLAY("RESUME_PLAY"),
     PAUSE("PAUSE"),
     REPLAY("REPLAY"),

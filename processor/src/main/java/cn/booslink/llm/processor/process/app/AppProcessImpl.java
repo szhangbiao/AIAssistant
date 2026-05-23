@@ -155,7 +155,7 @@ public class AppProcessImpl implements IAppProcess {
     private boolean populateAppInstalledWithSummary(AIUIIntent intent, AppSummary summary) {
         Timber.tag(TAG).d("populateAppInstalledWithSummary, intent = %s, package name = %s", intent, summary.getPkgName());
         String foregroundPkgName = PkgUtils.getForegroundPkgName(mContext);
-        if (TextUtils.equals(summary.getPkgName(), foregroundPkgName)) {
+        if (foregroundPkgName != null && foregroundPkgName.equals(summary.getPkgName())) {
             mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.DONE));
             mSpeechInteraction.nlpAnswer("当前已处于应用内");
             return true;

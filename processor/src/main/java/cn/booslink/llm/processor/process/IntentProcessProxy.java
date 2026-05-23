@@ -54,10 +54,10 @@ public class IntentProcessProxy implements IIntentProcess {
         Timber.tag(TAG).d("processIntent, semantic count = %d", semantics.size());
         for (Semantic semantic : semantics) {
             VoiceResult handleResult = processIntent(category, semantic);
-            if (handleResult.getHandled()) {
+            if (handleResult != null && handleResult.getHandled()) {
                 mSpeechInteraction.nlpAnswer(handleResult.getResponseText());
+                return handleResult;
             }
-            return handleResult;
         }
         return VoiceResult.Companion.failure();
     }

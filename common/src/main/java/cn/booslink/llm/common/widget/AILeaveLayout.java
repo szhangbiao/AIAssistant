@@ -3,8 +3,8 @@ package cn.booslink.llm.common.widget;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
-import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -18,8 +18,8 @@ import dagger.Lazy;
 import dagger.hilt.android.EntryPointAccessors;
 
 public class AILeaveLayout extends FrameLayout {
-    private Button btnPositive;
-    private Button btnNegative;
+    private TextView tvPositive;
+    private TextView tvNegative;
 
     private Lazy<ISpeechAgent> mSpeechAgentLazy;
     private Lazy<ISpeechStorage> mSpeechStorageLazy;
@@ -55,12 +55,12 @@ public class AILeaveLayout extends FrameLayout {
     }
 
     private void initWidgets() {
-        btnPositive = findViewById(R.id.btn_positive);
-        btnNegative = findViewById(R.id.btn_negative);
+        tvPositive = findViewById(R.id.tv_positive);
+        tvNegative = findViewById(R.id.tv_negative);
     }
 
     private void initWidgetListeners() {
-        btnNegative.setOnClickListener(v -> {
+        tvNegative.setOnClickListener(v -> {
             ISpeechInteraction speechInteraction = mSpeechInteractionLazy.get();
             if (speechInteraction == null) return;
             speechInteraction.UISleep();
@@ -68,7 +68,7 @@ public class AILeaveLayout extends FrameLayout {
             if (speechStorage == null) return;
             speechStorage.setShowLeaveConfirm(false);
         });
-        btnPositive.setOnClickListener(v -> {
+        tvPositive.setOnClickListener(v -> {
             ISpeechInteraction speechInteraction = mSpeechInteractionLazy.get();
             if (speechInteraction == null) return;
             speechInteraction.UISleep();

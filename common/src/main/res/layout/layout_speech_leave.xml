@@ -19,26 +19,32 @@
         android:textColor="@android:color/white"
         android:textSize="28sp" />
 
-    <Button
-        android:id="@+id/btn_negative"
+    <TextView
+        android:id="@+id/tv_negative"
         android:layout_width="184dp"
         android:layout_height="60dp"
         android:layout_gravity="bottom"
         android:layout_marginStart="48dp"
         android:layout_marginBottom="24dp"
         android:background="@drawable/bg_button_negative"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:gravity="center"
         android:text="@string/leave_button_negative"
         android:textColor="#1D2543"
         android:textSize="26sp" />
 
-    <Button
-        android:id="@+id/btn_positive"
+    <TextView
+        android:id="@+id/tv_positive"
         android:layout_width="184dp"
         android:layout_height="60dp"
         android:layout_gravity="bottom|end"
         android:layout_marginEnd="48dp"
         android:layout_marginBottom="24dp"
         android:background="@drawable/bg_button_positive"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:gravity="center"
         android:text="@string/leave_button_positive"
         android:textColor="@android:color/white"
         android:textSize="26sp" />

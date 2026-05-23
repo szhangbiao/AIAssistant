@@ -28,6 +28,7 @@ public class KSongProcessImpl implements IKSongProcess {
 
     private static final String TAG = "KSongProcess";
 
+    private static final String BOOSLINK_QM_APP_NAME = "全民K歌";
     private static final String BOOSLINK_QM_PACKAGE_NAME = "cn.booslink.kg";
     private static final String DUO_CHANG_PACKAGE_NAME = "com.evideo.kmbox";
     private static final String QUANMIN_PACKAGE_NAME = "com.tencent.karaoketv";
@@ -35,6 +36,7 @@ public class KSongProcessImpl implements IKSongProcess {
     private static final String SMART_PACKAGE_NAME = "com.huiaichang.sdm.desktop";
     private static final String LEIKA_PACKAGE_NAME = "com.huiaichang.mars.desktop";
 
+    private static final String KEY_NAME = "name";
     private static final String KEY_NUMBER = "number";
     private static final String KEY_PAGE = "page";
     private static final String KEY_ARTIST = "artist";
@@ -70,7 +72,7 @@ public class KSongProcessImpl implements IKSongProcess {
 
     @Override
     public boolean shouldKSongProcess(String foregroundPkgName, Category category, AIUIIntent intent) {
-        boolean isKSongAppStartup = BOOSLINK_QM_PACKAGE_NAME.equals(foregroundPkgName) || DUO_CHANG_PACKAGE_NAME.equals(foregroundPkgName) || QUANMIN_PACKAGE_NAME.equals(foregroundPkgName) || SMART_PACKAGE_NAME.equals(foregroundPkgName) || LEIKA_PACKAGE_NAME.equals(foregroundPkgName);
+        boolean isKSongAppStartup = BOOSLINK_QM_PACKAGE_NAME.equals(foregroundPkgName) || DUO_CHANG_PACKAGE_NAME.equals(foregroundPkgName) || QUANMIN_PACKAGE_NAME.equals(foregroundPkgName) || SMART_PACKAGE_NAME.equals(foregroundPkgName) || LEIKA_PACKAGE_NAME.equals(foregroundPkgName) || LEISHI_PACKAGE_NAME.equals(foregroundPkgName);
         return (category == Category.KSONG && (
                 intent == AIUIIntent.RANDOM_KSONG ||// 打开应用
                         intent == AIUIIntent.KSONG_ADD// 点歌
@@ -97,6 +99,7 @@ public class KSongProcessImpl implements IKSongProcess {
                         intent == AIUIIntent.KSONG_TOP ||// 置顶
                         intent == AIUIIntent.OPEN_SCORE ||// 打开评分
                         intent == AIUIIntent.CLOSE_SCORE ||// 关闭评分
+                        intent == AIUIIntent.EXIT ||// 关闭全民K歌
                         intent == AIUIIntent.EXIT_APP // 关闭应用
         ));
     }
@@ -104,7 +107,7 @@ public class KSongProcessImpl implements IKSongProcess {
     @Override
     public VoiceResult handleKSongIntent(String foregroundPkgName, AIUIIntent intent, @NotNull List<Slot> slots) {
         if (intent == AIUIIntent.RANDOM_KSONG || intent == AIUIIntent.KSONG_ADD) {
-            boolean isKSongAppStartup = BOOSLINK_QM_PACKAGE_NAME.equals(foregroundPkgName) || DUO_CHANG_PACKAGE_NAME.equals(foregroundPkgName) || QUANMIN_PACKAGE_NAME.equals(foregroundPkgName) || SMART_PACKAGE_NAME.equals(foregroundPkgName) || LEIKA_PACKAGE_NAME.equals(foregroundPkgName);
+            boolean isKSongAppStartup = BOOSLINK_QM_PACKAGE_NAME.equals(foregroundPkgName) || DUO_CHANG_PACKAGE_NAME.equals(foregroundPkgName) || QUANMIN_PACKAGE_NAME.equals(foregroundPkgName) || SMART_PACKAGE_NAME.equals(foregroundPkgName) || LEIKA_PACKAGE_NAME.equals(foregroundPkgName) || LEISHI_PACKAGE_NAME.equals(foregroundPkgName);
             if (!isKSongAppStartup) {
                 Intent launchIntent = null;
                 if (intent == AIUIIntent.KSONG_ADD) {
@@ -134,11 +137,15 @@ public class KSongProcessImpl implements IKSongProcess {
         switch (intent) {
             case EXIT:
             case EXIT_APP:
-                Intent exitIntent = songAction.exit();
-                if (isEmptyIntent(exitIntent)) {
-                    simulateHomePress();
+                boolean isExitMatch = parseNameBySlot(foregroundPkgName, slots);
+                if (isExitMatch) {
+                    Intent exitIntent = songAction.exit();
+                    if (isEmptyIntent(exitIntent)) {
+                        simulateHomePress();
+                    }
+                    return exitIntent;
                 }
-                return exitIntent;
+                break;
             case RESUME_PLAY:
                 return songAction.play();
             case PAUSE:
@@ -192,6 +199,20 @@ public class KSongProcessImpl implements IKSongProcess {
         return null;
     }
 
+    private boolean parseNameBySlot(String foregroundPkgName, @NotNull List<Slot> slots) {
+        if (slots.isEmpty()) return true;
+        String name = null;
+        for (Slot slot : slots) {
+            if (KEY_NAME.equals(slot.getName())) {
+                name = slot.getValue();
+                break;
+            }
+        }
+        if (TextUtils.isEmpty(name)) return true;
+        String appName = getKSongAppName(foregroundPkgName);
+        return !TextUtils.isEmpty(appName) && (appName.equalsIgnoreCase(name) || appName.contains(name));
+    }
+
     private Pair<String, String> parseArtistAndSongBySlot(String foregroundPkgName, @NotNull List<Slot> slots) {
         if (slots.isEmpty()) return null;
         String artist = null;
@@ -199,7 +220,7 @@ public class KSongProcessImpl implements IKSongProcess {
         for (Slot slot : slots) {
             if (KEY_ARTIST.equals(slot.getName())) {
                 artist = slot.getValue();
-            }else if (KEY_SONG.equals(slot.getName())) {
+            } else if (KEY_SONG.equals(slot.getName())) {
                 song = slot.getValue();
             }
         }
@@ -224,6 +245,27 @@ public class KSongProcessImpl implements IKSongProcess {
                 return mSmartActionLazy.get();
             case BOOSLINK_QM_PACKAGE_NAME:
                 return mBslQmActionLazy.get();
+//            case LEISHI_PACKAGE_NAME:
+//                return null;
+        }
+        return null;
+    }
+
+    private String getKSongAppName(String foregroundPkgName) {
+        if (TextUtils.isEmpty(foregroundPkgName)) {
+            return BOOSLINK_QM_APP_NAME;
+        }
+        switch (foregroundPkgName) {
+            case DUO_CHANG_PACKAGE_NAME:
+                return "多唱K歌";
+            case SMART_PACKAGE_NAME:
+            case LEIKA_PACKAGE_NAME:
+                return "智能K歌";
+            case QUANMIN_PACKAGE_NAME:
+            case BOOSLINK_QM_PACKAGE_NAME:
+                return BOOSLINK_QM_APP_NAME;
+            case LEISHI_PACKAGE_NAME:
+                return "雷石K歌";
         }
         return null;
     }

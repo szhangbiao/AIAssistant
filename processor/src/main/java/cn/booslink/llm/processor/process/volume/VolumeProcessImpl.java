@@ -67,7 +67,11 @@ public class VolumeProcessImpl implements IVolumeProcess {
     }
 
     private VoiceResult volumeSet(int setNum) {
-        return null;
+        if (setNum <= mMaxVolume && setNum >= mMinVolume) {
+            mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, setNum, AudioManager.FLAG_SHOW_UI);
+            return VoiceResult.Companion.success("已为你调整音量");
+        }
+        return VoiceResult.Companion.failure();
     }
 
     private VoiceResult volumeChange(int volumeNum) {

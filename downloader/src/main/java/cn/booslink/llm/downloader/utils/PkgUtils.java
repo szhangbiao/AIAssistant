@@ -8,13 +8,9 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
-import android.net.Uri;
 import android.os.Build;
-import android.provider.Settings;
 import android.text.TextUtils;
 import android.text.format.Formatter;
-import android.util.Log;
 
 import java.io.File;
 import java.util.HashMap;
@@ -88,7 +84,7 @@ public class PkgUtils {
     }
 
     public static void launchApp(Context context, String pkgName) {
-        if (pkgName.equals(context.getPackageName())) return;
+        if (pkgName == null || pkgName.equals(context.getPackageName())) return;
         AppInfo appInfo = getAppInfo(context, pkgName);
         if (appInfo != null) {
             launchApp(context, appInfo);
@@ -126,6 +122,11 @@ public class PkgUtils {
             try {
                 // 检查是否有 PACKAGE_USAGE_STATS 权限
                 if (!hasUsageStatsPermission(context)) {
+                    Timber.tag(TAG).w("PACKAGE_USAGE_STATS permission not granted, trying to grant silently...");
+                    grantUsageStatsPermissionSilently(context);
+                }
+
+                if (!hasUsageStatsPermission(context)) {
                     Timber.tag(TAG).w("PACKAGE_USAGE_STATS permission not granted");
                     return getForegroundPkgNameLegacy(context);
                 }
@@ -137,8 +138,26 @@ public class PkgUtils {
                 }
 
                 long endTime = System.currentTimeMillis();
-                long beginTime = endTime - 1000 * 10; // 最近10秒
 
+                // 优先方案：使用高精度、实时的 UsageEvents 检测前台 Activity 切换事件（最近5分钟内）
+                long beginTime = endTime - 1000L * 60 * 5;
+                android.app.usage.UsageEvents usageEvents = usageStatsManager.queryEvents(beginTime, endTime);
+                android.app.usage.UsageEvents.Event event = new android.app.usage.UsageEvents.Event();
+                String foregroundPackage = null;
+                while (usageEvents.hasNextEvent()) {
+                    usageEvents.getNextEvent(event);
+                    if (event.getEventType() == android.app.usage.UsageEvents.Event.ACTIVITY_RESUMED || event.getEventType() == android.app.usage.UsageEvents.Event.MOVE_TO_FOREGROUND) {
+                        foregroundPackage = event.getPackageName();
+                    }
+                }
+
+                if (!TextUtils.isEmpty(foregroundPackage)) {
+                    Timber.tag(TAG).d("Found foreground package via UsageEvents: %s", foregroundPackage);
+                    return foregroundPackage;
+                }
+
+                // 备选方案：如果最近5分钟内无事件，查询最近1小时（原为10秒，极易为空）的 UsageStats 统计数据
+                beginTime = endTime - 1000L * 60 * 60;
                 List<UsageStats> stats = usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, beginTime, endTime);
                 Timber.tag(TAG).d("queryUsageStats returned %d items", stats != null ? stats.size() : 0);
 
@@ -149,13 +168,15 @@ public class PkgUtils {
                             recentStats = usageStats;
                         }
                     }
-                    String packageName = recentStats != null ? recentStats.getPackageName() : null;
-                    Timber.tag(TAG).d("Found foreground package: %s", packageName);
-                    return packageName;
-                } else {
-                    Timber.tag(TAG).w("UsageStats is empty, trying legacy method");
-                    return getForegroundPkgNameLegacy(context);
+                    if (recentStats != null) {
+                        String packageName = recentStats.getPackageName();
+                        Timber.tag(TAG).d("Found foreground package via queryUsageStats: %s", packageName);
+                        return packageName;
+                    }
                 }
+
+                Timber.tag(TAG).w("UsageStats is empty, trying legacy method");
+                return getForegroundPkgNameLegacy(context);
             } catch (Exception e) {
                 Timber.tag(TAG).e(e, "Error in getForegroundPkgName with UsageStatsManager");
                 return getForegroundPkgNameLegacy(context);
@@ -171,16 +192,38 @@ public class PkgUtils {
     private static boolean hasUsageStatsPermission(Context context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
             try {
-                long time = System.currentTimeMillis();
-                UsageStatsManager usageStatsManager = (UsageStatsManager) context.getSystemService(Context.USAGE_STATS_SERVICE);
-                List<UsageStats> stats = usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, time - 1000, time);
-                return stats != null && !stats.isEmpty();
+                android.app.AppOpsManager appOps = (android.app.AppOpsManager) context.getSystemService(Context.APP_OPS_SERVICE);
+                if (appOps == null) return false;
+                int mode = appOps.noteOpNoThrow(android.app.AppOpsManager.OPSTR_GET_USAGE_STATS, android.os.Process.myUid(), context.getPackageName());
+                return mode == android.app.AppOpsManager.MODE_ALLOWED;
             } catch (Exception e) {
                 Timber.tag(TAG).e(e, "Error checking usage stats permission");
                 return false;
             }
         }
         return true;
+    }
+
+    /**
+     * 系统签名应用通过反射静默授予 PACKAGE_USAGE_STATS 权限
+     */
+    private static boolean grantUsageStatsPermissionSilently(Context context) {
+        try {
+            android.app.AppOpsManager appOps = (android.app.AppOpsManager) context.getSystemService(Context.APP_OPS_SERVICE);
+            if (appOps == null) return false;
+            java.lang.reflect.Method setModeMethod = appOps.getClass().getMethod("setMode", int.class, int.class, String.class, int.class);
+            // 43 是 OP_GET_USAGE_STATS 的代号 (即 AppOpsManager.OP_GET_USAGE_STATS)
+            int opCode = 43;
+            int uid = android.os.Process.myUid();
+            String packageName = context.getPackageName();
+            // 0 代表 AppOpsManager.MODE_ALLOWED
+            setModeMethod.invoke(appOps, opCode, uid, packageName, 0);
+            Timber.tag(TAG).d("Successfully granted PACKAGE_USAGE_STATS permission silently");
+            return true;
+        } catch (Exception e) {
+            Timber.tag(TAG).e(e, "Failed to grant PACKAGE_USAGE_STATS permission silently");
+            return false;
+        }
     }
 
     /**
