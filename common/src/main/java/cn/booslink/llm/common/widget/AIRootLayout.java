@@ -141,6 +141,7 @@ public class AIRootLayout extends ConstraintLayout {
         llInteraction.setVisibility(View.VISIBLE);
         String voiceInput = query.getQuery();
         if (!TextUtils.isEmpty(voiceInput)) {
+            Timber.tag(TAG).d("changeUIWithVoiceInput, input = %s", voiceInput);
             llInteraction.voiceInput(voiceInput);
         }
         if (mCurrentQueryState != null && mCurrentQueryState == query.getState()) return;

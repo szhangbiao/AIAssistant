@@ -7,6 +7,7 @@ import androidx.annotation.NonNull;
 
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
+import org.joda.time.format.DateTimeFormat;
 
 import javax.inject.Inject;
 
@@ -59,7 +60,7 @@ public class MemoryCacheImpl implements IAppCache {
         if (jsonValue != null) {
             Timber.tag(TAG).d("getCache: key: %s, value: %s", key, jsonValue);
             String expireTimeStr = mCacheUtils.getCache(key + EXPIRE_TIME_SUFFIX);
-            if (expireTimeStr == null || TextUtils.isEmpty(expireTimeStr) || DateTime.parse(expireTimeStr).isAfterNow()) {
+            if (expireTimeStr == null || TextUtils.isEmpty(expireTimeStr) || DateTimeFormat.forPattern(FORMAT_TIME).parseDateTime(expireTimeStr).isAfterNow()) {
                 return cacheConverter.deserialize(jsonValue);
             }
         }
@@ -76,7 +77,7 @@ public class MemoryCacheImpl implements IAppCache {
             Timber.tag(TAG).d("getCacheSingle: key: %s", key);
             String jsonValue = mCacheUtils.getCache(key);
             String expireTimeStr = mCacheUtils.getCache(key + EXPIRE_TIME_SUFFIX);
-            boolean isNotExpired = expireTimeStr == null || TextUtils.isEmpty(expireTimeStr) || DateTime.parse(expireTimeStr).isAfterNow();
+            boolean isNotExpired = expireTimeStr == null || TextUtils.isEmpty(expireTimeStr) || DateTimeFormat.forPattern(FORMAT_TIME).parseDateTime(expireTimeStr).isAfterNow();
             if (isNotExpired && jsonValue != null && !TextUtils.isEmpty(jsonValue)) {
                 T t = cacheConverter.deserialize(jsonValue);
                 Timber.tag(TAG).d("getCacheSingle: key: %s, value: %s", key, jsonValue);

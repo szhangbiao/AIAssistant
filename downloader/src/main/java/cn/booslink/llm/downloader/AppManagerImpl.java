@@ -15,7 +15,8 @@ import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
 
 import java.io.File;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
@@ -25,6 +26,7 @@ import cn.booslink.llm.common.model.ApkInfo;
 import cn.booslink.llm.common.model.DeviceInfo;
 import cn.booslink.llm.common.model.PkgInfo;
 import cn.booslink.llm.common.model.enums.ApkStatus;
+import cn.booslink.llm.common.ui.IToast;
 import cn.booslink.llm.common.utils.ContextUtils;
 import cn.booslink.llm.common.utils.FileUtils;
 import cn.booslink.llm.downloader.bus.IRxApkBus;
@@ -37,6 +39,7 @@ import cn.booslink.llm.downloader.receiver.PkgInstallBroadcastReceiver;
 import cn.booslink.llm.downloader.utils.ApkInstallUtils;
 import cn.booslink.llm.downloader.utils.InstallStateUtils;
 import cn.booslink.llm.downloader.utils.PkgUtils;
+import dagger.Lazy;
 import dagger.hilt.android.qualifiers.ApplicationContext;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Single;
@@ -57,8 +60,9 @@ public class AppManagerImpl implements IAppManager {
     private final Context mContext;
     private final DeviceInfo mDevice;
     private final IRxApkBus mRxApkBus;
+    private final Lazy<IToast> mToastLazy;
     private final CompositeDisposable mCompositeDisposable;
-    private final ConcurrentHashMap<String, ApkDownload> mApkDownloadMap;
+    private final LinkedHashMap<String, ApkDownload> mApkDownloadMap;
     private final PkgInstallBroadcastReceiver mPkgInstallBroadcastReceiver;
     private DownloadTask mDownloadingTask;
     private volatile String currentPackageName = null;
@@ -66,12 +70,13 @@ public class AppManagerImpl implements IAppManager {
     private OnAppManagerListener mOnAppManagerListener;
 
     @Inject
-    public AppManagerImpl(@ApplicationContext Context context, DeviceInfo deviceInfo, IRxApkBus rxApkBus, PkgInstallBroadcastReceiver receiver) {
+    public AppManagerImpl(@ApplicationContext Context context, Lazy<IToast> toastLazy, DeviceInfo deviceInfo, IRxApkBus rxApkBus, PkgInstallBroadcastReceiver receiver) {
         this.mContext = context;
         this.mDevice = deviceInfo;
         this.mRxApkBus = rxApkBus;
+        this.mToastLazy = toastLazy;
         this.mPkgInstallBroadcastReceiver = receiver;
-        this.mApkDownloadMap = new ConcurrentHashMap<>();
+        this.mApkDownloadMap = new LinkedHashMap<>();
         this.mCompositeDisposable = new CompositeDisposable();
         registerPackageInstallBroadcast();
     }
@@ -84,7 +89,6 @@ public class AppManagerImpl implements IAppManager {
         if (currentDownload != null) return;
         ApkDownload download = ApkDownload.createFromPkgInfo(pkgInfo, false);
         startDownloadApkIfNeed(download);
-        mRxApkBus.post(download);
     }
 
     @Override
@@ -95,7 +99,6 @@ public class AppManagerImpl implements IAppManager {
         if (currentDownload != null) return;
         ApkDownload download = ApkDownload.createFromPkgInfo(pkgInfo, true);
         startDownloadApkIfNeed(download);
-        mRxApkBus.post(download);
     }
 
     @Override
@@ -105,10 +108,22 @@ public class AppManagerImpl implements IAppManager {
     }
 
     @Override
-    public boolean isPkgDownloading() {
-        boolean isDownloading = !mApkDownloadMap.isEmpty() && mDownloadingTask != null && OkDownload.with().downloadDispatcher().isRunning(mDownloadingTask);
-        Timber.tag(TAG).d("isPkgDownloading = %b", isDownloading);
-        return isDownloading;
+    public boolean isPkgTaskRunning(String packageName) {
+        if (mApkDownloadMap.isEmpty()) return false;
+        ApkDownload download = mApkDownloadMap.get(packageName);
+        return download != null && download.getStatus() != ApkStatus.DOWNLOAD_PADDING;
+    }
+
+    @Override
+    public boolean isPkgInTaskQueue(String packageName) {
+        return mApkDownloadMap.containsKey(packageName);
+    }
+
+    @Override
+    public boolean isAnyPkgTaskRunning() {
+        boolean isAnyDownloading = !mApkDownloadMap.isEmpty() || (mDownloadingTask != null && OkDownload.with().downloadDispatcher().isRunning(mDownloadingTask));
+        Timber.tag(TAG).d("isAnyPkgTaskRunning = %b", isAnyDownloading);
+        return isAnyDownloading;
     }
 
     @Override
@@ -131,7 +146,10 @@ public class AppManagerImpl implements IAppManager {
                     // 安装失败Toast失败原因
                     if (!isInstallSuccess && apkDownload.getRetryCount() == ApkDownload.FLAG_APK_FAIL) {
                         if (state == InstallState.INSUFFICIENT_STORAGE) {
-                            // TODO mToast.get().showMessage(state.getMessage(), 10);
+                            IToast toast = mToastLazy.get();
+                            if (toast != null) {
+                                toast.showMessage(state.getMessage());
+                            }
                         }
                     }
                     return apkDownload;
@@ -145,6 +163,7 @@ public class AppManagerImpl implements IAppManager {
                         mOnAppManagerListener.onAppInstalled(installedApk);
                     }
                     mRxApkBus.post(installedApk);
+                    startNextPaddingItem();
                 });
         addDisposable(disposable);
     }
@@ -167,8 +186,9 @@ public class AppManagerImpl implements IAppManager {
     }
 
     private void startDownloadApkIfNeed(ApkDownload download) {
-        if (mDownloadingTask == null) {
+        if (!isAnyPkgTaskRunning()) {
             buildTaskAndDownloadApk(download);
+            mRxApkBus.post(download);
         } else {
             mApkDownloadMap.put(download.getPkgName(), download);
         }
@@ -222,6 +242,7 @@ public class AppManagerImpl implements IAppManager {
                         install(downloadItem);
                     } else {
                         mApkDownloadMap.remove(downloadItem.getPkgName());
+                        startNextPaddingItem();
                     }
                 } else if (downloadItem.isDownloadError()) {
                     Timber.tag(TAG).d("onDownloadUpdate, download fail");
@@ -229,6 +250,7 @@ public class AppManagerImpl implements IAppManager {
                     if (mOnAppManagerListener != null) {
                         mOnAppManagerListener.onAppFailed(true, downloadItem);
                     }
+                    startNextPaddingItem();
                 }
                 mDownloadingTask = null;
                 mRxApkBus.post(downloadItem);
@@ -241,12 +263,16 @@ public class AppManagerImpl implements IAppManager {
 
             @Override
             public void onDownloadFailed(ApkDownload downloadItem) {
-                // TODO mToast.get().showMessage(downloadItem.getFailedReason(), 10);
+                IToast toast = mToastLazy.get();
+                if (toast != null) {
+                    toast.showMessage(downloadItem.getFailedReason());
+                }
                 mApkDownloadMap.remove(downloadItem.getPkgName());
                 if (mOnAppManagerListener != null) {
                     mOnAppManagerListener.onAppFailed(true, downloadItem);
                 }
                 mRxApkBus.post(downloadItem);
+                startNextPaddingItem();
             }
         };
     }
@@ -437,6 +463,28 @@ public class AppManagerImpl implements IAppManager {
                 .subscribeOn(Schedulers.io())
                 .subscribe();
         addDisposable(disposable);
+    }
+
+    private void startNextPaddingItem() {
+        ApkDownload nextDownload = findNextPaddingItem();
+        if (nextDownload != null) {
+            buildTaskAndDownloadApk(nextDownload);
+        } else {
+            mDownloadingTask = null;
+        }
+    }
+
+    public ApkDownload findNextPaddingItem() {
+        Iterator<ApkDownload> valueIterator = mApkDownloadMap.values().iterator();
+        ApkDownload nextDownload = null;
+        while (valueIterator.hasNext()) {
+            ApkDownload nextElement = valueIterator.next();
+            if (nextElement != null && nextElement.getStatus() == ApkStatus.DOWNLOAD_PADDING) {
+                nextDownload = nextElement;
+                break;
+            }
+        }
+        return nextDownload;
     }
 
     private void addDisposable(Disposable disposable) {

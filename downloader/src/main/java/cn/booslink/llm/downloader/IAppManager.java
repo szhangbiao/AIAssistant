@@ -13,7 +13,11 @@ public interface IAppManager {
 
     void install(ApkInfo apkInfo);
 
-    boolean isPkgDownloading();
+    boolean isPkgTaskRunning(String packageName);
+
+    boolean isPkgInTaskQueue(String packageName);
+
+    boolean isAnyPkgTaskRunning();
 
     boolean isPkgInstalling();
 

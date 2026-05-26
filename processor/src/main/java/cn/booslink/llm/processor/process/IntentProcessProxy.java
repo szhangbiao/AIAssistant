@@ -9,6 +9,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import cn.booslink.llm.common.model.Semantic;
+import cn.booslink.llm.common.model.UIResponse;
 import cn.booslink.llm.common.model.VoiceResult;
 import cn.booslink.llm.common.model.enums.AIUIIntent;
 import cn.booslink.llm.common.model.enums.Category;
@@ -20,6 +21,7 @@ import cn.booslink.llm.processor.process.ksong.IKSongProcess;
 import cn.booslink.llm.processor.process.music.IMusicProcess;
 import cn.booslink.llm.processor.process.video.IVideoProcess;
 import cn.booslink.llm.processor.process.volume.IVolumeProcess;
+import cn.booslink.llm.processor.process.weather.IWeatherProcess;
 import dagger.hilt.android.qualifiers.ApplicationContext;
 import timber.log.Timber;
 
@@ -34,10 +36,11 @@ public class IntentProcessProxy implements IIntentProcess {
     private final IMusicProcess mMusicProcess;
     private final IVideoProcess mVideoProcess;
     private final IKSongProcess mKSongProcess;
+    private final IWeatherProcess mWeatherProcess;
     private final ISpeechInteraction mSpeechInteraction;
 
     @Inject
-    public IntentProcessProxy(@ApplicationContext Context context, IAppProcess appProcess, IControlProcess controlProcess, IVolumeProcess volumeProcess, IMusicProcess musicProcess, IVideoProcess videoProcess, IKSongProcess kSongProcess, ISpeechInteraction speechInteraction) {
+    public IntentProcessProxy(@ApplicationContext Context context, IAppProcess appProcess, IControlProcess controlProcess, IVolumeProcess volumeProcess, IMusicProcess musicProcess, IVideoProcess videoProcess, IKSongProcess kSongProcess, IWeatherProcess weatherProcess, ISpeechInteraction speechInteraction) {
         this.mContext = context;
         this.mAppProcess = appProcess;
         this.mKSongProcess = kSongProcess;
@@ -45,27 +48,31 @@ public class IntentProcessProxy implements IIntentProcess {
         this.mVideoProcess = videoProcess;
         this.mVolumeProcess = volumeProcess;
         this.mControlProcess = controlProcess;
+        this.mWeatherProcess = weatherProcess;
         this.mSpeechInteraction = speechInteraction;
     }
 
     @Override
-    public VoiceResult processIntent(Category category, @Nullable List<Semantic> semantics) {
-        if (semantics == null || semantics.isEmpty()) return VoiceResult.Companion.failure();
+    public VoiceResult processIntent(UIResponse response, @Nullable List<Semantic> semantics) {
+        if (semantics == null || semantics.isEmpty() || response.getCategory() == Category.UNKNOWN) return VoiceResult.Companion.failure();
         Timber.tag(TAG).d("processIntent, semantic count = %d", semantics.size());
         for (Semantic semantic : semantics) {
-            VoiceResult handleResult = processIntent(category, semantic);
+            VoiceResult handleResult = processIntent(response, semantic);
             if (handleResult != null && handleResult.getHandled()) {
-                mSpeechInteraction.nlpAnswer(handleResult.getResponseText());
+                if (!handleResult.getIgnoreNlpResponse()) {
+                    mSpeechInteraction.nlpAnswer(handleResult.getResponseText());
+                }
                 return handleResult;
             }
         }
         return VoiceResult.Companion.failure();
     }
 
-    private VoiceResult processIntent(Category category, Semantic semantic) {
+    private VoiceResult processIntent(UIResponse response, Semantic semantic) {
         AIUIIntent intent = semantic.getIntent();
         if (intent == null) return VoiceResult.Companion.failure();
         String foregroundPkgName = PkgUtils.getForegroundPkgName(mContext);
+        Category category = response.getCategory();
         if (mAppProcess.shouldAppProcess(category, intent)) {
             return mAppProcess.handleAppIntent(intent, semantic.getSlots());
         } else if (mMusicProcess.shouldMusicProcess(foregroundPkgName, category, intent)) {
@@ -76,6 +83,8 @@ public class IntentProcessProxy implements IIntentProcess {
             return mKSongProcess.handleKSongIntent(foregroundPkgName, intent, semantic.getSlots());
         } else if (mVolumeProcess.shouldVolumeProcess(category, intent)) {
             return mVolumeProcess.handleVolumeIntent(intent, semantic.getSlots());
+        } else if (mWeatherProcess.shouldWeatherProcess(category)) {
+            return mWeatherProcess.handleWeatherIntent(response, semantic.getSlots());
         }
         switch (intent) {
             case EXIT:

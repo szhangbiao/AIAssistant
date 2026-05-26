@@ -8,8 +8,6 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.bumptech.glide.Glide;
-
 import java.util.Locale;
 
 import cn.booslink.llm.common.R;
@@ -59,7 +57,7 @@ public class ApkDownloadLayout extends RelativeLayout {
             resetViews();
             return;
         }
-        if (download.getProgress() == 0 && !TextUtils.isEmpty(download.getIcon())) {
+        if (!TextUtils.isEmpty(download.getIcon())) {
             CommonEntryPoint hiltEntryPoint = EntryPointAccessors.fromApplication(getContext().getApplicationContext(), CommonEntryPoint.class);
             ImageLoader imageLoader = hiltEntryPoint.lazyImageLoader().get();
             if (imageLoader != null) {

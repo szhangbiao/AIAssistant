@@ -6,14 +6,13 @@ class VoiceQuery(val query: String?, val state: QueryState) {
 
     companion object {
         fun startup() = VoiceQuery("您好，我是Bobo！", QueryState.IDLE)
-
         fun stateOnly(state: QueryState) = VoiceQuery(null, state)
+        fun replace(query: String?, state: QueryState) = VoiceQuery(query, state)
     }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is VoiceQuery) return false
-
         return query == other.query && state == other.state
     }
 

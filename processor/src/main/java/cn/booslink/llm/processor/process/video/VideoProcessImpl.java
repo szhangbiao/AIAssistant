@@ -44,7 +44,7 @@ public class VideoProcessImpl implements IVideoProcess {
     private static final String SKIP_HEAD = "片头";
     private static final String SKIP_TAIL = "片尾";
 
-    private final String IQIYI_APP_NAME = "爱奇艺";
+    private static final String IQIYI_APP_NAME = "爱奇艺";
     private final String IQIYI_PACKAGE_NAME = "com.qiyi.video.iv";
 
     private final Context mContext;
@@ -61,7 +61,7 @@ public class VideoProcessImpl implements IVideoProcess {
     @Override
     public boolean shouldVideoProcess(String foregroundPkgName, Category category, AIUIIntent intent) {
         boolean isAppOpened = IQIYI_PACKAGE_NAME.equals(foregroundPkgName);
-        return category == Category.VIDEO || (isAppOpened && category == Category.CONTROL && (
+        return category == Category.VIDEO || intent == AIUIIntent.RANDOM_VIDEO || (isAppOpened && category == Category.CONTROL && (
                 intent == AIUIIntent.EXIT || // 退出应用
                         intent == AIUIIntent.RESUME_PLAY || // 播放
                         intent == AIUIIntent.PAUSE || // 暂停
@@ -91,7 +91,7 @@ public class VideoProcessImpl implements IVideoProcess {
     @Override
     public VoiceResult handleVideoIntent(String foregroundPkgName, AIUIIntent intent, @NotNull List<Slot> slots) {
         boolean isVideoStartup = IQIYI_PACKAGE_NAME.equals(foregroundPkgName);
-        if ((intent == AIUIIntent.QUERY || intent == AIUIIntent.RECOMMEND) && !isVideoStartup) {
+        if ((intent == AIUIIntent.QUERY || intent == AIUIIntent.RECOMMEND || intent == AIUIIntent.RANDOM_VIDEO) && !isVideoStartup) {
             return populateActionBySlots(intent, slots);
         }
         Intent actionIntent = populateByVideoAction(foregroundPkgName, intent, slots);
@@ -119,6 +119,7 @@ public class VideoProcessImpl implements IVideoProcess {
         switch (aiuiIntent) {
             case QUERY:
             case RECOMMEND:
+            case RANDOM_VIDEO:
                 if (!TextUtils.isEmpty(name) || !TextUtils.isEmpty(actor)) {
                     Intent intent = mIQiYiVideoAction.openSearch(!TextUtils.isEmpty(name) ? name : actor);
                     mAppProcess.launchAppWithIntent(IQIYI_PACKAGE_NAME, intent);
@@ -149,6 +150,7 @@ public class VideoProcessImpl implements IVideoProcess {
                 break;
             case QUERY:
             case RECOMMEND:
+            case RANDOM_VIDEO:
                 return populateActionInApp(slots);
             case PAGE_BACK:
                 return videoAction.pageBack();

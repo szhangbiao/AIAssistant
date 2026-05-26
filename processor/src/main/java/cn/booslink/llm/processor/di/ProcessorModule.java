@@ -29,6 +29,8 @@ import cn.booslink.llm.processor.process.video.VideoProcessImpl;
 import cn.booslink.llm.processor.process.video.YouKuVideoAction;
 import cn.booslink.llm.processor.process.volume.IVolumeProcess;
 import cn.booslink.llm.processor.process.volume.VolumeProcessImpl;
+import cn.booslink.llm.processor.process.weather.IWeatherProcess;
+import cn.booslink.llm.processor.process.weather.WeatherProcessImpl;
 import cn.booslink.llm.processor.repository.AppRepositoryImpl;
 import cn.booslink.llm.processor.repository.IAppRepository;
 import dagger.Binds;
@@ -67,6 +69,9 @@ public interface ProcessorModule {
 
     @Binds
     IKSongProcess bindKSongProcess(KSongProcessImpl kSongProcessImpl);
+
+    @Binds
+    IWeatherProcess bindWeatherProcess(WeatherProcessImpl weatherProcessImpl);
 
     @Binds
     @Named("quanmin")

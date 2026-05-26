@@ -110,7 +110,7 @@ public class EventProcessorImpl implements IEventProcessor {
                 Timber.tag(TAG).d("wakeup, type = %d", type);
                 mHandler.post(mSpeechInteraction::UIWakeup);
                 if (type == 0) {
-                    boolean shouldBlockSleepLogic = mAppManager.isPkgDownloading() || mAppManager.isPkgInstalling();
+                    boolean shouldBlockSleepLogic = mAppManager.isAnyPkgTaskRunning();
                     if (shouldBlockSleepLogic) {
                         // TODO
                         return;
@@ -124,13 +124,13 @@ public class EventProcessorImpl implements IEventProcessor {
             case AIUIConstant.EVENT_SLEEP: // 休眠事件
                 int sleepType = event.arg1; // 0 （交互超时,自动休眠）, 1 （发送CMD_RESET_WAKEUP手动休眠）
                 Timber.tag(TAG).d("sleep, type = %d", sleepType);
-                boolean shouldBlockSleepLogic = mAppManager.isPkgDownloading() || mAppManager.isPkgInstalling();
+                boolean shouldBlockSleepLogic = mAppManager.isAnyPkgTaskRunning();
                 boolean isNetworkConnected = NetworkUtils.isConnected(mContext);
                 if (sleepType == 0 && shouldBlockSleepLogic && isNetworkConnected) {
                     wakeupNetworkResumeOrDownloadContinue();
                     return;
                 }
-                if (!isNetworkConnected) return;
+                //if (!isNetworkConnected) return;
                 boolean showLeaveConfirm = mSpeechStorage.shouldShowLeaveConfirm();
                 if (showLeaveConfirm) {
                     mSpeechInteraction.semanticAnswer(UIResponse.Companion.withSleep(sleepType));
@@ -221,7 +221,7 @@ public class EventProcessorImpl implements IEventProcessor {
             String cntJsonRaw = new String(bytes, StandardCharsets.UTF_8);
             String tag = event.data.getString(KEY_TAG);
             String streamId = event.data.getString(KEY_STREAM_ID);
-            Timber.tag(TAG).d("parseEventData, cnt json = %s", cntJsonRaw);
+            //Timber.tag(TAG).d("parseEventData, cnt json = %s", cntJsonRaw);
             EventData data = mGson.fromJson(cntJsonRaw, EventData.class);
             data.setId(streamId);
             data.setTag(AIUITag.fromTag(tag));
@@ -240,7 +240,7 @@ public class EventProcessorImpl implements IEventProcessor {
             Timber.tag(TAG).d("processSemanticData, category = %s", cbmSemantic.getCategory());
             try {
                 UIResponse response = cbmSemantic.getResponse(mGson);
-                mEventData.setSemanticHandled(!response.isWeatherEmpty());
+                //mEventData.setSemanticHandled(!response.isWeatherEmpty());
                 eventData.setResponse(response);
             } catch (JsonSyntaxException e) {
                 Timber.tag(TAG).e(e, "Parse semantic result failed");
@@ -286,7 +286,8 @@ public class EventProcessorImpl implements IEventProcessor {
                         mSpeechInteraction.nlpAnswer("未找到相关内容");
                     }
                     if (data.getTag() == AIUITag.LAUNCH || TextUtils.isEmpty(nplContent)) return;
-                    mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.DONE));
+                    String queryText = mEventData.getText() != null ? mEventData.getText().getIATVoice() : null;
+                    mSpeechInteraction.updateQuery(VoiceQuery.Companion.replace(queryText, QueryState.DONE));
                     break;
             }
         } else if (sub == CBMSub.CBM_TIDY) {
@@ -295,16 +296,15 @@ public class EventProcessorImpl implements IEventProcessor {
             mEventData = mEventData.copyTidy(data.getCbmTidy());
             mSpeechInteraction.updateQuery(new VoiceQuery(data.getCbmTidy().getText().getQuery(), QueryState.QUERYING));
         } else if (sub == CBMSub.CBM_SEMANTIC) {
-            if (data.getResponse() == null || data.getTag() == AIUITag.LAUNCH) return;
-            mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.DONE));
-            mSpeechInteraction.semanticAnswer(data.getResponse());
-            if (data.getCbmSemantic() == null) return;
+            if (data.getResponse() == null || data.getTag() == AIUITag.LAUNCH || data.getCbmSemantic() == null) return;
             mEventData = mEventData.copySemantic(data.getCbmSemantic(), data.getResponse());
             CBMSemantic cbmSemantic = data.getCbmSemantic().getText();
             if (cbmSemantic != null && cbmSemantic.getSemantic() != null) {
-                VoiceResult voiceResult = mIntentProcess.processIntent(data.getResponse().getCategory(), cbmSemantic.getSemantic());
-                if (data.getResponse().isWeatherEmpty()) {
-                    mEventData.setSemanticHandled(voiceResult.getHandled());
+                VoiceResult voiceResult = mIntentProcess.processIntent(data.getResponse(), cbmSemantic.getSemantic());
+                mEventData.setSemanticHandled(voiceResult.getHandled());
+                if (voiceResult.getHandled()) {
+                    String queryText = mEventData.getCbmTidy() != null && mEventData.getCbmTidy().getText() != null ? mEventData.getCbmTidy().getText().getQuery() : null;
+                    mSpeechInteraction.updateQuery(VoiceQuery.Companion.replace(queryText, QueryState.DONE));
                 }
                 if (cbmSemantic.getSemantic().isEmpty()) return;
                 Timber.tag(TAG).d("cbm semantic category = %s, intent = %s", data.getResponse().getCategory(), cbmSemantic.getSemantic().get(0).getIntent());
@@ -383,8 +383,8 @@ public class EventProcessorImpl implements IEventProcessor {
                     if (speechAgent == null || !speechAgent.isAIUIReady()) return;
                     boolean isConnect = networkStatus == NetworkStatus.CONNECTED;
                     if (isConnect) {
-                        if (!speechAgent.isAIUIWorking()) return;
-                        mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.DONE));
+                        //if (!speechAgent.isAIUIWorking()) return;
+                        mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.IDLE));
                         mSpeechInteraction.nlpAnswer("网络恢复了");
                         wakeupNetworkResumeOrDownloadContinue();
                     } else {

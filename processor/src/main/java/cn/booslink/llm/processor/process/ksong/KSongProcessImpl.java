@@ -46,6 +46,7 @@ public class KSongProcessImpl implements IKSongProcess {
     private static final String PAGE_RECENT = "最近播放";
     private static final String PAGE_LOCAL = "本地";
     private static final String PAGE_FREQUENT = "常唱";
+    private static final String PAGE_PLAYLIST = "播放列表";
     private static final String PAGE_FREQUENT_2 = "尝尝";
 
     @Inject
@@ -112,7 +113,7 @@ public class KSongProcessImpl implements IKSongProcess {
                 Intent launchIntent = null;
                 if (intent == AIUIIntent.KSONG_ADD) {
                     IKSongAction songAction = getKSongAction(foregroundPkgName);
-                    Pair<String, String> addSongPair = parseArtistAndSongBySlot(foregroundPkgName, slots);
+                    Pair<String, String> addSongPair = parseArtistAndSongBySlot(slots);
                     if (addSongPair != null && songAction != null) {
                         launchIntent = songAction.addSong(addSongPair.first, addSongPair.second, false);
                     }
@@ -181,14 +182,14 @@ public class KSongProcessImpl implements IKSongProcess {
             case CLOSE_ORIGIN:
                 return songAction.accompanyTrack();
             case KSONG_ADD:
-                Pair<String, String> addSongPair = parseArtistAndSongBySlot(foregroundPkgName, slots);
+                Pair<String, String> addSongPair = parseArtistAndSongBySlot(slots);
                 if (addSongPair == null) return null;
                 return songAction.addSong(addSongPair.first, addSongPair.second, false);
             case KSONG_REMOVE:
                 // TODO
                 return null;
             case KSONG_TOP:
-                Pair<String, String> topSongPair = parseArtistAndSongBySlot(foregroundPkgName, slots);
+                Pair<String, String> topSongPair = parseArtistAndSongBySlot(slots);
                 if (topSongPair == null) return null;
                 return songAction.topSong(topSongPair.first, topSongPair.second);
             case OPEN_SCORE:
@@ -213,7 +214,7 @@ public class KSongProcessImpl implements IKSongProcess {
         return !TextUtils.isEmpty(appName) && (appName.equalsIgnoreCase(name) || appName.contains(name));
     }
 
-    private Pair<String, String> parseArtistAndSongBySlot(String foregroundPkgName, @NotNull List<Slot> slots) {
+    private Pair<String, String> parseArtistAndSongBySlot(@NotNull List<Slot> slots) {
         if (slots.isEmpty()) return null;
         String artist = null;
         String song = null;
@@ -225,8 +226,6 @@ public class KSongProcessImpl implements IKSongProcess {
             }
         }
         if (TextUtils.isEmpty(artist) && TextUtils.isEmpty(song)) return null;
-        IKSongAction songAction = getKSongAction(foregroundPkgName);
-        if (songAction == null) return null;
         return new Pair<>(artist, song);
     }
 
@@ -243,12 +242,12 @@ public class KSongProcessImpl implements IKSongProcess {
             case SMART_PACKAGE_NAME:
             case LEIKA_PACKAGE_NAME:
                 return mSmartActionLazy.get();
-            case BOOSLINK_QM_PACKAGE_NAME:
-                return mBslQmActionLazy.get();
 //            case LEISHI_PACKAGE_NAME:
 //                return null;
+            case BOOSLINK_QM_PACKAGE_NAME:
+            default:
+                return mBslQmActionLazy.get();
         }
-        return null;
     }
 
     private String getKSongAppName(String foregroundPkgName) {
@@ -299,6 +298,8 @@ public class KSongProcessImpl implements IKSongProcess {
                         return songAction.openFavorite();
                     case PAGE_RECENT:
                         return songAction.openRecent();
+                    case PAGE_PLAYLIST:
+                        return songAction.openPlaylist();
                     case PAGE_LOCAL:
                         return songAction.openLocal();
                     case PAGE_FREQUENT:

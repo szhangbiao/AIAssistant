@@ -223,8 +223,12 @@ public class AppProcessImpl implements IAppProcess {
         } else {
             IAppManager downloadManager = mAppManagerLazy.get();
             if (downloadManager == null) return;
-            if (downloadManager.isPkgDownloading()) {
-                mToast.showMessage("正在下载应用，请稍候再试");
+            if (downloadManager.isPkgTaskRunning(pkgInfo.getPkgName())) {
+                mToast.showMessage(pkgInfo.getName() + "正处于下载阶段，请稍候");
+                return;
+            }
+            if (downloadManager.isPkgInTaskQueue(pkgInfo.getPkgName())) {
+                mToast.showMessage(pkgInfo.getName() + "正在排队处理中，请稍候");
                 return;
             }
             downloadManager.registerListener(new SimpleAppManagerListener() {
@@ -236,6 +240,9 @@ public class AppProcessImpl implements IAppProcess {
                     mSpeechInteraction.nlpAnswer(download.getFailedReason());
                 }
             });
+            if (downloadManager.isAnyPkgTaskRunning()) {
+                mToast.showMessage(pkgInfo.getName() + "已加入处理队列");
+            }
             mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.DOWNLOADING));
             downloadManager.downloadPkgOnly(pkgInfo);
         }
@@ -245,8 +252,12 @@ public class AppProcessImpl implements IAppProcess {
         Timber.tag(TAG).d("populateAppInstall, package name = %s", pkgInfo.getPkgName());
         IAppManager downloadManager = mAppManagerLazy.get();
         if (downloadManager == null) return;
-        if (downloadManager.isPkgDownloading() || downloadManager.isPkgInstalling()) {
-            mToast.showMessage("正在进行应用的下载安装，请稍候再试");
+        if (downloadManager.isPkgTaskRunning(pkgInfo.getPkgName())) {
+            mToast.showMessage(pkgInfo.getName() + "正处于下载安装阶段，请稍候");
+            return;
+        }
+        if (downloadManager.isPkgInTaskQueue(pkgInfo.getPkgName())) {
+            mToast.showMessage(pkgInfo.getName() + "正在排队处理中，请稍候");
             return;
         }
         downloadManager.registerListener(new SimpleAppManagerListener() {
@@ -267,6 +278,9 @@ public class AppProcessImpl implements IAppProcess {
                 mSpeechInteraction.nlpAnswer(download.getFailedReason());
             }
         });
+        if (downloadManager.isAnyPkgTaskRunning()) {
+            mToast.showMessage(pkgInfo.getName() + "已加入处理队列");
+        }
         if (pkgInfo.isDownloaded()) {
             ApkInfo apkInfo = PkgUtils.getApkInfoByFile(mContext, new File(pkgInfo.getLocalPath()));
             if (apkInfo != null) {
@@ -283,8 +297,12 @@ public class AppProcessImpl implements IAppProcess {
         if (pkgInfo.isIgnore()) return;
         IAppManager downloadManager = mAppManagerLazy.get();
         if (downloadManager == null) return;
-        if (downloadManager.isPkgDownloading() || downloadManager.isPkgInstalling()) {
-            mToast.showMessage("正在进行应用的下载安装，请稍候再试");
+        if (downloadManager.isPkgTaskRunning(pkgInfo.getPkgName())) {
+            mToast.showMessage(pkgInfo.getName() + "正处于下载安装阶段，请稍候");
+            return;
+        }
+        if (downloadManager.isPkgInTaskQueue(pkgInfo.getPkgName())) {
+            mToast.showMessage(pkgInfo.getName() + "正在排队处理中，请稍候");
             return;
         }
         downloadManager.registerListener(new SimpleAppManagerListener() {
@@ -311,6 +329,9 @@ public class AppProcessImpl implements IAppProcess {
                 populateWakeupAfterAppInstall();
             }
         });
+        if (downloadManager.isAnyPkgTaskRunning()) {
+            mToast.showMessage(pkgInfo.getName() + "已加入处理队列");
+        }
         if (pkgInfo.isDownloaded()) {
             ApkInfo apkInfo = PkgUtils.getApkInfoByFile(mContext, new File(pkgInfo.getLocalPath()));
             if (apkInfo != null) {

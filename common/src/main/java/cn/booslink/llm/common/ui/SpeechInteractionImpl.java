@@ -180,7 +180,7 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
     public void updateQuery(VoiceQuery query) {
         mVoiceInputLiveData.postValue(query);
         QueryState state = query.getState();
-        Timber.tag(TAG).d("updateQuery, state = %s", state);
+        Timber.tag(TAG).d("updateQuery, text = %s, state = %s", query.getQuery(), state);
         switch (state) {
             case IDLE:
                 mEmoteStateLiveData.postValue(EmoteState.IDLE);
@@ -233,6 +233,7 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
     public void downloadUpdate(ApkDownload download) {
         if (download == null) return;
         mApkDownloadLiveData.postValue(download);
+        mEmoteStateLiveData.postValue(EmoteState.NORMAL);
     }
 
     @Override
