@@ -1,5 +1,4 @@
 package cn.booslink.llm.common.model
-
 import cn.booslink.llm.common.model.enums.AIUITag
 import cn.booslink.llm.common.model.enums.CBMSub
 import cn.booslink.llm.common.model.enums.Category
@@ -120,6 +119,19 @@ data class UIResponse(
         } catch (e: IllegalArgumentException) {
             return true
         }
+    }
+
+    fun getWeatherTTSSpeechText(): String? {
+        if (queryDate.isNullOrEmpty() || isWeatherEmpty()) return null
+        val queryDayWeather: Weather? = weathers?.firstOrNull { weather -> queryDate == weather.date?.toString("yyyy-MM-dd") }
+        return queryDayWeather?.let {
+            "${it.city}${it.dateForVoice}天气${it.weather}，${it.weatherDescription}"
+        }
+    }
+
+    fun getQueryDayWeather(): Weather? {
+        if (queryDate.isNullOrEmpty() || isWeatherEmpty()) return null
+        return weathers?.firstOrNull { weather -> queryDate == weather.date?.toString("yyyy-MM-dd") }
     }
 }
 

@@ -60,7 +60,7 @@ public class IntentProcessProxy implements IIntentProcess {
             VoiceResult handleResult = processIntent(response, semantic);
             if (handleResult != null && handleResult.getHandled()) {
                 if (!handleResult.getIgnoreNlpResponse()) {
-                    mSpeechInteraction.nlpAnswer(handleResult.getResponseText());
+                    mSpeechInteraction.customAnswer(handleResult.getResponseText());
                 }
                 return handleResult;
             }

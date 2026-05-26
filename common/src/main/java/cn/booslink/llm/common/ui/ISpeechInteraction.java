@@ -20,7 +20,9 @@ public interface ISpeechInteraction {
 
     void updateQuery(VoiceQuery query);
 
-    void nlpAnswer(String nlpReply);
+    void nlpAnswer(String nlpReply, boolean isStreamEnd);
+
+    void customAnswer(String customReply);
 
     void semanticAnswer(UIResponse response);
 

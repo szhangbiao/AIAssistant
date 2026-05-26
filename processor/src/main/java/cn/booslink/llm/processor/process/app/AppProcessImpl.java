@@ -99,10 +99,10 @@ public class AppProcessImpl implements IAppProcess {
                     if (appInfo != null) {
                         if (intent == null) {
                             PkgUtils.launchApp(mContext, deliveryPkgName);
-                            mSpeechInteraction.nlpAnswer("已为你打开应用");
+                            mSpeechInteraction.customAnswer("已为你打开应用");
                         } else {
                             PkgUtils.launchIntent(mContext, intent);
-                            mSpeechInteraction.nlpAnswer("好的");
+                            mSpeechInteraction.customAnswer("好的");
                         }
                         return Single.just(PkgInfo.ignore());
                     }
@@ -157,7 +157,7 @@ public class AppProcessImpl implements IAppProcess {
         String foregroundPkgName = PkgUtils.getForegroundPkgName(mContext);
         if (foregroundPkgName != null && foregroundPkgName.equals(summary.getPkgName())) {
             mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.DONE));
-            mSpeechInteraction.nlpAnswer("当前已处于应用内");
+            mSpeechInteraction.customAnswer("当前已处于应用内");
             return true;
         }
         AppInfo appInfo = PkgUtils.getAppInfo(mContext, summary.getPkgName());
@@ -166,16 +166,16 @@ public class AppProcessImpl implements IAppProcess {
             switch (intent) {
                 case DOWNLOAD:
                 case DOWNLOAD_APP:
-                    mSpeechInteraction.nlpAnswer("设备已有" + summary.getName() + "，无需下载");
+                    mSpeechInteraction.customAnswer("设备已有" + summary.getName() + "，无需下载");
                     break;
                 case INSTALL:
                 case INSTALL_APP:
-                    mSpeechInteraction.nlpAnswer("设备已有" + summary.getName() + "，无需安装");
+                    mSpeechInteraction.customAnswer("设备已有" + summary.getName() + "，无需安装");
                     break;
                 case LAUNCH:
                 case LAUNCH_APP:
                     PkgUtils.launchApp(mContext, appInfo);
-                    mSpeechInteraction.nlpAnswer("已为你打开应用");
+                    mSpeechInteraction.customAnswer("已为你打开应用");
                     break;
             }
             return true;
@@ -187,7 +187,7 @@ public class AppProcessImpl implements IAppProcess {
         if (pkgInfo.isIgnore()) return;
         if (pkgInfo.isEmpty()) {
             mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.EMPTY));
-            mSpeechInteraction.nlpAnswer("未找到匹配的应用");
+            mSpeechInteraction.customAnswer("未找到匹配的应用");
         } else {
             switch (intent) {
                 case DOWNLOAD:
@@ -209,7 +209,7 @@ public class AppProcessImpl implements IAppProcess {
     private void populateProcessError(Throwable throwable) {
         Timber.tag(TAG).d(throwable, "populateProcessError");
         mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.FAILED));
-        mSpeechInteraction.nlpAnswer("处理过程出错了");
+        mSpeechInteraction.customAnswer("处理过程出错了");
     }
 
     private void populateAppDownload(PkgInfo pkgInfo) {
@@ -237,7 +237,7 @@ public class AppProcessImpl implements IAppProcess {
                     super.onAppFailed(isDownloadFailed, download);
                     Timber.tag(TAG).d("populateAppDownload onAppFailed");
                     mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.FAILED));
-                    mSpeechInteraction.nlpAnswer(download.getFailedReason());
+                    mSpeechInteraction.customAnswer(download.getFailedReason());
                 }
             });
             if (downloadManager.isAnyPkgTaskRunning()) {
@@ -265,7 +265,7 @@ public class AppProcessImpl implements IAppProcess {
             public void onAppInstalled(ApkDownload download) {
                 super.onAppInstalled(download);
                 Timber.tag(TAG).d("populateAppInstall onAppInstalled");
-                mSpeechInteraction.nlpAnswer("安装" + pkgInfo.getName() + "成功");
+                mSpeechInteraction.customAnswer("安装" + pkgInfo.getName() + "成功");
                 mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.DONE));
                 populateWakeupAfterAppInstall();
             }
@@ -275,7 +275,7 @@ public class AppProcessImpl implements IAppProcess {
                 super.onAppFailed(isDownloadFailed, download);
                 Timber.tag(TAG).d("populateAppInstall onAppFailed");
                 mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.FAILED));
-                mSpeechInteraction.nlpAnswer(download.getFailedReason());
+                mSpeechInteraction.customAnswer(download.getFailedReason());
             }
         });
         if (downloadManager.isAnyPkgTaskRunning()) {
@@ -311,7 +311,7 @@ public class AppProcessImpl implements IAppProcess {
                 super.onAppFailed(isDownloadFailed, download);
                 Timber.tag(TAG).d("populateAppLaunchWithPkgInfo onAppFailed");
                 mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.FAILED));
-                mSpeechInteraction.nlpAnswer(download.getFailedReason());
+                mSpeechInteraction.customAnswer(download.getFailedReason());
             }
 
             @Override
@@ -320,10 +320,10 @@ public class AppProcessImpl implements IAppProcess {
                 Timber.tag(TAG).d("populateAppLaunchWithPkgInfo onAppInstalled");
                 if (intent == null) {
                     PkgUtils.launchApp(mContext, download.getPkgName());
-                    mSpeechInteraction.nlpAnswer("已为你打开应用");
+                    mSpeechInteraction.customAnswer("已为你打开应用");
                 } else {
                     PkgUtils.launchIntent(mContext, intent);
-                    mSpeechInteraction.nlpAnswer("好的");
+                    mSpeechInteraction.customAnswer("好的");
                 }
                 mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.DONE));
                 populateWakeupAfterAppInstall();

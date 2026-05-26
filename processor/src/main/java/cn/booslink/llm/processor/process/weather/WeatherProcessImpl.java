@@ -32,7 +32,7 @@ public class WeatherProcessImpl implements IWeatherProcess {
     @Override
     public VoiceResult handleWeatherIntent(UIResponse response, @NotNull List<Slot> slots) {
         boolean shouldShowWeatherList = parseQueryFocusBySlots(slots);
-        if (shouldShowWeatherList) {
+        if (shouldShowWeatherList && !response.queryWeatherInvalid()) {
             mSpeechInteraction.semanticAnswer(response);
             return VoiceResult.Companion.ignore();
         } else {

@@ -190,7 +190,7 @@ public class VideoProcessImpl implements IVideoProcess {
             case BRIGHT_DOWN:
                 return videoAction.changeBright("DOWN");
             case BRIGHT_MAX:
-                return videoAction.changeBright("225");
+                return videoAction.changeBright("255");
             case BRIGHT_MIN:
                 return videoAction.changeBright("0");
             case VOLUME_PLUS:

@@ -25,6 +25,7 @@ import cn.booslink.llm.common.model.enums.Category;
 import cn.booslink.llm.common.model.enums.EmoteState;
 import cn.booslink.llm.common.model.enums.QueryState;
 import cn.booslink.llm.common.speech.ISpeechAgent;
+import cn.booslink.llm.common.speech.ITTSSpeech;
 import cn.booslink.llm.common.utils.ContextUtils;
 import cn.booslink.llm.common.utils.WeatherExtKt;
 import cn.booslink.llm.common.widget.AIRootLayout;
@@ -42,6 +43,7 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
     Lazy<ISpeechAgent> mSpeechAgentLazy;
 
     private final Context mContext;
+    private final ITTSSpeech mTTSSpeech;
     private final FrameLayout mParentView;
     private final MutableLiveData<String> mNplResponseLiveData;
     private final MutableLiveData<EmoteState> mEmoteStateLiveData;
@@ -53,8 +55,9 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
     private volatile boolean isActive = false;
 
     @Inject
-    public SpeechInteractionImpl(@ApplicationContext Context context) {
+    public SpeechInteractionImpl(@ApplicationContext Context context, ITTSSpeech ttsSpeech) {
         this.mContext = context;
+        this.mTTSSpeech = ttsSpeech;
         this.mParentView = new FrameLayout(context);
         this.mEmoteStateLiveData = new MutableLiveData<>(EmoteState.IDLE);
         this.mVoiceInputLiveData = new MutableLiveData<>(VoiceQuery.Companion.startup());
@@ -205,24 +208,40 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
     }
 
     @Override
-    public void nlpAnswer(String nlpReply) {
+    public void nlpAnswer(String nlpReply, boolean isStreamEnd) {
         if (TextUtils.isEmpty(nlpReply)) return;
+        if (isStreamEnd) {
+            mTTSSpeech.speak(nlpReply);
+        }
         mNplResponseLiveData.postValue(nlpReply);
+    }
+
+    @Override
+    public void customAnswer(String customReply) {
+        if (TextUtils.isEmpty(customReply)) return;
+        mTTSSpeech.speak(customReply);
+        mNplResponseLiveData.postValue(customReply);
     }
 
     @Override
     public void semanticAnswer(UIResponse response) {
         Timber.tag(TAG).d("semanticAnswer, category = %s", response.getCategory());
         if (response.getCategory() == Category.WEATHER) {
-            if (response.getWeathers() == null || response.getWeathers().isEmpty() || response.queryWeatherInvalid()) {
+            if (response.getWeathers() == null || response.getWeathers().isEmpty()) {
                 Timber.tag(TAG).d("weather invalid");
-                nlpAnswer("未找到相关内容");
+                customAnswer("未找到相关内容");
                 mEmoteStateLiveData.postValue(EmoteState.CRYING);
                 return;
             }
+            String ttsText = response.getWeatherTTSSpeechText();
+            if (!TextUtils.isEmpty(ttsText)) {
+                mTTSSpeech.speak(ttsText);
+            }
             mUIResponseLiveData.postValue(response);
-            Weather weather = response.getWeathers().get(0);
-            mEmoteStateLiveData.postValue(WeatherExtKt.getEmoteState(weather));
+            Weather weather = response.getQueryDayWeather();
+            if (weather != null) {
+                mEmoteStateLiveData.postValue(WeatherExtKt.getEmoteState(weather));
+            }
         } else if (response.getCategory() == Category.SLEEP) {
             mUIResponseLiveData.postValue(response);
             mEmoteStateLiveData.postValue(EmoteState.NORMAL);
@@ -271,7 +290,7 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
         }
         mParentView.setVisibility(View.VISIBLE);
         updateQuery(VoiceQuery.Companion.stateOnly(QueryState.FAILED));
-        nlpAnswer(failReason);
+        customAnswer(failReason);
     }
 
     @Override
@@ -285,7 +304,7 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
         }
         mParentView.setVisibility(View.VISIBLE);
         updateQuery(VoiceQuery.Companion.stateOnly(QueryState.IDLE));
-        nlpAnswer("等待联网鉴权");
+        customAnswer("等待联网鉴权");
     }
 
     /**

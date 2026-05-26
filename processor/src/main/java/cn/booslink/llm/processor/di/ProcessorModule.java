@@ -33,6 +33,8 @@ import cn.booslink.llm.processor.process.weather.IWeatherProcess;
 import cn.booslink.llm.processor.process.weather.WeatherProcessImpl;
 import cn.booslink.llm.processor.repository.AppRepositoryImpl;
 import cn.booslink.llm.processor.repository.IAppRepository;
+import cn.booslink.llm.common.speech.ITTSSpeech;
+import cn.booslink.llm.processor.tts.TTSSpeechImpl;
 import dagger.Binds;
 import dagger.Module;
 import dagger.hilt.InstallIn;
@@ -47,12 +49,17 @@ public interface ProcessorModule {
     IEventProcessor bindEventProcessor(EventProcessorImpl eventProcessorImpl);
 
     @Binds
+    @Singleton
+    ITTSSpeech bindTTSSpeech(TTSSpeechImpl ttsspeechImpl);
+
+    @Binds
     IIntentProcess bindIntentProcess(IntentProcessProxy intentProcessProxy);
 
     @Binds
     IControlProcess bindControlProcess(ControlProcessImpl controlProcessImpl);
 
     @Binds
+    @Singleton
     IVolumeProcess bindVolumeProcess(VolumeProcessImpl volumeProcessImpl);
 
     @Binds
