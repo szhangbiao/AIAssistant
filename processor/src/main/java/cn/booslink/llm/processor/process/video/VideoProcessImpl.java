@@ -247,7 +247,7 @@ public class VideoProcessImpl implements IVideoProcess {
         String name = null;
         for (Slot slot : slots) {
             if (SLOT_NAME.equals(slot.getName())) {
-                name = slot.getName();
+                name = slot.getValue();
                 break;
             }
         }

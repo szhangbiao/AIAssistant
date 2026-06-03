@@ -97,9 +97,26 @@ public class RoundProgressBar extends View {
         super.onDraw(canvas);
         int width = getWidth();
         int height = getHeight();
-        int radius = Math.min(width, height) / 2 - (int) (mStrokeWidth / 2);
+        
+        int paddingLeft = getPaddingLeft();
+        int paddingRight = getPaddingRight();
+        int paddingTop = getPaddingTop();
+        int paddingBottom = getPaddingBottom();
+        
+        int usableWidth = width - paddingLeft - paddingRight;
+        int usableHeight = height - paddingTop - paddingBottom;
+        
+        float centerX = paddingLeft + usableWidth / 2.0f;
+        float centerY = paddingTop + usableHeight / 2.0f;
+        
+        // 使用 float 计算半径，减去半个画笔宽度，并留出 1.0px 的微调缓冲空间（以防抗锯齿渲染时边缘被切）
+        float radius = (Math.min(usableWidth, usableHeight) - mStrokeWidth) / 2.0f - 1.0f;
+        if (radius < 0) {
+            radius = 0;
+        }
+        
         // 设置绘制区域
-        mRectF.set(width / 2.0f - radius, height / 2.0f - radius, width / 2.0f + radius, height / 2.0f + radius);
+        mRectF.set(centerX - radius, centerY - radius, centerX + radius, centerY + radius);
         // 绘制背景圆环
         canvas.drawArc(mRectF, 0, 360, false, mBackgroundPaint);
         // 使用已创建的渐变对象

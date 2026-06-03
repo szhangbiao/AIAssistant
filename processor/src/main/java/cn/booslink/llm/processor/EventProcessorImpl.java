@@ -127,7 +127,8 @@ public class EventProcessorImpl implements IEventProcessor {
             case AIUIConstant.EVENT_SLEEP: // 休眠事件
                 int sleepType = event.arg1; // 0 （交互超时,自动休眠）, 1 （发送CMD_RESET_WAKEUP手动休眠）
                 Timber.tag(TAG).d("sleep, type = %d", sleepType);
-                boolean shouldBlockSleepLogic = mAppManager.isAnyPkgTaskRunning();
+                boolean nlpOutput = !mEventData.getSemanticHandled() && mNplBuilder.length() > 0;
+                boolean shouldBlockSleepLogic = mAppManager.isAnyPkgTaskRunning() || mTTSSpeech.isSpeaking() || nlpOutput;
                 boolean isNetworkConnected = NetworkUtils.isConnected(mContext);
                 if (sleepType == 0 && shouldBlockSleepLogic && isNetworkConnected) {
                     wakeupNetworkResumeOrDownloadContinue();
@@ -172,6 +173,8 @@ public class EventProcessorImpl implements IEventProcessor {
                 int code = event.arg1;
                 Timber.tag(TAG).d("error code = %d, info = %s", code, event.info);
                 mSpeechInteraction.semanticAnswer(UIResponse.Companion.empty());
+                ISpeechAgent speechAgent = mSpeechAgentLazy.get();
+                if (speechAgent == null || !speechAgent.isAIUIWorking()) return;
                 if (RESULT_NETWORK_ERROR == code || RESULT_NETWORK_TIMEOUT == code) {
                     mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.ERROR));
                     mSpeechInteraction.customAnswer("网络出现错误");
@@ -219,7 +222,7 @@ public class EventProcessorImpl implements IEventProcessor {
         CBMSub sub = eventInfo.getSub();
         String cntId = eventInfo.getCntId();
         if (sub == null || TextUtils.isEmpty(cntId) || sub == CBMSub.TTS) return EventData.Companion.empty();
-        Timber.tag(TAG).d("parseEventData, sub = %s", sub);
+        //Timber.tag(TAG).d("parseEventData, sub = %s", sub);
         try {
             byte[] bytes = event.data.getByteArray(cntId);
             String cntJsonRaw = new String(bytes, StandardCharsets.UTF_8);
@@ -262,7 +265,12 @@ public class EventProcessorImpl implements IEventProcessor {
             mEventData = mEventData.copyIat(data.getText());
             mSpeechInteraction.updateQuery(new VoiceQuery(data.getText().getIATVoice(), QueryState.QUERYING));
         } else if (sub == CBMSub.NLP) {
-            if (data.getNlp() == null || (!TextUtils.isEmpty(mEventData.getId()) && !mEventData.getId().equals(data.getId()))) return;
+            if (data.getNlp() == null || (!TextUtils.isEmpty(mEventData.getId()) && !mEventData.getId().equals(data.getId()))) {
+                if (mNplBuilder.length() > 0) {
+                    mNplBuilder.delete(0, mNplBuilder.length());
+                }
+                return;
+            }
             int status = data.getNlp().getStatus() != null ? data.getNlp().getStatus() : -1;
             switch (status) {
                 case 0:
@@ -279,7 +287,7 @@ public class EventProcessorImpl implements IEventProcessor {
                     break;
                 case 2:
                     String nplContent = mNplBuilder.toString();
-                    Timber.tag(TAG).d("nlp, content = %s, semanticHandled = %b", nplContent, mEventData.getSemanticHandled());
+                    Timber.tag(TAG).d("nlp, content = %s, semanticHandled = %b, id = %s", nplContent, mEventData.getSemanticHandled(), mEventData.getId());
                     mNplBuilder.delete(0, mNplBuilder.length());
                     mEventData = mEventData.copyNlp(data.getNlp());
                     if (data.getTag() != AIUITag.LAUNCH && mEventData.getSemanticHandled()) return;
@@ -325,7 +333,7 @@ public class EventProcessorImpl implements IEventProcessor {
             if (TYPE_VAD.equals(type) && VAD_BOS.equals(key)) { // speak start
                 mTTSSpeech.cancel();
             }
-            Timber.tag(TAG).d("cbm event, type = %s, key = %s", type, key);
+            Timber.tag(TAG).d("cbm event, type = %s, key = %s, event id = %s", type, key, data.getId());
             if (TYPE_VAD.equals(type) && (VAD_SILENCE.equals(key) || VAD_EOS.equals(key))) {
                 mEventData = EventData.Companion.withId(data.getId());
                 if (mEventData.getCbmSemantic() == null || mEventData.getCbmSemantic().getText() == null) return;

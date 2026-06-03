@@ -7,5 +7,7 @@ public interface ITTSSpeech {
 
     void ttsState(AIUIEvent event);
 
+    boolean isSpeaking();
+
     void cancel();
 }

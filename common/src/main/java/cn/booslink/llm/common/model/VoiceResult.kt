@@ -1,10 +1,10 @@
 package cn.booslink.llm.common.model
 
-data class VoiceResult(val handled: Boolean,val ignoreNlpResponse: Boolean, val responseText: String?) {
+data class VoiceResult(val handled: Boolean = true, val ignoreNlpResponse: Boolean = false, val responseText: String? = null) {
     companion object {
-        fun success(responseText: String) = VoiceResult(handled = true, ignoreNlpResponse = false, responseText = responseText)
-        fun failure() = VoiceResult(handled = false, ignoreNlpResponse = false, responseText = null)
-        fun progress() = VoiceResult(true, ignoreNlpResponse = false, responseText = "正在为你处理")
-        fun ignore() = VoiceResult(true, ignoreNlpResponse = true, responseText = null)
+        fun success(responseText: String) = VoiceResult(responseText = responseText)
+        fun failure() = VoiceResult(handled = false)
+        fun progress() = VoiceResult(responseText = "正在为你处理")
+        fun ignore() = VoiceResult(ignoreNlpResponse = true)
     }
 }

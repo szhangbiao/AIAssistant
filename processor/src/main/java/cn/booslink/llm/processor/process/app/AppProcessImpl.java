@@ -87,7 +87,7 @@ public class AppProcessImpl implements IAppProcess {
         }
         if (TextUtils.isEmpty(appName)) return VoiceResult.Companion.failure();
         findMatchApp(intent, appName);
-        return VoiceResult.Companion.success("正在处理");
+        return VoiceResult.Companion.ignore();
     }
 
     @Override
