@@ -30,6 +30,7 @@ import cn.booslink.llm.common.model.enums.CBMSub;
 import cn.booslink.llm.common.model.enums.QueryState;
 import cn.booslink.llm.common.network.NetworkMonitor;
 import cn.booslink.llm.common.speech.ISpeechAgent;
+import cn.booslink.llm.common.speech.ISpeechStatus;
 import cn.booslink.llm.common.storage.ISpeechStorage;
 import cn.booslink.llm.common.ui.ISpeechInteraction;
 import cn.booslink.llm.common.utils.NetworkUtils;
@@ -68,6 +69,7 @@ public class EventProcessorImpl implements IEventProcessor {
     private final ITTSSpeech mTTSSpeech;
     private final IAppManager mAppManager;
     private final StringBuilder mNplBuilder;
+    private final ISpeechStatus mSpeechStatus;
     private final ISpeechStorage mSpeechStorage;
     private final IIntentProcess mIntentProcess;
     private final Lazy<ISpeechAgent> mSpeechAgentLazy;
@@ -78,16 +80,17 @@ public class EventProcessorImpl implements IEventProcessor {
     private FlowableEmitter<AIUIEvent> mEventEmitter;
     private volatile boolean isSubscriptionActive = false;
     private volatile boolean isDestroyed = false;
-    private volatile int mSpeechStatus;
+    private volatile int mSpeechState;
 
     private EventData mEventData = EventData.Companion.empty();
 
     @Inject
-    public EventProcessorImpl(Gson gson, @ApplicationContext Context context, IIntentProcess intentProcess, IAppManager appManager, ISpeechStorage speechStorage, ISpeechInteraction speechInteraction, NetworkMonitor networkMonitor, Lazy<ISpeechAgent> speechAgentLazy, ITTSSpeech ittsSpeech) {
+    public EventProcessorImpl(Gson gson, @ApplicationContext Context context, IIntentProcess intentProcess, IAppManager appManager, ISpeechStatus speechStatus, ISpeechStorage speechStorage, ISpeechInteraction speechInteraction, NetworkMonitor networkMonitor, Lazy<ISpeechAgent> speechAgentLazy, ITTSSpeech ittsSpeech) {
         this.mGson = gson;
         this.mContext = context;
         this.mTTSSpeech = ittsSpeech;
         this.mAppManager = appManager;
+        this.mSpeechStatus = speechStatus;
         this.mIntentProcess = intentProcess;
         this.mSpeechStorage = speechStorage;
         this.mNplBuilder = new StringBuilder();
@@ -102,7 +105,7 @@ public class EventProcessorImpl implements IEventProcessor {
     public void processEvent(AIUIEvent event) {
         switch (event.eventType) {
             case AIUIConstant.EVENT_STATE: // 服务状态事件
-                mSpeechStatus = event.arg1;
+                mSpeechState = event.arg1;
                 break;
             case AIUIConstant.EVENT_RESULT: // 结果事件
                 //Timber.tag(TAG).d("result = %s", event.info);
@@ -111,6 +114,7 @@ public class EventProcessorImpl implements IEventProcessor {
             case AIUIConstant.EVENT_WAKEUP: // 唤醒事件
                 int type = event.arg1; // 0 （语音唤醒）, 1 （发送CMD_WAKEUP手动唤醒）
                 Timber.tag(TAG).d("wakeup, type = %d", type);
+                mSpeechStatus.wakeup();
                 mHandler.post(mSpeechInteraction::UIWakeup);
                 if (type == 0) {
                     boolean shouldBlockSleepLogic = mAppManager.isAnyPkgTaskRunning();
@@ -130,10 +134,11 @@ public class EventProcessorImpl implements IEventProcessor {
                 boolean nlpOutput = !mEventData.getSemanticHandled() && mNplBuilder.length() > 0;
                 boolean shouldBlockSleepLogic = mAppManager.isAnyPkgTaskRunning() || mTTSSpeech.isSpeaking() || nlpOutput;
                 boolean isNetworkConnected = NetworkUtils.isConnected(mContext);
-                if (sleepType == 0 && shouldBlockSleepLogic && isNetworkConnected) {
+                if (mSpeechStatus.isTimeout() && shouldBlockSleepLogic && isNetworkConnected) {
                     wakeupNetworkResumeOrDownloadContinue();
                     return;
                 }
+                mSpeechStatus.sleep();
                 //if (!isNetworkConnected) return;
                 boolean showLeaveConfirm = mSpeechStorage.shouldShowLeaveConfirm();
                 if (showLeaveConfirm) {
@@ -161,6 +166,9 @@ public class EventProcessorImpl implements IEventProcessor {
                 break;
             case AIUIConstant.EVENT_TTS: // 语音合成事件
                 mTTSSpeech.ttsState(event);
+                if (event.arg1 == AIUIConstant.TTS_SPEAK_COMPLETED) {
+                    mSpeechStatus.reset();
+                }
                 break;
             case AIUIConstant.EVENT_CONNECTED_TO_SERVER: // 与服务端建立连接
                 String uid = event.data.getString(KEY_UID);
@@ -177,7 +185,7 @@ public class EventProcessorImpl implements IEventProcessor {
                 if (speechAgent == null || !speechAgent.isAIUIWorking()) return;
                 if (RESULT_NETWORK_ERROR == code || RESULT_NETWORK_TIMEOUT == code) {
                     mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.ERROR));
-                    mSpeechInteraction.customAnswer("网络出现错误");
+                    mSpeechInteraction.nlpAnswer("网络出现错误", false);
                 }
                 break;
         }
@@ -185,7 +193,7 @@ public class EventProcessorImpl implements IEventProcessor {
 
     @Override
     public boolean isProcessActive() {
-        return mSpeechStatus == AIUIState.WORKING.getState();
+        return mSpeechState == AIUIState.WORKING.getState();
     }
 
     @Override
@@ -228,7 +236,7 @@ public class EventProcessorImpl implements IEventProcessor {
             String cntJsonRaw = new String(bytes, StandardCharsets.UTF_8);
             String tag = event.data.getString(KEY_TAG);
             String streamId = event.data.getString(KEY_STREAM_ID);
-            //Timber.tag(TAG).d("parseEventData, cnt json = %s", cntJsonRaw);
+            Timber.tag(TAG).d("parseEventData, cnt json = %s", cntJsonRaw);
             EventData data = mGson.fromJson(cntJsonRaw, EventData.class);
             data.setId(streamId);
             data.setTag(AIUITag.fromTag(tag));
@@ -259,6 +267,7 @@ public class EventProcessorImpl implements IEventProcessor {
     private void populateEventResult(EventData data) {
         CBMSub sub = data.getSub();
         if (sub == null) return;
+        mSpeechStatus.reset();
         if (sub == CBMSub.IAT) {
             if (data.getText() == null || data.getTag() == AIUITag.LAUNCH) return;
             Timber.tag(TAG).d("iat result = %s", data.getText().getIATVoice());
@@ -304,9 +313,10 @@ public class EventProcessorImpl implements IEventProcessor {
             }
         } else if (sub == CBMSub.CBM_TIDY) {
             if (data.getCbmTidy() == null || data.getCbmTidy().getText() == null || data.getTag() == AIUITag.LAUNCH) return;
-            Timber.tag(TAG).d("cbm tidy, query = %s", data.getCbmTidy().getText().getQuery());
+            String tidyText = data.getCbmTidy().getText().getQuery();
+            Timber.tag(TAG).d("cbm tidy, query = %s", tidyText);
             mEventData = mEventData.copyTidy(data.getCbmTidy());
-            mSpeechInteraction.updateQuery(new VoiceQuery(data.getCbmTidy().getText().getQuery(), QueryState.QUERYING));
+            mSpeechInteraction.updateQuery(new VoiceQuery(tidyText, QueryState.QUERYING));
         } else if (sub == CBMSub.CBM_SEMANTIC) {
             if (data.getResponse() == null || data.getTag() == AIUITag.LAUNCH || data.getCbmSemantic() == null) return;
             mEventData = mEventData.copySemantic(data.getCbmSemantic(), data.getResponse());
@@ -314,10 +324,8 @@ public class EventProcessorImpl implements IEventProcessor {
             if (cbmSemantic != null && cbmSemantic.getSemantic() != null) {
                 VoiceResult voiceResult = mIntentProcess.processIntent(data.getResponse(), cbmSemantic.getSemantic());
                 mEventData.setSemanticHandled(voiceResult.getHandled());
-                if (voiceResult.getHandled()) {
-                    String queryText = mEventData.getCbmTidy() != null && mEventData.getCbmTidy().getText() != null ? mEventData.getCbmTidy().getText().getQuery() : null;
-                    mSpeechInteraction.updateQuery(VoiceQuery.Companion.replace(queryText, QueryState.DONE));
-                }
+                String queryText = mEventData.getCbmTidy() != null && mEventData.getCbmTidy().getText() != null ? mEventData.getCbmTidy().getText().getQuery() : null;
+                mSpeechInteraction.updateQuery(VoiceQuery.Companion.replace(queryText, voiceResult.getHandled() ? QueryState.DONE : QueryState.QUERYING));
                 if (cbmSemantic.getSemantic().isEmpty()) return;
                 Timber.tag(TAG).d("cbm semantic category = %s, intent = %s", data.getResponse().getCategory(), cbmSemantic.getSemantic().get(0).getIntent());
             }
@@ -402,11 +410,10 @@ public class EventProcessorImpl implements IEventProcessor {
                         //if (!speechAgent.isAIUIWorking()) return;
                         mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.IDLE));
                         mSpeechInteraction.customAnswer("网络恢复了");
-
                         wakeupNetworkResumeOrDownloadContinue();
                     } else {
                         mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.ERROR));
-                        mSpeechInteraction.customAnswer("网络出现错误");
+                        mSpeechInteraction.nlpAnswer("网络出现错误", false);
                     }
                 });
     }

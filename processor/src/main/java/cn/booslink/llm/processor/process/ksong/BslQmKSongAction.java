@@ -58,7 +58,7 @@ public class BslQmKSongAction implements IKSongAction {
     @Nullable
     @Override
     public Intent addSong(String artist, String song, boolean isTop) {
-        return getIntentWithParams(1000, isTop ? 1 : 0, artist, song);
+        return getIntentWithParams(1000, isTop ? 1 : 0, artist, song, 1);
     }
 
     @Nullable
@@ -106,19 +106,19 @@ public class BslQmKSongAction implements IKSongAction {
     @Nullable
     @Override
     public Intent select(int num) {
-        return null;
+        return getIntentWithParams(1030, num);
     }
 
     @Nullable
     @Override
     public Intent previousPage() {
-        return null;
+        return getIntentWithParams(1031, -1);
     }
 
     @Nullable
     @Override
     public Intent nextPage() {
-        return null;
+        return getIntentWithParams(1031, 1);
     }
 
     @Nullable
@@ -176,6 +176,26 @@ public class BslQmKSongAction implements IKSongAction {
         if (!TextUtils.isEmpty(song)) {
             deeplink.append("&m2=").append(song);
         }
+        deeplink.append("&pull_from=12121&mb=false");
+        Uri uri = Uri.parse(deeplink.toString());
+        Timber.tag(TAG).d("getIntentWithParams: %s", deeplink.toString());
+        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        return intent;
+    }
+
+    private Intent getIntentWithParams(int action, int m0, String artist, String song, int m3) {
+        StringBuilder deeplink = new StringBuilder("booslink_kg://?action=").append(action);
+        if (m0 != -1) {
+            deeplink.append("&m0=").append(m0);
+        }
+        if (!TextUtils.isEmpty(artist)) {
+            deeplink.append("&m1=").append(artist);
+        }
+        if (!TextUtils.isEmpty(song)) {
+            deeplink.append("&m2=").append(song);
+        }
+        deeplink.append("&m3=").append(m3);
         deeplink.append("&pull_from=12121&mb=false");
         Uri uri = Uri.parse(deeplink.toString());
         Timber.tag(TAG).d("getIntentWithParams: %s", deeplink.toString());

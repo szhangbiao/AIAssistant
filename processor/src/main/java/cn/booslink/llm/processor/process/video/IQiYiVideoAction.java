@@ -72,7 +72,11 @@ public class IQiYiVideoAction implements IVideoAction {
 
     @Override
     public Intent exitApp() {
-        return getAppIntent(ACTION_EXIT_APP);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            return getAppIntent(ACTION_EXIT_APP);
+        } else {
+            return new Intent();
+        }
     }
 
     @Override

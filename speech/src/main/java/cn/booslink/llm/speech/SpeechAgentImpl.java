@@ -83,7 +83,7 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
 
     @Override
     public void sendMessage(AIUIMessage message) {
-        if (message == null) return;
+        if (message == null || mAIUIAgent == null) return;
         mAIUIAgent.sendMessage(message);
     }
 

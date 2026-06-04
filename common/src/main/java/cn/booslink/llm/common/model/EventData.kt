@@ -1,4 +1,6 @@
 package cn.booslink.llm.common.model
+
+import cn.booslink.llm.common.model.enums.AIUIIntent
 import cn.booslink.llm.common.model.enums.AIUITag
 import cn.booslink.llm.common.model.enums.CBMSub
 import cn.booslink.llm.common.model.enums.Category
@@ -35,8 +37,20 @@ data class EventData(
     fun copyTidy(cbmTidy: SdkResponse<CBMTidy>) =
         EventData(id, text, event, cbmTidy, cbmSemantic, cbmToolPK, nlp, sub, tag, response, semanticHandled)
 
-    fun copySemantic(cbmSemantic: SdkResponse<CBMSemantic>, response: UIResponse) =
-        EventData(id, text, event, cbmTidy, cbmSemantic, cbmToolPK, nlp, sub, tag, response, !response.isWeatherEmpty())
+    fun copySemantic(cbmSemantic: SdkResponse<CBMSemantic>, response: UIResponse): EventData {
+        val semantic = cbmSemantic.text?.semantic?.firstOrNull()
+        val targetCategory = response.category == Category.PAGE_CONTROL || response.category == Category.KSONG
+        val targetIntent = semantic?.intent == AIUIIntent.PAGE_OPEN || semantic?.intent == AIUIIntent.OPEN_SCORE || semantic?.intent == AIUIIntent.CLOSE_SCORE
+        if (targetCategory && targetIntent && semantic.slots.isNotEmpty()) {
+            val slot = semantic.slots.firstOrNull()
+            val targetName = "page" == slot?.name || "score" == slot?.name
+            if (targetName && slot.normValue?.isNotEmpty() == true && slot.value?.isNotEmpty() == true && slot.normValue != slot.value) {
+                cbmTidy?.text?.query = cbmTidy.text.query?.replace(slot.value, slot.normValue)
+            }
+        }
+        return EventData(id, text, event, cbmTidy, cbmSemantic, cbmToolPK, nlp, sub, tag, response, !response.isWeatherEmpty())
+    }
+
 
     fun copyNlp(nlp: SdkResponse<String>) = EventData(id, text, event, cbmTidy, cbmSemantic, cbmToolPK, nlp, sub, tag, response, semanticHandled)
 }
@@ -66,7 +80,7 @@ data class Loc(val ability: String?, val intent: Int?, @SerializedName("unique_i
 
 // {\"query\":\"今天天气怎么样\",\"intent\":[{\"index\":0,\"value\":\"今天天气怎么样\"}]}
 
-data class CBMTidy(val query: String?, val intent: List<VoiceIntent>?)
+data class CBMTidy(var query: String?, val intent: List<VoiceIntent>?)
 
 data class VoiceIntent(val index: Int?, val value: String?)
 

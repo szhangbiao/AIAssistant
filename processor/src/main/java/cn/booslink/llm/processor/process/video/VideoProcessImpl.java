@@ -1,8 +1,10 @@
 package cn.booslink.llm.processor.process.video;
 
+import android.app.Instrumentation;
 import android.content.Context;
 import android.content.Intent;
 import android.text.TextUtils;
+import android.view.KeyEvent;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -17,8 +19,11 @@ import cn.booslink.llm.common.model.enums.AIUIIntent;
 import cn.booslink.llm.common.model.enums.Category;
 import cn.booslink.llm.processor.process.app.IAppProcess;
 import dagger.hilt.android.qualifiers.ApplicationContext;
+import timber.log.Timber;
 
 public class VideoProcessImpl implements IVideoProcess {
+
+    private static final String TAG = "VideoProcess";
 
     private static final String SLOT_CATEGORY = "category";
     private static final String SLOT_NAME = "name";
@@ -145,7 +150,11 @@ public class VideoProcessImpl implements IVideoProcess {
             case EXIT_APP:
                 boolean isMatchApp = parseSlotName(slots);
                 if (isMatchApp) {
-                    return videoAction.exitApp();
+                    Intent exitIntent = videoAction.exitApp();
+                    if (isEmptyIntent(exitIntent)) {
+                        simulateHomePress();
+                    }
+                    return exitIntent;
                 }
                 break;
             case QUERY:
@@ -427,5 +436,23 @@ public class VideoProcessImpl implements IVideoProcess {
             num = 0;
         }
         return num;
+    }
+
+    private void simulateHomePress() {
+        try {
+            Instrumentation inst = new Instrumentation();
+            inst.sendKeyDownUpSync(KeyEvent.KEYCODE_HOME);
+        } catch (Exception e) {
+            // 记录错误日志
+            Timber.tag(TAG).e(e, "Failed to simulate back press");
+        }
+    }
+
+    private boolean isEmptyIntent(Intent intent) {
+        if (intent == null) return true;
+        // 如果没有action、component或package，基本上就是空Intent
+        return TextUtils.isEmpty(intent.getAction()) &&
+                intent.getComponent() == null &&
+                TextUtils.isEmpty(intent.getPackage());
     }
 }

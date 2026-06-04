@@ -19,6 +19,7 @@ import cn.booslink.llm.common.model.Slot;
 import cn.booslink.llm.common.model.VoiceResult;
 import cn.booslink.llm.common.model.enums.AIUIIntent;
 import cn.booslink.llm.common.model.enums.Category;
+import cn.booslink.llm.common.utils.GsonProvider;
 import cn.booslink.llm.processor.process.app.IAppProcess;
 import dagger.Lazy;
 import dagger.hilt.android.qualifiers.ApplicationContext;
@@ -41,13 +42,15 @@ public class KSongProcessImpl implements IKSongProcess {
     private static final String KEY_PAGE = "page";
     private static final String KEY_ARTIST = "artist";
     private static final String KEY_SONG = "song";
+    private static final String KEY_UNIT = "unit";
+    private static final String UNIT_PAGE = "页";
 
     private static final String PAGE_FAVORITE = "收藏";
     private static final String PAGE_RECENT = "最近播放";
     private static final String PAGE_LOCAL = "本地";
     private static final String PAGE_FREQUENT = "常唱";
+    private static final String PAGE_FREQUENT_2 = "常点歌曲";
     private static final String PAGE_PLAYLIST = "播放列表";
-    private static final String PAGE_FREQUENT_2 = "尝尝";
 
     @Inject
     @Named("quanmin")
@@ -89,7 +92,8 @@ public class KSongProcessImpl implements IKSongProcess {
                         intent == AIUIIntent.CHOOSE_WHICH || // 选择第几首
                         intent == AIUIIntent.CHOOSE_PREVIOUS // 上一页
         )) || (isKSongAppStartup && category == Category.PAGE_CONTROL && (
-                intent == AIUIIntent.PAGE_OPEN || //打开最近播放,收藏,本地,常唱
+                intent == AIUIIntent.PAGE_OPEN || //打开最近播放,收藏,本地
+                        intent == AIUIIntent.OPEN_FREQUENT || //打开常唱
                         intent == AIUIIntent.PAGE_BACK // 关闭当前页 or 返回到上一级页面
         )) || (isKSongAppStartup && (
                 intent == AIUIIntent.KSONG_ORIGIN || intent == AIUIIntent.CLOSE_ACCOM ||// 原唱
@@ -152,6 +156,10 @@ public class KSongProcessImpl implements IKSongProcess {
             case PAUSE:
                 return songAction.pause();
             case CHOOSE_NEXT:
+                String nextUnit = parseUnitBySlot(slots);
+                if (UNIT_PAGE.equals(nextUnit)) {
+                    return songAction.nextPage();
+                }
                 return songAction.next();
             case REPLAY:
             case KSONG_REPLAY:
@@ -175,6 +183,8 @@ public class KSongProcessImpl implements IKSongProcess {
                 return backIntent;
             case PAGE_OPEN:
                 return getPageIntentBySlot(foregroundPkgName, slots);
+            case OPEN_FREQUENT:
+                return songAction.openFrequent();
             case KSONG_ORIGIN:
             case CLOSE_ACCOM:
                 return songAction.originTrack();
@@ -200,6 +210,16 @@ public class KSongProcessImpl implements IKSongProcess {
         return null;
     }
 
+    private String parseUnitBySlot(@NotNull List<Slot> slots) {
+        if (slots.isEmpty()) return null;
+        for (Slot slot : slots) {
+            if (KEY_UNIT.equals(slot.getName())) {
+                return slot.getValue();
+            }
+        }
+        return null;
+    }
+
     private boolean parseNameBySlot(String foregroundPkgName, @NotNull List<Slot> slots) {
         if (slots.isEmpty()) return true;
         String name = null;
@@ -218,6 +238,7 @@ public class KSongProcessImpl implements IKSongProcess {
         if (slots.isEmpty()) return null;
         String artist = null;
         String song = null;
+        Timber.tag(TAG).d("parseArtistAndSongBySlot, gson = %s", GsonProvider.instance().toJson(slots));
         for (Slot slot : slots) {
             if (KEY_ARTIST.equals(slot.getName())) {
                 artist = slot.getValue();
@@ -290,10 +311,11 @@ public class KSongProcessImpl implements IKSongProcess {
     private Intent getPageIntentBySlot(String foregroundPkgName, @NotNull List<Slot> slots) {
         for (Slot slot : slots) {
             if (KEY_PAGE.equals(slot.getName())) {
-                if (TextUtils.isEmpty(slot.getValue())) return null;
+                if (TextUtils.isEmpty(slot.getValue()) || TextUtils.isEmpty(slot.getNormValue())) return null;
                 IKSongAction songAction = getKSongAction(foregroundPkgName);
                 if (songAction == null) return null;
-                switch (slot.getValue()) {
+                String pageValue = slot.getValue().equals(slot.getNormValue()) ? slot.getValue() : slot.getNormValue();
+                switch (pageValue) {
                     case PAGE_FAVORITE:
                         return songAction.openFavorite();
                     case PAGE_RECENT:

@@ -3,6 +3,7 @@ package cn.booslink.llm.processor.di;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import cn.booslink.llm.common.speech.ISpeechStatus;
 import cn.booslink.llm.processor.EventProcessorImpl;
 import cn.booslink.llm.processor.IEventProcessor;
 import cn.booslink.llm.processor.process.IIntentProcess;
@@ -34,6 +35,7 @@ import cn.booslink.llm.processor.process.weather.WeatherProcessImpl;
 import cn.booslink.llm.processor.repository.AppRepositoryImpl;
 import cn.booslink.llm.processor.repository.IAppRepository;
 import cn.booslink.llm.common.speech.ITTSSpeech;
+import cn.booslink.llm.processor.status.SpeechStatusImpl;
 import cn.booslink.llm.processor.tts.TTSSpeechImpl;
 import dagger.Binds;
 import dagger.Module;
@@ -51,6 +53,10 @@ public interface ProcessorModule {
     @Binds
     @Singleton
     ITTSSpeech bindTTSSpeech(TTSSpeechImpl ttsspeechImpl);
+
+    @Binds
+    @Singleton
+    ISpeechStatus bindSpeechStatus(SpeechStatusImpl speechStatusImpl);
 
     @Binds
     IIntentProcess bindIntentProcess(IntentProcessProxy intentProcessProxy);
