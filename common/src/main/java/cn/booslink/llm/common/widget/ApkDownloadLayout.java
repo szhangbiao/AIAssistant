@@ -8,12 +8,20 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.graphics.Color;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
+
 import java.util.Locale;
 
 import cn.booslink.llm.common.R;
 import cn.booslink.llm.common.di.CommonEntryPoint;
 import cn.booslink.llm.common.image.ImageLoader;
 import cn.booslink.llm.common.model.ApkDownload;
+import cn.booslink.llm.common.ui.ISpeechInteraction;
 import dagger.hilt.android.EntryPointAccessors;
 
 public class ApkDownloadLayout extends RelativeLayout {
@@ -21,8 +29,10 @@ public class ApkDownloadLayout extends RelativeLayout {
     private ImageView ivIcon;
     private TextView tvName;
     private TextView tvStatus;
-    private ImageView ivDone;
+    private TextView tvLabel;
+    private TextView tvCountdown;
     private RoundProgressBar pbProgress;
+    private CountDownProgressBar pbDone;
     private TextView tvProgress;
 
     public ApkDownloadLayout(Context context) {
@@ -37,20 +47,9 @@ public class ApkDownloadLayout extends RelativeLayout {
         super(context, attrs, defStyleAttr);
         inflateLayout(context);
         initWidgets();
+        initListeners();
     }
 
-    private void inflateLayout(Context context) {
-        LayoutInflater.from(context).inflate(R.layout.layout_apk_download, this, true);
-    }
-
-    private void initWidgets() {
-        ivIcon = findViewById(R.id.iv_icon);
-        tvName = findViewById(R.id.tv_name);
-        tvStatus = findViewById(R.id.tv_status);
-        ivDone = findViewById(R.id.iv_download_done);
-        pbProgress = findViewById(R.id.pb_progress);
-        tvProgress = findViewById(R.id.tv_progress);
-    }
 
     public void updateDownloadView(ApkDownload download) {
         if (download.isEmpty()) {
@@ -67,7 +66,7 @@ public class ApkDownloadLayout extends RelativeLayout {
             ivIcon.setImageDrawable(download.getApkIcon());
         }
         tvName.setText(download.getName());
-        ivDone.setVisibility(download.isDownloadComplete() ? VISIBLE : GONE);
+        pbDone.setVisibility(download.isDownloadComplete() ? VISIBLE : GONE);
         pbProgress.setVisibility(download.isDownloadComplete() ? GONE : VISIBLE);
         tvProgress.setVisibility(download.isDownloadComplete() ? GONE : VISIBLE);
         if (download.isDownloadComplete()) {
@@ -79,13 +78,74 @@ public class ApkDownloadLayout extends RelativeLayout {
         }
     }
 
-    private void resetViews() {
+    public void startCountDown(boolean isApkInstalled) {
+        tvLabel.setVisibility(VISIBLE);
+        tvCountdown.setVisibility(VISIBLE);
+        tvLabel.setText(isApkInstalled ? R.string.install_finish : R.string.download_finish);
+        tvStatus.setVisibility(GONE);
+        pbProgress.setVisibility(GONE);
+        pbDone.setVisibility(VISIBLE);
+        pbDone.startCountDown();
+    }
+
+    public void resetViews() {
+        clearAnimation();
         tvName.setText("");
-        ivDone.setVisibility(GONE);
+        pbDone.setVisibility(GONE);
+        pbDone.cancelCountDown();
         pbProgress.setVisibility(VISIBLE);
         tvProgress.setVisibility(VISIBLE);
+        tvLabel.setVisibility(GONE);
+        tvCountdown.setVisibility(GONE);
         tvProgress.setText("0%");
         tvStatus.setText(R.string.downloading);
         ivIcon.setImageBitmap(null);
+    }
+
+    private void inflateLayout(Context context) {
+        LayoutInflater.from(context).inflate(R.layout.layout_apk_download, this, true);
+    }
+
+    private void initWidgets() {
+        ivIcon = findViewById(R.id.iv_icon);
+        tvName = findViewById(R.id.tv_name);
+        tvStatus = findViewById(R.id.tv_status);
+        tvLabel = findViewById(R.id.tv_label);
+        tvCountdown = findViewById(R.id.tv_countdown);
+        pbDone = findViewById(R.id.pb_done);
+        pbProgress = findViewById(R.id.pb_progress);
+        tvProgress = findViewById(R.id.tv_progress);
+    }
+
+    private void initListeners() {
+        pbDone.setOnCountDownListener(new CountDownProgressBar.OnCountDownListener() {
+            @Override
+            public void onTick(int second) {
+                String secondStr = String.valueOf(second);
+                SpannableStringBuilder builder = new SpannableStringBuilder(secondStr);
+                builder.setSpan(new ForegroundColorSpan(Color.parseColor("#3EEDEF")), 0, secondStr.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                builder.append(" 秒后自动消失");
+                tvCountdown.setText(builder);
+            }
+
+            @Override
+            public void onFinish() {
+                fadeDownloadLayout();
+            }
+        });
+    }
+
+
+    private void fadeDownloadLayout() {
+        animate().alpha(0.0f)
+                .setDuration(1000L)
+                .setListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        setVisibility(GONE);
+                        setAlpha(1.0f);
+                    }
+                })
+                .start();
     }
 }

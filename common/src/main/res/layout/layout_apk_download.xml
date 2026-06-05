@@ -39,6 +39,34 @@
         tools:text="腾讯视频" />
 
     <TextView
+        android:id="@+id/tv_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@id/iv_icon"
+        android:layout_marginStart="16dp"
+        android:layout_toEndOf="@id/iv_icon"
+        android:background="@drawable/bg_label_download_done"
+        android:includeFontPadding="false"
+        android:paddingHorizontal="10dp"
+        android:paddingVertical="4dp"
+        android:text="@string/download_finish"
+        android:textColor="#00F0FF"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/tv_countdown"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@id/iv_icon"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="8dp"
+        android:layout_toEndOf="@id/tv_label"
+        android:includeFontPadding="false"
+        android:textColor="#AEAEAE"
+        android:textSize="20sp"
+        tools:text=" 3 秒后自动消失" />
+
+    <TextView
         android:id="@+id/tv_status"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -50,17 +78,16 @@
         android:includeFontPadding="false"
         android:textColor="#AEAEAE"
         android:textSize="20sp"
-        tools:text="正在为您下载..." />
+        tools:text="正在为您下载..."
+        tools:visibility="gone" />
 
-    <ImageView
-        android:id="@+id/iv_download_done"
+    <cn.booslink.llm.common.widget.CountDownProgressBar
+        android:id="@+id/pb_done"
         android:layout_width="86dp"
         android:layout_height="86dp"
         android:layout_alignParentEnd="true"
         android:layout_centerVertical="true"
         android:layout_marginEnd="30dp"
-        android:contentDescription="@null"
-        android:src="@drawable/ic_download_done"
         android:visibility="gone" />
 
     <cn.booslink.llm.common.widget.RoundProgressBar
@@ -74,7 +101,7 @@
         app:gradientEndColor="@color/green_light"
         app:gradientStartColor="@color/blue_light"
         app:max="100"
-        app:progress="0" />
+        app:progress="50" />
 
     <TextView
         android:id="@+id/tv_progress"

@@ -55,8 +55,8 @@ public class SpeechStatusImpl implements ISpeechStatus {
 
     @Override
     public void reset() {
-        //Timber.tag(TAG).d("reset");
-        mIsTimeoutSleeping = false;
+        Timber.tag(TAG).d("reset");
+        //mIsTimeoutSleeping = false;
         mHandler.removeCallbacks(mSleepRunnable);
         mHandler.postDelayed(mSleepRunnable, SLEEP_TIME);
     }

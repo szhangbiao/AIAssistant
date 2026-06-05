@@ -15,6 +15,17 @@
         <attr name="strokeWidth" format="dimension" />
     </declare-styleable>
 
+    <declare-styleable name="CountDownProgressBar">
+        <!-- 背景颜色 -->
+        <attr name="backgroundColor" />
+        <!-- 渐变起始颜色 -->
+        <attr name="gradientStartColor" />
+        <!-- 渐变结束颜色 -->
+        <attr name="gradientEndColor" />
+        <!-- 圆环宽度 -->
+        <attr name="strokeWidth" />
+    </declare-styleable>
+
     <declare-styleable name="LoadingView">
         <attr name="dotRadius" format="dimension" />
         <attr name="dotSpacing" format="dimension" />

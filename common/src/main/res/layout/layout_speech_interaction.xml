@@ -5,6 +5,7 @@
     android:layout_width="510dp"
     android:layout_height="wrap_content"
     tools:orientation="vertical"
+    tools:paddingBottom="24dp"
     tools:parentTag="android.widget.LinearLayout">
 
     <TextView
@@ -38,7 +39,6 @@
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="24dp"
         android:layout_marginTop="16dp"
-        android:layout_marginBottom="24dp"
         android:background="@drawable/bg_answer_content"
         tools:minHeight="72dp">
 
@@ -46,10 +46,19 @@
             android:id="@+id/tv_npl"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="20dp"
+            android:fadeScrollbars="false"
             android:lineSpacingExtra="2dp"
+            android:maxHeight="304dp"
+            android:paddingVertical="20dp"
+            android:paddingStart="20dp"
+            android:paddingEnd="8dp"
+            android:scrollbarSize="6dp"
+            android:scrollbarStyle="insideOverlay"
+            android:scrollbarThumbVertical="@drawable/scrollbar_thumb"
+            android:scrollbarTrackVertical="@drawable/scrollbar_track"
+            android:scrollbars="vertical"
             android:textColor="@android:color/white"
-            android:textSize="24sp"
+            android:textSize="22sp"
             tools:text="上午好！现在是北京时间2024年7月23日11:46。您所在的地区：苏州市今日小雨转多云，气温10°C，注意天冷加衣哦～"
             tools:visibility="gone" />
 
@@ -65,12 +74,6 @@
             app:enlargedRadiusScale="1.5"
             app:normalColor="#CCCCCC" />
 
-        <cn.booslink.llm.common.widget.ApkDownloadLayout
-            android:id="@+id/fl_download_layout"
-            android:layout_width="match_parent"
-            android:layout_height="110dp"
-            android:visibility="gone" />
-
         <cn.booslink.llm.common.widget.WeatherListLayout
             android:id="@+id/cl_weather_list"
             android:layout_width="match_parent"
@@ -83,4 +86,24 @@
             android:layout_height="278dp"
             android:visibility="gone" />
     </FrameLayout>
+
+    <cn.booslink.llm.common.widget.ApkDownloadLayout
+        android:id="@+id/fl_download_layout"
+        android:layout_width="match_parent"
+        android:layout_height="110dp"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/bg_answer_content"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+    <cn.booslink.llm.common.widget.ApkDownloadLayout
+        android:id="@+id/fl_download_dismiss"
+        android:layout_width="match_parent"
+        android:layout_height="110dp"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/bg_answer_content"
+        android:visibility="gone"
+        tools:visibility="visible" />
 </merge>

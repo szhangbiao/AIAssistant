@@ -24,7 +24,6 @@ import cn.booslink.llm.common.model.NetworkStatus;
 import cn.booslink.llm.common.model.UIResponse;
 import cn.booslink.llm.common.model.VoiceQuery;
 import cn.booslink.llm.common.model.VoiceResult;
-import cn.booslink.llm.common.model.enums.AIUIState;
 import cn.booslink.llm.common.model.enums.AIUITag;
 import cn.booslink.llm.common.model.enums.CBMSub;
 import cn.booslink.llm.common.model.enums.QueryState;
@@ -117,11 +116,10 @@ public class EventProcessorImpl implements IEventProcessor {
                 mSpeechStatus.wakeup();
                 mHandler.post(mSpeechInteraction::UIWakeup);
                 if (type == 0) {
-                    boolean shouldBlockSleepLogic = mAppManager.isAnyPkgTaskRunning();
-                    if (shouldBlockSleepLogic) {
-                        // TODO
-                        return;
-                    }
+//                    boolean shouldBlockSleepLogic = mAppManager.isAnyPkgTaskRunning();
+//                    if (shouldBlockSleepLogic) {
+//                        return;
+//                    }
                     mSpeechInteraction.updateQuery(new VoiceQuery("Bobo在听，有什么可以帮您~", QueryState.WAKE_UP));
                 }
                 break;
@@ -134,7 +132,7 @@ public class EventProcessorImpl implements IEventProcessor {
                 boolean nlpOutput = !mEventData.getSemanticHandled() && mNplBuilder.length() > 0;
                 boolean shouldBlockSleepLogic = mAppManager.isAnyPkgTaskRunning() || mTTSSpeech.isSpeaking() || nlpOutput;
                 boolean isNetworkConnected = NetworkUtils.isConnected(mContext);
-                if (mSpeechStatus.isTimeout() && shouldBlockSleepLogic && isNetworkConnected) {
+                if (sleepType == 0 || (mSpeechStatus.isTimeout() && shouldBlockSleepLogic && isNetworkConnected)) {
                     wakeupNetworkResumeOrDownloadContinue();
                     return;
                 }
@@ -183,6 +181,7 @@ public class EventProcessorImpl implements IEventProcessor {
                 mSpeechInteraction.semanticAnswer(UIResponse.Companion.empty());
                 ISpeechAgent speechAgent = mSpeechAgentLazy.get();
                 if (speechAgent == null || !speechAgent.isAIUIWorking()) return;
+                mSpeechStatus.reset();
                 if (RESULT_NETWORK_ERROR == code || RESULT_NETWORK_TIMEOUT == code) {
                     mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.ERROR));
                     mSpeechInteraction.nlpAnswer("网络出现错误", false);
@@ -192,8 +191,9 @@ public class EventProcessorImpl implements IEventProcessor {
     }
 
     @Override
-    public boolean isProcessActive() {
-        return mSpeechState == AIUIState.WORKING.getState();
+    public boolean isInteractionActive() {
+        boolean nlpOutput = !mEventData.getSemanticHandled() && mNplBuilder.length() > 0;
+        return mTTSSpeech.isSpeaking() || nlpOutput;
     }
 
     @Override
@@ -267,7 +267,6 @@ public class EventProcessorImpl implements IEventProcessor {
     private void populateEventResult(EventData data) {
         CBMSub sub = data.getSub();
         if (sub == null) return;
-        mSpeechStatus.reset();
         if (sub == CBMSub.IAT) {
             if (data.getText() == null || data.getTag() == AIUITag.LAUNCH) return;
             Timber.tag(TAG).d("iat result = %s", data.getText().getIATVoice());
@@ -336,6 +335,7 @@ public class EventProcessorImpl implements IEventProcessor {
             if (data.getEvent() == null) return;
             CBMEvent event = data.getEvent().getText();
             if (event == null) return;
+            mSpeechStatus.reset();
             String type = event.getType();
             String key = event.getKey();
             if (TYPE_VAD.equals(type) && VAD_BOS.equals(key)) { // speak start
@@ -407,11 +407,11 @@ public class EventProcessorImpl implements IEventProcessor {
                     if (speechAgent == null || !speechAgent.isAIUIReady()) return;
                     boolean isConnect = networkStatus == NetworkStatus.CONNECTED;
                     if (isConnect) {
-                        //if (!speechAgent.isAIUIWorking()) return;
                         mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.IDLE));
                         mSpeechInteraction.customAnswer("网络恢复了");
                         wakeupNetworkResumeOrDownloadContinue();
                     } else {
+                        if (!speechAgent.isAIUIWorking()) return;
                         mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.ERROR));
                         mSpeechInteraction.nlpAnswer("网络出现错误", false);
                     }

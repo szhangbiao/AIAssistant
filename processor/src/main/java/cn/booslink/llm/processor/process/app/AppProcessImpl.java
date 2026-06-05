@@ -35,6 +35,7 @@ import cn.booslink.llm.common.utils.RxUtil;
 import cn.booslink.llm.downloader.IAppManager;
 import cn.booslink.llm.downloader.listener.SimpleAppManagerListener;
 import cn.booslink.llm.downloader.utils.PkgUtils;
+import cn.booslink.llm.processor.IEventProcessor;
 import cn.booslink.llm.processor.repository.IAppRepository;
 import dagger.Lazy;
 import dagger.hilt.android.qualifiers.ApplicationContext;
@@ -57,15 +58,17 @@ public class AppProcessImpl implements IAppProcess {
     private final Lazy<ISpeechAgent> mSpeechAgentLazy;
     private final ISpeechInteraction mSpeechInteraction;
     private final CompositeDisposable mCompositeDisposable;
+    private final Lazy<IEventProcessor> mEventProcessorLazy;
 
     @Inject
-    public AppProcessImpl(@ApplicationContext Context context, IToast toast, IAppRepository appRepository, Lazy<IAppManager> appManagerLazy, ISpeechInteraction speechInteraction, Lazy<ISpeechAgent> speechAgentLazy) {
+    public AppProcessImpl(@ApplicationContext Context context, IToast toast, IAppRepository appRepository, Lazy<IAppManager> appManagerLazy, ISpeechInteraction speechInteraction, Lazy<ISpeechAgent> speechAgentLazy, Lazy<IEventProcessor> eventProcessorLazy) {
         this.mToast = toast;
         this.mContext = context;
         this.mAppRepository = appRepository;
         this.mAppManagerLazy = appManagerLazy;
         this.mSpeechAgentLazy = speechAgentLazy;
         this.mSpeechInteraction = speechInteraction;
+        this.mEventProcessorLazy = eventProcessorLazy;
         this.mCompositeDisposable = new CompositeDisposable();
     }
 
@@ -236,8 +239,7 @@ public class AppProcessImpl implements IAppProcess {
                 public void onAppFailed(boolean isDownloadFailed, ApkDownload download) {
                     super.onAppFailed(isDownloadFailed, download);
                     Timber.tag(TAG).d("populateAppDownload onAppFailed");
-                    mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.FAILED));
-                    mSpeechInteraction.customAnswer(download.getFailedReason());
+                    delayPostMessage(download.getFailedReason(), VoiceQuery.Companion.stateOnly(QueryState.FAILED));
                 }
             });
             if (downloadManager.isAnyPkgTaskRunning()) {
@@ -265,8 +267,7 @@ public class AppProcessImpl implements IAppProcess {
             public void onAppInstalled(ApkDownload download) {
                 super.onAppInstalled(download);
                 Timber.tag(TAG).d("populateAppInstall onAppInstalled");
-                mSpeechInteraction.customAnswer("安装" + pkgInfo.getName() + "成功");
-                mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.DONE));
+                delayPostMessage("安装" + pkgInfo.getName() + "成功", VoiceQuery.Companion.stateOnly(QueryState.DONE));
                 populateWakeupAfterAppInstall();
             }
 
@@ -274,8 +275,7 @@ public class AppProcessImpl implements IAppProcess {
             public void onAppFailed(boolean isDownloadFailed, ApkDownload download) {
                 super.onAppFailed(isDownloadFailed, download);
                 Timber.tag(TAG).d("populateAppInstall onAppFailed");
-                mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.FAILED));
-                mSpeechInteraction.customAnswer(download.getFailedReason());
+                delayPostMessage(download.getFailedReason(), VoiceQuery.Companion.stateOnly(QueryState.FAILED));
             }
         });
         if (downloadManager.isAnyPkgTaskRunning()) {
@@ -310,8 +310,7 @@ public class AppProcessImpl implements IAppProcess {
             public void onAppFailed(boolean isDownloadFailed, ApkDownload download) {
                 super.onAppFailed(isDownloadFailed, download);
                 Timber.tag(TAG).d("populateAppLaunchWithPkgInfo onAppFailed");
-                mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.FAILED));
-                mSpeechInteraction.customAnswer(download.getFailedReason());
+                delayPostMessage(download.getFailedReason(), VoiceQuery.Companion.stateOnly(QueryState.FAILED));
             }
 
             @Override
@@ -320,12 +319,11 @@ public class AppProcessImpl implements IAppProcess {
                 Timber.tag(TAG).d("populateAppLaunchWithPkgInfo onAppInstalled");
                 if (intent == null) {
                     PkgUtils.launchApp(mContext, download.getPkgName());
-                    mSpeechInteraction.customAnswer("已为你打开应用");
+                    delayPostMessage("已为你打开应用", VoiceQuery.Companion.stateOnly(QueryState.DONE));
                 } else {
                     PkgUtils.launchIntent(mContext, intent);
-                    mSpeechInteraction.customAnswer("好的");
+                    delayPostMessage("好的", VoiceQuery.Companion.stateOnly(QueryState.DONE));
                 }
-                mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.DONE));
                 populateWakeupAfterAppInstall();
             }
         });
@@ -347,6 +345,16 @@ public class AppProcessImpl implements IAppProcess {
         ISpeechAgent speechAgent = mSpeechAgentLazy.get();
         if (speechAgent == null) return;
         speechAgent.sendMessage(new AIUIMessage(AIUIConstant.CMD_WAKEUP, 0, 0, null, null));
+    }
+
+    private void delayPostMessage(String message, VoiceQuery query) {
+        IEventProcessor eventProcessor = mEventProcessorLazy.get();
+        if (eventProcessor != null && eventProcessor.isInteractionActive()) {
+            mToast.showMessage(message);
+        } else {
+            mSpeechInteraction.updateQuery(query);
+            mSpeechInteraction.customAnswer(message);
+        }
     }
 
     private void addDisposable(Disposable disposable) {
