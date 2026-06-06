@@ -10,6 +10,7 @@ import javax.inject.Inject;
 
 import cn.booslink.llm.common.speech.ISpeechAgent;
 import cn.booslink.llm.common.speech.ISpeechStatus;
+import cn.booslink.llm.processor.IEventProcessor;
 import dagger.Lazy;
 import timber.log.Timber;
 
@@ -22,17 +23,24 @@ public class SpeechStatusImpl implements ISpeechStatus {
     private final Handler mHandler;
     private final Runnable mSleepRunnable;
     private final Lazy<ISpeechAgent> mSpeechAgentLazy;
+    private final Lazy<IEventProcessor> mEventProcessorLazy;
 
     private volatile boolean mIsTimeoutSleeping;
 
     @Inject
-    public SpeechStatusImpl(Lazy<ISpeechAgent> speechStatusLazy) {
+    public SpeechStatusImpl(Lazy<ISpeechAgent> speechStatusLazy, Lazy<IEventProcessor> eventProcessorLazy) {
         mSpeechAgentLazy = speechStatusLazy;
+        mEventProcessorLazy = eventProcessorLazy;
         mHandler = new Handler(Looper.getMainLooper());
         mSleepRunnable = () -> {
             Timber.tag(TAG).d("Count down to sleep");
             ISpeechAgent speechAgent = mSpeechAgentLazy.get();
-            if (speechAgent == null) return;
+            IEventProcessor eventProcessor = mEventProcessorLazy.get();
+            if (speechAgent == null || eventProcessor == null) return;
+            if (eventProcessor.isInteractionActive()) {
+                reset();
+                return;
+            }
             mIsTimeoutSleeping = true;
             speechAgent.sendMessage(new AIUIMessage(AIUIConstant.CMD_RESET_WAKEUP, 0, 0, null, null));
         };

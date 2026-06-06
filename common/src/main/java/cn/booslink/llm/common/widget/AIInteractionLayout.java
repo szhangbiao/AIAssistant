@@ -121,5 +121,7 @@ public class AIInteractionLayout extends LinearLayout {
         loadingView = findViewById(R.id.loadingView);
         llWakeup = findViewById(R.id.ll_wakeup);
         tvNplReply.setMovementMethod(new ScrollingMovementMethod());
+        tvNplReply.setFocusable(false);
+        tvNplReply.setFocusableInTouchMode(false);
     }
 }

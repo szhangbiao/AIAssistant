@@ -29,6 +29,7 @@ import cn.booslink.llm.common.speech.ITTSSpeech;
 import cn.booslink.llm.common.utils.ContextUtils;
 import cn.booslink.llm.common.utils.WeatherExtKt;
 import cn.booslink.llm.common.widget.AIRootLayout;
+import cn.booslink.llm.common.widget.SpeechWindowLayout;
 import dagger.Lazy;
 import dagger.hilt.android.qualifiers.ApplicationContext;
 import timber.log.Timber;
@@ -58,7 +59,7 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
     public SpeechInteractionImpl(@ApplicationContext Context context, ITTSSpeech ttsSpeech) {
         this.mContext = context;
         this.mTTSSpeech = ttsSpeech;
-        this.mParentView = new FrameLayout(context);
+        this.mParentView = new SpeechWindowLayout(context);
         this.mEmoteStateLiveData = new MutableLiveData<>(EmoteState.IDLE);
         this.mVoiceInputLiveData = new MutableLiveData<>(VoiceQuery.Companion.startup());
         this.mNplResponseLiveData = new MutableLiveData<>("");
