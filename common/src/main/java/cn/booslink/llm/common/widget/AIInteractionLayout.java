@@ -65,7 +65,7 @@ public class AIInteractionLayout extends LinearLayout {
     }
 
     public void showDownloadProcess(ApkDownload apkDownload) {
-        boolean shouldHideDownloadLayout = apkDownload.isEmpty() || apkDownload.isDownloadFail() || apkDownload.isInstallFail() || apkDownload.isInstallFinish();
+        boolean shouldHideDownloadLayout = apkDownload.isEmpty() || apkDownload.isDownloadError() || apkDownload.isDownloadFail() || apkDownload.isInstallFail() || apkDownload.isInstallFinish();
         //showLoading(false);
         apkDownloadLayout.setVisibility(shouldHideDownloadLayout ? GONE : VISIBLE);
         apkDownloadLayout.updateDownloadView(apkDownload);
