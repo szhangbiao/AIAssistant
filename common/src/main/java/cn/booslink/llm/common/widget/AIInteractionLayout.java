@@ -92,6 +92,7 @@ public class AIInteractionLayout extends LinearLayout {
     public void showLoading(boolean isShow) {
         if (isShow) {
             tvNplReply.setText("");
+            tvNplReply.scrollTo(0, 0);
             tvNplReply.setVisibility(View.VISIBLE);
             weatherListLayout.setVisibility(GONE);
             llWakeup.setVisibility(GONE);

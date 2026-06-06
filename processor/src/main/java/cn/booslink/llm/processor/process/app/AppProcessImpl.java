@@ -36,7 +36,9 @@ import cn.booslink.llm.downloader.IAppManager;
 import cn.booslink.llm.downloader.listener.SimpleAppManagerListener;
 import cn.booslink.llm.downloader.utils.PkgUtils;
 import cn.booslink.llm.processor.IEventProcessor;
+import cn.booslink.llm.processor.process.music.NetEaseMusicProcessImpl;
 import cn.booslink.llm.processor.repository.IAppRepository;
+import cn.booslink.llm.processor.utils.MusicOpUtils;
 import dagger.Lazy;
 import dagger.hilt.android.qualifiers.ApplicationContext;
 import io.reactivex.rxjava3.core.Observable;
@@ -177,6 +179,9 @@ public class AppProcessImpl implements IAppProcess {
                     break;
                 case LAUNCH:
                 case LAUNCH_APP:
+                    if (NetEaseMusicProcessImpl.NETEASE_PACKAGE_NAME.equals(foregroundPkgName)) {
+                        MusicOpUtils.sendMediaPauseKey(mContext);
+                    }
                     PkgUtils.launchApp(mContext, appInfo);
                     mSpeechInteraction.customAnswer("已为你打开应用");
                     break;

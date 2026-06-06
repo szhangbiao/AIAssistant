@@ -1,6 +1,7 @@
 package cn.booslink.llm.processor.process.music;
 
 import android.app.Instrumentation;
+import android.content.Context;
 import android.content.Intent;
 import android.text.TextUtils;
 import android.view.KeyEvent;
@@ -16,6 +17,8 @@ import cn.booslink.llm.common.model.VoiceResult;
 import cn.booslink.llm.common.model.enums.AIUIIntent;
 import cn.booslink.llm.common.model.enums.Category;
 import cn.booslink.llm.processor.process.app.IAppProcess;
+import cn.booslink.llm.processor.utils.MusicOpUtils;
+import dagger.hilt.android.qualifiers.ApplicationContext;
 import timber.log.Timber;
 
 public class NetEaseMusicProcessImpl implements IMusicProcess {
@@ -23,16 +26,18 @@ public class NetEaseMusicProcessImpl implements IMusicProcess {
     private static final String TAG = "MusicProcess";
 
     private static final String NETEASE_APP_NAME = "网易云音乐";
-    private static final String NETEASE_PACKAGE_NAME = "com.netease.cloudmusic.tv";
+    public static final String NETEASE_PACKAGE_NAME = "com.netease.cloudmusic.tv";
 
     private static final String KEY_NAME = "name";
     private static final String MUSIC_ARTIST = "artist";
     private static final String MUSIC_SONG = "song";
 
+    private final Context mContext;
     private final IAppProcess mAppProcess;
 
     @Inject
-    public NetEaseMusicProcessImpl(IAppProcess appProcess) {
+    public NetEaseMusicProcessImpl(@ApplicationContext Context context, IAppProcess appProcess) {
+        this.mContext = context;
         this.mAppProcess = appProcess;
     }
 
@@ -57,6 +62,7 @@ public class NetEaseMusicProcessImpl implements IMusicProcess {
             case EXIT_APP:
                 boolean isExitMatch = parseNameBySlot(slots);
                 if (isExitMatch) {
+                    MusicOpUtils.sendMediaPauseKey(mContext);
                     simulateHomePress();
                     return VoiceResult.Companion.success("好的");
                 } else {

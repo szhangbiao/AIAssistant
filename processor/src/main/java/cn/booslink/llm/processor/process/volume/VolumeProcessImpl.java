@@ -71,7 +71,7 @@ public class VolumeProcessImpl implements IVolumeProcess {
             mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, setNum, AudioManager.FLAG_SHOW_UI);
             return VoiceResult.Companion.success("已为你调整音量");
         }
-        return VoiceResult.Companion.failure();
+        return VoiceResult.Companion.success("请设置在1到" + mMaxVolume + "之间有效的音量值");
     }
 
     private VoiceResult volumeChange(int volumeNum) {
