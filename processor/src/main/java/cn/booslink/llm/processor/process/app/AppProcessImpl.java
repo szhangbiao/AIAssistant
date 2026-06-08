@@ -125,7 +125,7 @@ public class AppProcessImpl implements IAppProcess {
                     return pkgInfo;
                 })
                 .compose(RxUtil.singleOnMain())
-                .subscribe(pkgInfo -> populateAppLaunchWithPkgInfo(pkgInfo, intent), this::populateProcessError);
+                .subscribe(pkgInfo -> populateAppLaunchWithPkgInfo(pkgInfo, intent, false), this::populateProcessError);
         addDisposable(disposable);
     }
 
@@ -153,7 +153,7 @@ public class AppProcessImpl implements IAppProcess {
                     return pkgInfo;
                 })
                 .compose(RxUtil.singleOnMain())
-                .subscribe(pkgInfo -> processIntentWithPkgInfo(intent, pkgInfo), this::populateProcessError);
+                .subscribe(pkgInfo -> processIntentWithPkgInfo(intent, pkgInfo, true), this::populateProcessError);
         addDisposable(disposable);
     }
 
@@ -191,7 +191,7 @@ public class AppProcessImpl implements IAppProcess {
         return false;
     }
 
-    private void processIntentWithPkgInfo(AIUIIntent intent, PkgInfo pkgInfo) {
+    private void processIntentWithPkgInfo(AIUIIntent intent, PkgInfo pkgInfo, boolean isDirectly) {
         if (pkgInfo.isIgnore()) return;
         if (pkgInfo.isEmpty()) {
             mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.EMPTY));
@@ -200,15 +200,15 @@ public class AppProcessImpl implements IAppProcess {
             switch (intent) {
                 case DOWNLOAD:
                 case DOWNLOAD_APP:
-                    populateAppDownload(pkgInfo);
+                    populateAppDownload(pkgInfo, isDirectly);
                     break;
                 case INSTALL:
                 case INSTALL_APP:
-                    populateAppInstall(pkgInfo);
+                    populateAppInstall(pkgInfo, isDirectly);
                     break;
                 case LAUNCH:
                 case LAUNCH_APP:
-                    populateAppLaunchWithPkgInfo(pkgInfo, null);
+                    populateAppLaunchWithPkgInfo(pkgInfo, null, isDirectly);
                     break;
             }
         }
@@ -220,7 +220,7 @@ public class AppProcessImpl implements IAppProcess {
         mSpeechInteraction.customAnswer("处理过程出错了");
     }
 
-    private void populateAppDownload(PkgInfo pkgInfo) {
+    private void populateAppDownload(PkgInfo pkgInfo, boolean isDirectly) {
         Timber.tag(TAG).d("populateAppDownload, package name = %s", pkgInfo.getPkgName());
         if (pkgInfo.isDownloaded()) {
             ApkInfo apkInfo = PkgUtils.getApkInfoByFile(mContext, new File(pkgInfo.getLocalPath()));
@@ -250,12 +250,15 @@ public class AppProcessImpl implements IAppProcess {
             if (downloadManager.isAnyPkgTaskRunning()) {
                 mToast.showMessage(pkgInfo.getName() + "已加入处理队列");
             }
+            if (isDirectly) {
+                mSpeechInteraction.customAnswer("正在为你处理");
+            }
             mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.DOWNLOADING));
             downloadManager.downloadPkgOnly(pkgInfo);
         }
     }
 
-    private void populateAppInstall(PkgInfo pkgInfo) {
+    private void populateAppInstall(PkgInfo pkgInfo, boolean isDirectly) {
         Timber.tag(TAG).d("populateAppInstall, package name = %s", pkgInfo.getPkgName());
         IAppManager downloadManager = mAppManagerLazy.get();
         if (downloadManager == null) return;
@@ -286,6 +289,9 @@ public class AppProcessImpl implements IAppProcess {
         if (downloadManager.isAnyPkgTaskRunning()) {
             mToast.showMessage(pkgInfo.getName() + "已加入处理队列");
         }
+        if (isDirectly) {
+            mSpeechInteraction.customAnswer("正在为你处理");
+        }
         if (pkgInfo.isDownloaded()) {
             ApkInfo apkInfo = PkgUtils.getApkInfoByFile(mContext, new File(pkgInfo.getLocalPath()));
             if (apkInfo != null) {
@@ -297,7 +303,7 @@ public class AppProcessImpl implements IAppProcess {
         }
     }
 
-    private void populateAppLaunchWithPkgInfo(PkgInfo pkgInfo, @Nullable Intent intent) {
+    private void populateAppLaunchWithPkgInfo(PkgInfo pkgInfo, @Nullable Intent intent, boolean isDirectly) {
         Timber.tag(TAG).d("populateAppLaunchWithPkgInfo, package name = %s", pkgInfo.getPkgName());
         if (pkgInfo.isIgnore()) return;
         IAppManager downloadManager = mAppManagerLazy.get();
@@ -334,6 +340,9 @@ public class AppProcessImpl implements IAppProcess {
         });
         if (downloadManager.isAnyPkgTaskRunning()) {
             mToast.showMessage(pkgInfo.getName() + "已加入处理队列");
+        }
+        if (isDirectly) {
+            mSpeechInteraction.customAnswer("正在为你处理");
         }
         if (pkgInfo.isDownloaded()) {
             ApkInfo apkInfo = PkgUtils.getApkInfoByFile(mContext, new File(pkgInfo.getLocalPath()));

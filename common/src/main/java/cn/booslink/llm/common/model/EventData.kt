@@ -41,12 +41,15 @@ data class EventData(
         val semantic = cbmSemantic.text?.semantic?.firstOrNull()
         val targetCategory = response.category == Category.PAGE_CONTROL || response.category == Category.KSONG
         val targetIntent = semantic?.intent == AIUIIntent.PAGE_OPEN || semantic?.intent == AIUIIntent.OPEN_SCORE || semantic?.intent == AIUIIntent.CLOSE_SCORE
+        val queryText = cbmTidy?.text?.query
         if (targetCategory && targetIntent && semantic.slots.isNotEmpty()) {
             val slot = semantic.slots.firstOrNull()
             val targetName = "page" == slot?.name || "score" == slot?.name
             if (targetName && slot.normValue?.isNotEmpty() == true && slot.value?.isNotEmpty() == true && slot.normValue != slot.value) {
                 cbmTidy?.text?.query = cbmTidy.text.query?.replace(slot.value, slot.normValue)
             }
+        } else if (response.category == Category.CONTROL && semantic?.intent == AIUIIntent.EXIT && "小飞退出" == queryText) {
+            semantic.intent = AIUIIntent.EXIT_AGENT
         }
         return EventData(id, text, event, cbmTidy, cbmSemantic, cbmToolPK, nlp, sub, tag, response, !response.isWeatherEmpty())
     }

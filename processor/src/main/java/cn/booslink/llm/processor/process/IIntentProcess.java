@@ -7,7 +7,6 @@ import java.util.List;
 import cn.booslink.llm.common.model.Semantic;
 import cn.booslink.llm.common.model.UIResponse;
 import cn.booslink.llm.common.model.VoiceResult;
-import cn.booslink.llm.common.model.enums.Category;
 
 public interface IIntentProcess {
 

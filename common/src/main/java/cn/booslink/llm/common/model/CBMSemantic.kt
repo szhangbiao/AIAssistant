@@ -47,7 +47,7 @@ data class Answer(val text: String?, val type: String?)
 
 class Semantic(
     @SerializedName("entrypoint") val entryPoint: String?,
-    val intent: AIUIIntent?,
+    var intent: AIUIIntent?,
     val score: Float?,
     val slots: List<Slot>,
     val template: String?
