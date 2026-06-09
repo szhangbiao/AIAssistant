@@ -25,7 +25,7 @@ android {
         applicationId = "cn.booslink.llm"
         minSdk = 19
         targetSdk = 36
-        versionCode = 2
+        versionCode = 3
         versionName = "1.0.0"
 
         multiDexEnabled = true
@@ -122,7 +122,7 @@ android {
 
     androidComponents.onVariants { variant ->
         variant.outputs.forEach { output ->
-            val projectName = "VoiceHelper"
+            val projectName = "VH"
             val flavor = (variant.flavorName ?: "").uppercase()
             val versionName = output.versionName.get()
             val date = SimpleDateFormat("yyyyMMdd").format(Date())
