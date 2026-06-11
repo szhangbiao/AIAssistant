@@ -144,6 +144,7 @@ public class SimpleDownloadListener extends DownloadListener4WithSpeed {
                     }
                 } else {
                     mDownloadItem.setStatus(ApkStatus.DOWNLOAD_PAUSE_WITH_ERROR);
+                    mDownloadItem.setFailedReason(mDownloadItem.getSpeed());
                     if (mOnApkDownloadListener != null) {
                         String apkPath = task.getFile() != null ? task.getFile().getAbsolutePath() : "";
                         mOnApkDownloadListener.onDownloadUpdate(apkPath, mDownloadItem);

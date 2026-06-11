@@ -32,7 +32,7 @@ public class RxApkBusImpl implements IRxApkBus {
     @Override
     public void post(ApkDownload download) {
         if (download == null) return;
-        mDownloadSubject.onNext(download);
+        mDownloadSubject.onNext(download.clone());
     }
 
     @Override
@@ -59,13 +59,13 @@ public class RxApkBusImpl implements IRxApkBus {
                         return false; // 不相同，允许通过
                     }
                     // 进度有变化才通过
-                    return previousDownload.getProgress() != afterDownload.getProgress();
+                    return previousDownload.getProgress() == afterDownload.getProgress();
                 })
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(download -> {
                     if (download == null) return;
                     // 更新下载状态
-                    mSpeechInteraction.downloadUpdate(download.clone());
+                    mSpeechInteraction.downloadUpdate(download);
                 }, this::handleErrorAndReSetupSubject);
         mDisposableMap.put(TAG_UPDATE_DOWNLOAD, disposable);
     }

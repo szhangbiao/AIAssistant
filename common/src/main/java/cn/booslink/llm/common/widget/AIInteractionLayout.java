@@ -16,8 +16,11 @@ import cn.booslink.llm.common.R;
 import cn.booslink.llm.common.model.ApkDownload;
 import cn.booslink.llm.common.model.WeatherUI;
 import cn.booslink.llm.common.utils.ContextUtils;
+import timber.log.Timber;
 
 public class AIInteractionLayout extends LinearLayout {
+
+    private final static String TAG = "InteractionLayout";
 
     private TextView tvQuestion;
     private TextView tvResultTitle;
@@ -67,6 +70,7 @@ public class AIInteractionLayout extends LinearLayout {
     public void showDownloadProcess(ApkDownload apkDownload) {
         boolean shouldHideDownloadLayout = apkDownload.isEmpty() || apkDownload.isDownloadError() || apkDownload.isDownloadFail() || apkDownload.isInstallFail() || apkDownload.isInstallFinish();
         //showLoading(false);
+        Timber.tag(TAG).d("showDownloadProcess, name = %s, layout visible = %b", apkDownload.getName(), !shouldHideDownloadLayout);
         apkDownloadLayout.setVisibility(shouldHideDownloadLayout ? GONE : VISIBLE);
         apkDownloadLayout.updateDownloadView(apkDownload);
         if (apkDownload.isInstallFinish() || (apkDownload.isDownloadComplete() && apkDownload.isDownloadOnly())) {
