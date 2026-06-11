@@ -9,5 +9,7 @@ public interface ITTSSpeech {
 
     boolean isSpeaking();
 
+    void networkError();
+
     void cancel();
 }

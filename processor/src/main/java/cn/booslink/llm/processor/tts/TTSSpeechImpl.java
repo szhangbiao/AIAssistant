@@ -24,6 +24,7 @@ public class TTSSpeechImpl implements ITTSSpeech {
     private final static String TAG = "TTSSpeech";
 
     private final static String KEY_PERCENT = "percent";
+    private final static int TTS_SPEAK_ERROR = -1;
 
     private final Lazy<ISpeechAgent> mSpeechAgentLazy;
 
@@ -71,6 +72,11 @@ public class TTSSpeechImpl implements ITTSSpeech {
     @Override
     public boolean isSpeaking() {
         return mTTSState == AIUIConstant.TTS_SPEAK_PROGRESS;
+    }
+
+    @Override
+    public void networkError() {
+        mTTSState = TTS_SPEAK_ERROR;
     }
 
     @Override

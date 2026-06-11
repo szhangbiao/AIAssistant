@@ -33,11 +33,12 @@ public class SpeechStatusImpl implements ISpeechStatus {
         mEventProcessorLazy = eventProcessorLazy;
         mHandler = new Handler(Looper.getMainLooper());
         mSleepRunnable = () -> {
-            Timber.tag(TAG).d("Count down to sleep");
             ISpeechAgent speechAgent = mSpeechAgentLazy.get();
             IEventProcessor eventProcessor = mEventProcessorLazy.get();
             if (speechAgent == null || eventProcessor == null) return;
-            if (eventProcessor.isInteractionActive()) {
+            boolean isSpeechActive = eventProcessor.isInteractionActive();
+            Timber.tag(TAG).d("Count down to sleep, active = %b", isSpeechActive);
+            if (isSpeechActive) {
                 reset();
                 return;
             }

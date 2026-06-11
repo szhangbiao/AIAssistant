@@ -61,6 +61,7 @@ public class EventProcessorImpl implements IEventProcessor {
 
     private final static int RESULT_NETWORK_ERROR = 10120;
     private final static int RESULT_NETWORK_TIMEOUT = 10114;
+    private final static int RESULT_NO_NETWORK = 20001;
 
     private final Gson mGson;
     private final Handler mHandler;
@@ -79,7 +80,6 @@ public class EventProcessorImpl implements IEventProcessor {
     private FlowableEmitter<AIUIEvent> mEventEmitter;
     private volatile boolean isSubscriptionActive = false;
     private volatile boolean isDestroyed = false;
-    private volatile int mSpeechState;
 
     private EventData mEventData = EventData.Companion.empty();
 
@@ -104,7 +104,6 @@ public class EventProcessorImpl implements IEventProcessor {
     public void processEvent(AIUIEvent event) {
         switch (event.eventType) {
             case AIUIConstant.EVENT_STATE: // 服务状态事件
-                mSpeechState = event.arg1;
                 break;
             case AIUIConstant.EVENT_RESULT: // 结果事件
                 //Timber.tag(TAG).d("result = %s", event.info);
@@ -182,7 +181,11 @@ public class EventProcessorImpl implements IEventProcessor {
                 ISpeechAgent speechAgent = mSpeechAgentLazy.get();
                 if (speechAgent == null || !speechAgent.isAIUIWorking()) return;
                 mSpeechStatus.reset();
-                if (RESULT_NETWORK_ERROR == code || RESULT_NETWORK_TIMEOUT == code) {
+                if (RESULT_NETWORK_ERROR == code || RESULT_NETWORK_TIMEOUT == code || RESULT_NO_NETWORK == code) {
+                    if (mTTSSpeech.isSpeaking()) {
+                        mTTSSpeech.cancel();
+                    }
+                    mTTSSpeech.networkError();
                     mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.ERROR));
                     mSpeechInteraction.nlpAnswer("网络出现错误", false);
                 }
@@ -412,6 +415,10 @@ public class EventProcessorImpl implements IEventProcessor {
                         wakeupNetworkResumeOrDownloadContinue();
                     } else {
                         if (!speechAgent.isAIUIWorking()) return;
+                        if (mTTSSpeech.isSpeaking()) {
+                            mTTSSpeech.cancel();
+                        }
+                        mTTSSpeech.networkError();
                         mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.ERROR));
                         mSpeechInteraction.nlpAnswer("网络出现错误", false);
                     }
