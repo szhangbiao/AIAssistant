@@ -231,6 +231,9 @@ public class AppProcessImpl implements IAppProcess {
         } else {
             IAppManager downloadManager = mAppManagerLazy.get();
             if (downloadManager == null) return;
+            if (isDirectly) {
+                mSpeechInteraction.customAnswer("正在为你处理");
+            }
             if (downloadManager.isPkgTaskRunning(pkgInfo.getPkgName())) {
                 mToast.showMessage(pkgInfo.getName() + "正处于下载阶段，请稍候");
                 return;
@@ -262,6 +265,9 @@ public class AppProcessImpl implements IAppProcess {
         Timber.tag(TAG).d("populateAppInstall, package name = %s", pkgInfo.getPkgName());
         IAppManager downloadManager = mAppManagerLazy.get();
         if (downloadManager == null) return;
+        if (isDirectly) {
+            mSpeechInteraction.customAnswer("正在为你处理");
+        }
         if (downloadManager.isPkgTaskRunning(pkgInfo.getPkgName())) {
             mToast.showMessage(pkgInfo.getName() + "正处于下载安装阶段，请稍候");
             return;
@@ -289,9 +295,6 @@ public class AppProcessImpl implements IAppProcess {
         if (downloadManager.isAnyPkgTaskRunning()) {
             mToast.showMessage(pkgInfo.getName() + "已加入处理队列");
         }
-        if (isDirectly) {
-            mSpeechInteraction.customAnswer("正在为你处理");
-        }
         if (pkgInfo.isDownloaded()) {
             ApkInfo apkInfo = PkgUtils.getApkInfoByFile(mContext, new File(pkgInfo.getLocalPath()));
             if (apkInfo != null) {
@@ -308,6 +311,9 @@ public class AppProcessImpl implements IAppProcess {
         if (pkgInfo.isIgnore()) return;
         IAppManager downloadManager = mAppManagerLazy.get();
         if (downloadManager == null) return;
+        if (isDirectly) {
+            mSpeechInteraction.customAnswer("正在为你处理");
+        }
         if (downloadManager.isPkgTaskRunning(pkgInfo.getPkgName())) {
             mToast.showMessage(pkgInfo.getName() + "正处于下载安装阶段，请稍候");
             return;
@@ -340,9 +346,6 @@ public class AppProcessImpl implements IAppProcess {
         });
         if (downloadManager.isAnyPkgTaskRunning()) {
             mToast.showMessage(pkgInfo.getName() + "已加入处理队列");
-        }
-        if (isDirectly) {
-            mSpeechInteraction.customAnswer("正在为你处理");
         }
         if (pkgInfo.isDownloaded()) {
             ApkInfo apkInfo = PkgUtils.getApkInfoByFile(mContext, new File(pkgInfo.getLocalPath()));

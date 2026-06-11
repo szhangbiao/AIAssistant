@@ -83,8 +83,8 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
                 params.type = WindowManager.LayoutParams.TYPE_SYSTEM_ALERT;
             }
             // 允许触摸事件传递到下方，同时监听外部触摸事件，并开启硬件加速防止 Android 4.4 在其它 App 启动时导致重叠区渲染滞后
-            params.flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL 
-                    | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE 
+            params.flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
+                    | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
                     | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH
                     | WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED;
             // 如果需要完全透明且不拦截触摸，可以使用下面的配置
@@ -255,7 +255,7 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
     public void downloadUpdate(ApkDownload download) {
         if (download == null) return;
         mApkDownloadLiveData.postValue(download);
-        mEmoteStateLiveData.postValue(EmoteState.NORMAL);
+        mEmoteStateLiveData.postValue(download.isDownloadComplete() ? EmoteState.LAUGHING : EmoteState.NORMAL);
     }
 
     @Override

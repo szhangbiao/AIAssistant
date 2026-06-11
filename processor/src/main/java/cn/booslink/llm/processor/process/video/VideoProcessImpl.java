@@ -357,7 +357,7 @@ public class VideoProcessImpl implements IVideoProcess {
     }
 
     private void startIntent(Intent intent) {
-        if (intent == null) return;
+        if (intent == null || isEmptyIntent(intent)) return;
         mContext.startActivity(intent);
     }
 
@@ -444,7 +444,7 @@ public class VideoProcessImpl implements IVideoProcess {
             inst.sendKeyDownUpSync(KeyEvent.KEYCODE_HOME);
         } catch (Exception e) {
             // 记录错误日志
-            Timber.tag(TAG).e(e, "Failed to simulate back press");
+            Timber.tag(TAG).e(e, "Failed to simulate home press");
         }
     }
 

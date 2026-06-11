@@ -21,8 +21,8 @@ import cn.booslink.llm.common.R;
 import cn.booslink.llm.common.di.CommonEntryPoint;
 import cn.booslink.llm.common.image.ImageLoader;
 import cn.booslink.llm.common.model.ApkDownload;
-import cn.booslink.llm.common.ui.ISpeechInteraction;
 import dagger.hilt.android.EntryPointAccessors;
+import timber.log.Timber;
 
 public class ApkDownloadLayout extends RelativeLayout {
 
@@ -85,6 +85,7 @@ public class ApkDownloadLayout extends RelativeLayout {
         tvStatus.setVisibility(GONE);
         pbProgress.setVisibility(GONE);
         pbDone.setVisibility(VISIBLE);
+        updateCountDownText(5);
         pbDone.startCountDown();
     }
 
@@ -121,11 +122,7 @@ public class ApkDownloadLayout extends RelativeLayout {
         pbDone.setOnCountDownListener(new CountDownProgressBar.OnCountDownListener() {
             @Override
             public void onTick(int second) {
-                String secondStr = String.valueOf(second);
-                SpannableStringBuilder builder = new SpannableStringBuilder(secondStr);
-                builder.setSpan(new ForegroundColorSpan(Color.parseColor("#3EEDEF")), 0, secondStr.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                builder.append(" 秒后自动消失");
-                tvCountdown.setText(builder);
+                updateCountDownText(second);
             }
 
             @Override
@@ -135,7 +132,6 @@ public class ApkDownloadLayout extends RelativeLayout {
         });
     }
 
-
     private void fadeDownloadLayout() {
         animate().alpha(0.0f)
                 .setDuration(1000L)
@@ -143,9 +139,19 @@ public class ApkDownloadLayout extends RelativeLayout {
                     @Override
                     public void onAnimationEnd(Animator animation) {
                         setVisibility(GONE);
+                        updateCountDownText(5);
                         setAlpha(1.0f);
                     }
                 })
                 .start();
+    }
+
+    private void updateCountDownText(int second) {
+        Timber.tag("DownloadLayout").d("Countdown second = %d", second);
+        String secondStr = String.valueOf(second);
+        SpannableStringBuilder builder = new SpannableStringBuilder(secondStr);
+        builder.setSpan(new ForegroundColorSpan(Color.parseColor("#3EEDEF")), 0, secondStr.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        builder.append(" 秒后自动消失");
+        tvCountdown.setText(builder);
     }
 }
