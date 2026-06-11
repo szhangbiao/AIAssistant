@@ -7,6 +7,8 @@ import android.view.KeyEvent;
 
 import java.lang.reflect.Method;
 
+import timber.log.Timber;
+
 public class MusicOpUtils {
     public static void requestAudioFocusAndPauseOthers(Context context) {
         AudioManager.OnAudioFocusChangeListener mFocusChangeListener = focusChange -> {
@@ -24,6 +26,7 @@ public class MusicOpUtils {
     }
 
     public static void sendMediaPauseKey(Context context) {
+        Timber.tag("MusicOpUtils").d("sendMediaPauseKey");
         AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         if (am != null) {
             // 模拟按下暂停键

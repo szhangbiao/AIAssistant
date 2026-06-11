@@ -133,6 +133,7 @@ public class ApkDownloadLayout extends RelativeLayout {
     }
 
     private void fadeDownloadLayout() {
+        updateCountDownText(0);
         animate().alpha(0.0f)
                 .setDuration(1000L)
                 .setListener(new AnimatorListenerAdapter() {

@@ -102,6 +102,10 @@ public class AppProcessImpl implements IAppProcess {
                 .flatMap((Function<String, SingleSource<PkgInfo>>) deliveryPkgName -> {
                     AppInfo appInfo = PkgUtils.getAppInfo(mContext, deliveryPkgName);
                     if (appInfo != null) {
+                        String foregroundPkgName = PkgUtils.getForegroundPkgName(mContext);
+                        if (NetEaseMusicProcessImpl.NETEASE_PACKAGE_NAME.equals(foregroundPkgName)) {
+                            MusicOpUtils.sendMediaPauseKey(mContext);
+                        }
                         if (intent == null) {
                             PkgUtils.launchApp(mContext, deliveryPkgName);
                             mSpeechInteraction.customAnswer("已为你打开应用");
@@ -334,6 +338,10 @@ public class AppProcessImpl implements IAppProcess {
             public void onAppInstalled(ApkDownload download) {
                 super.onAppInstalled(download);
                 Timber.tag(TAG).d("populateAppLaunchWithPkgInfo onAppInstalled");
+                String foregroundPkgName = PkgUtils.getForegroundPkgName(mContext);
+                if (NetEaseMusicProcessImpl.NETEASE_PACKAGE_NAME.equals(foregroundPkgName)) {
+                    MusicOpUtils.sendMediaPauseKey(mContext);
+                }
                 if (intent == null) {
                     PkgUtils.launchApp(mContext, download.getPkgName());
                     delayPostMessage("已为你打开应用", VoiceQuery.Companion.stateOnly(QueryState.DONE));
