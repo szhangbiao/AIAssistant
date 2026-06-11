@@ -76,8 +76,8 @@ public class VideoProcessImpl implements IVideoProcess {
                         intent == AIUIIntent.FAST_FORWARD || // 快进
                         intent == AIUIIntent.REWIND || // 快退
                         intent == AIUIIntent.PLAYTIME_SET || // 跳转到指定时间
-                        intent == AIUIIntent.BRIGHT_UP || intent == AIUIIntent.BRIGHT_DOWN || intent == AIUIIntent.BRIGHT_MAX || intent == AIUIIntent.BRIGHT_MIN ||// 修改亮度
-                        intent == AIUIIntent.VOLUME_PLUS || intent == AIUIIntent.VOLUME_MINUS || intent == AIUIIntent.VOLUME_MAX || intent == AIUIIntent.VOLUME_MIN || intent == AIUIIntent.UNMUTE || intent == AIUIIntent.MUTE || // 修改音量
+                        intent == AIUIIntent.BRIGHT_UP || intent == AIUIIntent.BRIGHT_DOWN || intent == AIUIIntent.BRIGHT_MAX || intent == AIUIIntent.BRIGHT_SET || intent == AIUIIntent.BRIGHT_MIN ||// 修改亮度
+                        intent == AIUIIntent.VOLUME_PLUS || intent == AIUIIntent.VOLUME_MINUS || intent == AIUIIntent.VOLUME_MAX || intent == AIUIIntent.VOLUME_MIN || intent == AIUIIntent.VOLUME_SET || intent == AIUIIntent.UNMUTE || intent == AIUIIntent.MUTE || // 修改音量
                         intent == AIUIIntent.SKIP_SET // 跳过片头， 跳过片尾
         )) || (isAppOpened && category == Category.PAGE_CONTROL && (
                 intent == AIUIIntent.PAGE_OPEN || // 打开登录、收银台、播放历史、收藏、榜单、搜索
@@ -103,6 +103,12 @@ public class VideoProcessImpl implements IVideoProcess {
         if (actionIntent != null) {
             startIntent(actionIntent);
             return VoiceResult.Companion.success("好的");
+        }
+        if (AIUIIntent.VOLUME_SET == intent) {
+            return VoiceResult.Companion.success("请设置在1到500之间有效的音量值");
+        }
+        if(AIUIIntent.BRIGHT_SET == intent) {
+            return VoiceResult.Companion.success("请设置在0到255之间有效的亮度值");
         }
         return VoiceResult.Companion.failure();
     }
@@ -200,10 +206,20 @@ public class VideoProcessImpl implements IVideoProcess {
                 return videoAction.changeBright("DOWN");
             case BRIGHT_MAX:
                 return videoAction.changeBright("255");
+            case BRIGHT_SET:
+                int bright = !slots.isEmpty() ? parseSlotValue(slots) : 1;
+                if (bright < 0 || bright > 255) return null;
+                return videoAction.changeBright(String.valueOf(bright));
             case BRIGHT_MIN:
                 return videoAction.changeBright("0");
             case VOLUME_PLUS:
                 return videoAction.changeVolume("UP");
+            case VOLUME_SET:
+                int volume = !slots.isEmpty() ? parseSlotValue(slots) : 1;
+                if (volume >= 0 && volume <= 500) {
+                    return videoAction.changeVolume(String.valueOf(volume));
+                }
+                return null;
             case VOLUME_MINUS:
                 return videoAction.changeVolume("DOWN");
             case VOLUME_MAX:
@@ -407,6 +423,16 @@ public class VideoProcessImpl implements IVideoProcess {
             }
         }
         return closestSpeed;
+    }
+
+    private int parseSlotValue(List<Slot> slots) {
+        for (Slot slot : slots) {
+            String value = slot.getValue();
+            if (!TextUtils.isEmpty(value)) {
+                return tryParseIntNum(value);
+            }
+        }
+        return 1;
     }
 
     private int adjustClarity(String clarity) {
