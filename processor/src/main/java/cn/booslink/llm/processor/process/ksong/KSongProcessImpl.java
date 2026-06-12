@@ -78,8 +78,8 @@ public class KSongProcessImpl implements IKSongProcess {
     public boolean shouldKSongProcess(String foregroundPkgName, Category category, AIUIIntent intent) {
         boolean isKSongAppStartup = BOOSLINK_QM_PACKAGE_NAME.equals(foregroundPkgName) || DUO_CHANG_PACKAGE_NAME.equals(foregroundPkgName) || QUANMIN_PACKAGE_NAME.equals(foregroundPkgName) || SMART_PACKAGE_NAME.equals(foregroundPkgName) || LEIKA_PACKAGE_NAME.equals(foregroundPkgName) || LEISHI_PACKAGE_NAME.equals(foregroundPkgName);
         return (category == Category.KSONG && (
-                intent == AIUIIntent.RANDOM_KSONG ||// 打开应用
-                        intent == AIUIIntent.KSONG_ADD// 点歌
+                intent == AIUIIntent.RANDOM_KSONG || // 打开应用
+                        intent == AIUIIntent.KSONG_ADD || intent == AIUIIntent.KSONG_ADD_SONG || intent == AIUIIntent.KSONG_ADD_ARTIST // 点歌
         )) || (isKSongAppStartup && category == Category.CONTROL && (
                 intent == AIUIIntent.EXIT || // 退出应用
                         intent == AIUIIntent.RESUME_PLAY || // 播放
@@ -99,9 +99,9 @@ public class KSongProcessImpl implements IKSongProcess {
                 intent == AIUIIntent.KSONG_ORIGIN || intent == AIUIIntent.CLOSE_ACCOM ||// 原唱
                         intent == AIUIIntent.KSONG_ACCOM || intent == AIUIIntent.CLOSE_ORIGIN || // 伴唱
                         intent == AIUIIntent.KSONG_REPLAY ||// 重唱
-                        intent == AIUIIntent.KSONG_ADD ||// 点歌
+                        intent == AIUIIntent.KSONG_ADD || intent == AIUIIntent.KSONG_ADD_SONG || intent == AIUIIntent.KSONG_ADD_ARTIST ||// 点歌
                         intent == AIUIIntent.KSONG_REMOVE ||// 移除点歌
-                        intent == AIUIIntent.KSONG_TOP ||// 置顶
+                        intent == AIUIIntent.KSONG_TOP || intent == AIUIIntent.KSONG_TOP_SONG || intent == AIUIIntent.KSONG_TOP_ARTIST || // 置顶
                         intent == AIUIIntent.OPEN_SCORE ||// 打开评分
                         intent == AIUIIntent.CLOSE_SCORE ||// 关闭评分
                         intent == AIUIIntent.EXIT ||// 关闭全民K歌
@@ -111,11 +111,11 @@ public class KSongProcessImpl implements IKSongProcess {
 
     @Override
     public VoiceResult handleKSongIntent(String foregroundPkgName, AIUIIntent intent, @NotNull List<Slot> slots) {
-        if (intent == AIUIIntent.RANDOM_KSONG || intent == AIUIIntent.KSONG_ADD) {
+        if (intent == AIUIIntent.RANDOM_KSONG || intent == AIUIIntent.KSONG_ADD || intent == AIUIIntent.KSONG_ADD_SONG || intent == AIUIIntent.KSONG_ADD_ARTIST) {
             boolean isKSongAppStartup = BOOSLINK_QM_PACKAGE_NAME.equals(foregroundPkgName) || DUO_CHANG_PACKAGE_NAME.equals(foregroundPkgName) || QUANMIN_PACKAGE_NAME.equals(foregroundPkgName) || SMART_PACKAGE_NAME.equals(foregroundPkgName) || LEIKA_PACKAGE_NAME.equals(foregroundPkgName) || LEISHI_PACKAGE_NAME.equals(foregroundPkgName);
             if (!isKSongAppStartup) {
                 Intent launchIntent = null;
-                if (intent == AIUIIntent.KSONG_ADD) {
+                if (intent == AIUIIntent.KSONG_ADD || intent == AIUIIntent.KSONG_ADD_SONG || intent == AIUIIntent.KSONG_ADD_ARTIST) {
                     IKSongAction songAction = getKSongAction(foregroundPkgName);
                     Pair<String, String> addSongPair = parseArtistAndSongBySlot(slots);
                     if (addSongPair != null && songAction != null) {
@@ -192,6 +192,8 @@ public class KSongProcessImpl implements IKSongProcess {
             case CLOSE_ORIGIN:
                 return songAction.accompanyTrack();
             case KSONG_ADD:
+            case KSONG_ADD_SONG:
+            case KSONG_ADD_ARTIST:
                 Pair<String, String> addSongPair = parseArtistAndSongBySlot(slots);
                 if (addSongPair == null) return null;
                 return songAction.addSong(addSongPair.first, addSongPair.second, false);
@@ -199,6 +201,8 @@ public class KSongProcessImpl implements IKSongProcess {
                 // TODO
                 return null;
             case KSONG_TOP:
+            case KSONG_TOP_SONG:
+            case KSONG_TOP_ARTIST:
                 Pair<String, String> topSongPair = parseArtistAndSongBySlot(slots);
                 if (topSongPair == null) return null;
                 return songAction.topSong(topSongPair.first, topSongPair.second);

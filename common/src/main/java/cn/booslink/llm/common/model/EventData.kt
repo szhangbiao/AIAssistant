@@ -48,12 +48,11 @@ data class EventData(
             if (targetName && slot.normValue?.isNotEmpty() == true && slot.value?.isNotEmpty() == true && slot.normValue != slot.value) {
                 cbmTidy?.text?.query = cbmTidy.text.query?.replace(slot.value, slot.normValue)
             }
-        } else if (response.category == Category.CONTROL && semantic?.intent == AIUIIntent.EXIT && "小飞退出" == queryText) {
+        } else if ((response.category == Category.CONTROL || response.category == Category.APP) && semantic?.intent == AIUIIntent.EXIT && "小飞退出" == queryText) {
             semantic.intent = AIUIIntent.EXIT_AGENT
         }
         return EventData(id, text, event, cbmTidy, cbmSemantic, cbmToolPK, nlp, sub, tag, response, !response.isWeatherEmpty())
     }
-
 
     fun copyNlp(nlp: SdkResponse<String>) = EventData(id, text, event, cbmTidy, cbmSemantic, cbmToolPK, nlp, sub, tag, response, semanticHandled)
 }

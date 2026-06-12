@@ -185,6 +185,9 @@ public class EventProcessorImpl implements IEventProcessor {
                     if (mTTSSpeech.isSpeaking()) {
                         mTTSSpeech.cancel();
                     }
+                    if (mNplBuilder.length() > 0) {
+                        mNplBuilder.delete(0, mNplBuilder.length());
+                    }
                     mTTSSpeech.networkError();
                     mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.ERROR));
                     mSpeechInteraction.nlpAnswer("网络出现错误", false);
@@ -417,6 +420,9 @@ public class EventProcessorImpl implements IEventProcessor {
                         if (!speechAgent.isAIUIWorking()) return;
                         if (mTTSSpeech.isSpeaking()) {
                             mTTSSpeech.cancel();
+                        }
+                        if (mNplBuilder.length() > 0) {
+                            mNplBuilder.delete(0, mNplBuilder.length());
                         }
                         mTTSSpeech.networkError();
                         mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.ERROR));
