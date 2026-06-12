@@ -25,6 +25,7 @@ public class NetEaseMusicProcessImpl implements IMusicProcess {
 
     private static final String TAG = "MusicProcess";
 
+    private static final String CURRENT_NAME = "当前";
     private static final String NETEASE_APP_NAME = "网易云音乐";
     public static final String NETEASE_PACKAGE_NAME = "com.netease.cloudmusic.tv";
 
@@ -85,7 +86,7 @@ public class NetEaseMusicProcessImpl implements IMusicProcess {
             }
         }
         if (TextUtils.isEmpty(name)) return true;
-        return NETEASE_APP_NAME.equalsIgnoreCase(name) || NETEASE_APP_NAME.contains(name);
+        return CURRENT_NAME.equals(name) || NETEASE_APP_NAME.equalsIgnoreCase(name) || NETEASE_APP_NAME.contains(name);
     }
 
     private VoiceResult populateMusicAppLaunch(AIUIIntent aiuiIntent, List<Slot> slots) {

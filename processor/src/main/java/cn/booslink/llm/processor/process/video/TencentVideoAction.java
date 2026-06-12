@@ -2,11 +2,19 @@ package cn.booslink.llm.processor.process.video;
 
 import android.content.Intent;
 
+import javax.inject.Inject;
+
 public class TencentVideoAction implements IVideoAction {
+
+
+    @Inject
+    public TencentVideoAction() {
+
+    }
 
     @Override
     public Intent exitApp() {
-        return null;
+        return new Intent();
     }
 
     @Override

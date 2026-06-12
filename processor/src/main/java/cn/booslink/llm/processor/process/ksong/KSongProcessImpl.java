@@ -29,6 +29,7 @@ public class KSongProcessImpl implements IKSongProcess {
 
     private static final String TAG = "KSongProcess";
 
+    private static final String CURRENT_NAME = "当前";
     private static final String BOOSLINK_QM_APP_NAME = "全民K歌";
     private static final String BOOSLINK_QM_PACKAGE_NAME = "cn.booslink.kg";
     private static final String DUO_CHANG_PACKAGE_NAME = "com.evideo.kmbox";
@@ -235,7 +236,7 @@ public class KSongProcessImpl implements IKSongProcess {
         }
         if (TextUtils.isEmpty(name)) return true;
         String appName = getKSongAppName(foregroundPkgName);
-        return !TextUtils.isEmpty(appName) && (appName.equalsIgnoreCase(name) || appName.contains(name));
+        return CURRENT_NAME.equals(name) || (!TextUtils.isEmpty(appName) && (appName.equalsIgnoreCase(name) || appName.contains(name)));
     }
 
     private Pair<String, String> parseArtistAndSongBySlot(@NotNull List<Slot> slots) {

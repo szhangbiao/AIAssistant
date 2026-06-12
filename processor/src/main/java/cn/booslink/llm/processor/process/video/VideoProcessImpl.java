@@ -49,26 +49,32 @@ public class VideoProcessImpl implements IVideoProcess {
     private static final String SKIP_HEAD = "片头";
     private static final String SKIP_TAIL = "片尾";
 
+    private static final String CURRENT_NAME = "当前";
     private static final String IQIYI_APP_NAME = "爱奇艺";
+    private static final String TENCENT_APP_NAME = "腾讯视频";
+    private static final String TENCENT_APP_NAME2 = "云视听极光";
     private final String IQIYI_PACKAGE_NAME = "com.qiyi.video.iv";
+    private final String TENCENT_PACKAGE_NAME = "com.ktcp.tvvideo";
 
     private final Context mContext;
     private final IAppProcess mAppProcess;
     private final IVideoAction mIQiYiVideoAction;
+    private final IVideoAction mTencentVideoAction;
 
     @Inject
-    public VideoProcessImpl(@ApplicationContext Context context, IAppProcess appProcess, @Named("iqiyi") IVideoAction iQiYiVideoAction) {
+    public VideoProcessImpl(@ApplicationContext Context context, IAppProcess appProcess, @Named("iqiyi") IVideoAction iQiYiVideoAction, @Named("tencent") IVideoAction tencentVideoAction) {
         this.mContext = context;
         this.mAppProcess = appProcess;
         this.mIQiYiVideoAction = iQiYiVideoAction;
+        this.mTencentVideoAction = tencentVideoAction;
     }
 
     @Override
     public boolean shouldVideoProcess(String foregroundPkgName, Category category, AIUIIntent intent) {
         boolean isAppOpened = IQIYI_PACKAGE_NAME.equals(foregroundPkgName);
+        boolean isVideoAppOpened = IQIYI_PACKAGE_NAME.equals(foregroundPkgName) || TENCENT_PACKAGE_NAME.equals(foregroundPkgName);
         return category == Category.VIDEO || intent == AIUIIntent.RANDOM_VIDEO || (isAppOpened && category == Category.CONTROL && (
-                intent == AIUIIntent.EXIT || // 退出应用
-                        intent == AIUIIntent.RESUME_PLAY || // 播放
+                intent == AIUIIntent.RESUME_PLAY || // 播放
                         intent == AIUIIntent.PAUSE || // 暂停
                         intent == AIUIIntent.REPLAY || // 重新播放
                         intent == AIUIIntent.CHOOSE_NEXT || // 下一集
@@ -89,13 +95,14 @@ public class VideoProcessImpl implements IVideoProcess {
                         intent == AIUIIntent.CLARITY_DOWN || intent == AIUIIntent.CLARITY_UP || intent == AIUIIntent.CHANGE_CLARITY || //  切换清晰度
                         intent == AIUIIntent.FAVORITE_REMOVE || intent == AIUIIntent.FAVORITE_ADD || // 收藏/取消收藏
                         intent == AIUIIntent.CLOSE_DANMU || intent == AIUIIntent.OPEN_DANMU // 开启/关闭弹幕
-        )) || (isAppOpened && category == Category.APP_PLUS && intent == AIUIIntent.EXIT_APP)
-                || (isAppOpened && category == Category.APP && intent == AIUIIntent.EXIT);
+        )) || (isVideoAppOpened && category == Category.APP_PLUS && intent == AIUIIntent.EXIT_APP)
+                || (isVideoAppOpened && category == Category.APP && intent == AIUIIntent.EXIT)
+                || (isVideoAppOpened && category == Category.CONTROL && intent == AIUIIntent.EXIT);
     }
 
     @Override
     public VoiceResult handleVideoIntent(String foregroundPkgName, AIUIIntent intent, @NotNull List<Slot> slots) {
-        boolean isVideoStartup = IQIYI_PACKAGE_NAME.equals(foregroundPkgName);
+        boolean isVideoStartup = IQIYI_PACKAGE_NAME.equals(foregroundPkgName) || TENCENT_PACKAGE_NAME.equals(foregroundPkgName);
         if ((intent == AIUIIntent.QUERY || intent == AIUIIntent.RECOMMEND || intent == AIUIIntent.RANDOM_VIDEO) && !isVideoStartup) {
             return populateActionBySlots(intent, slots);
         }
@@ -107,7 +114,7 @@ public class VideoProcessImpl implements IVideoProcess {
         if (AIUIIntent.VOLUME_SET == intent) {
             return VoiceResult.Companion.success("请设置在1到500之间有效的音量值");
         }
-        if(AIUIIntent.BRIGHT_SET == intent) {
+        if (AIUIIntent.BRIGHT_SET == intent) {
             return VoiceResult.Companion.success("请设置在0到255之间有效的亮度值");
         }
         return VoiceResult.Companion.failure();
@@ -154,7 +161,7 @@ public class VideoProcessImpl implements IVideoProcess {
         switch (intent) {
             case EXIT:
             case EXIT_APP:
-                boolean isMatchApp = parseSlotName(slots);
+                boolean isMatchApp = parseSlotName(foregroundPkgName, slots);
                 if (isMatchApp) {
                     Intent exitIntent = videoAction.exitApp();
                     if (isEmptyIntent(exitIntent)) {
@@ -267,7 +274,7 @@ public class VideoProcessImpl implements IVideoProcess {
         return null;
     }
 
-    private boolean parseSlotName(@NotNull List<Slot> slots) {
+    private boolean parseSlotName(String foregroundPkgName, @NotNull List<Slot> slots) {
         if (slots.isEmpty()) return true;
         String name = null;
         for (Slot slot : slots) {
@@ -277,7 +284,8 @@ public class VideoProcessImpl implements IVideoProcess {
             }
         }
         if (TextUtils.isEmpty(name)) return true;
-        return IQIYI_APP_NAME.equalsIgnoreCase(name) || IQIYI_APP_NAME.contains(name);
+        String appName = getVideoAppName(foregroundPkgName);
+        return CURRENT_NAME.equals(name) || (!TextUtils.isEmpty(appName) && (appName.equalsIgnoreCase(name) || appName.contains(name)));
     }
 
     private float getSpeedBySlot(@NotNull List<Slot> slots) {
@@ -378,7 +386,8 @@ public class VideoProcessImpl implements IVideoProcess {
     }
 
     private IVideoAction getVideoActionByPkgName(String foregroundPackage) {
-        // TODO 根据packageName获取VideoAction
+        if (TENCENT_PACKAGE_NAME.equals(foregroundPackage))
+            return mTencentVideoAction;
         return mIQiYiVideoAction;
     }
 
@@ -480,5 +489,18 @@ public class VideoProcessImpl implements IVideoProcess {
         return TextUtils.isEmpty(intent.getAction()) &&
                 intent.getComponent() == null &&
                 TextUtils.isEmpty(intent.getPackage());
+    }
+
+    private String getVideoAppName(String foregroundPkgName) {
+        if (TextUtils.isEmpty(foregroundPkgName)) {
+            return IQIYI_APP_NAME;
+        }
+        switch (foregroundPkgName) {
+            case IQIYI_PACKAGE_NAME:
+                return IQIYI_APP_NAME;
+            case TENCENT_PACKAGE_NAME:
+                return TENCENT_APP_NAME + TENCENT_APP_NAME2;
+        }
+        return null;
     }
 }

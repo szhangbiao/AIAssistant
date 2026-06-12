@@ -50,5 +50,9 @@
   {
     "name": "智能K歌",
     "pkg_name": "com.huiaichang.sdm.desktop"
+  },
+  {
+    "name": "唱吧",
+    "pkg_name": "com.changba.sd"
   }
 ]
