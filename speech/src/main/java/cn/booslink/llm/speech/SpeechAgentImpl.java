@@ -22,7 +22,6 @@ import cn.booslink.llm.common.network.exception.DeviceAuthException;
 import cn.booslink.llm.common.speech.ISpeechAgent;
 import cn.booslink.llm.common.storage.ISpeechStorage;
 import cn.booslink.llm.common.ui.ISpeechInteraction;
-import cn.booslink.llm.common.utils.NetworkUtils;
 import cn.booslink.llm.common.utils.RxUtil;
 import cn.booslink.llm.processor.IEventProcessor;
 import cn.booslink.llm.speech.config.AIUIConfig;
@@ -49,10 +48,11 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
     private AIUIConfig mAIUIConfig = null;
     private AIUIAgent mAIUIAgent = null;
 
-    private volatile boolean mIsDeviceAuthed = false;
+    private volatile boolean mIsDeviceAuthSuccess = false;
     private volatile boolean mIsFirstStartup = true;
     private volatile int mAIUIState = 0;
     private volatile boolean mIsAuthenticating = false;
+    private volatile boolean mIsAuthVerifiedThisSession = false;
 
     @Inject
     public SpeechAgentImpl(@ApplicationContext Context context, Gson gson, Device device, DeviceInfo deviceInfo, ISpeechStorage speechStorage, IEventProcessor eventProcessor, IConfigRepository configRepository, Lazy<ISpeechInteraction> speechInteractionLazy, NetworkMonitor networkMonitor) {
@@ -70,20 +70,23 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
     @Override
     public void createAgent() {
         Timber.tag(TAG).d("createAgent");
-        if (mIsAuthenticating || mAIUIAgent != null) return;
-        boolean isNetworkConnected = NetworkUtils.isConnected(mContext);
-        if (!isNetworkConnected) return;
         boolean isAuthSuccessBefore = mSpeechStorage.isAuthSuccess();
-        mIsAuthenticating = true;
-        startDeviceAuth();
         if (isAuthSuccessBefore) {
+            mIsDeviceAuthSuccess = true;
+        }
+        if (mIsDeviceAuthSuccess && mAIUIAgent != null && mIsAuthVerifiedThisSession) return;
+        if (!mIsAuthVerifiedThisSession && !mIsAuthenticating) {
+            mIsAuthenticating = true;
+            startDeviceAuth();
+        }
+        if (isAuthSuccessBefore && mAIUIAgent == null) {
             initAIUIAgent();
         }
     }
 
     @Override
     public void sendMessage(AIUIMessage message) {
-        if (message == null || mAIUIAgent == null) return;
+        if (message == null || mAIUIAgent == null || !mIsDeviceAuthSuccess) return;
         mAIUIAgent.sendMessage(message);
     }
 
@@ -105,7 +108,7 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
                 int state = event.arg1;
                 AIUIState aiuiState = state < AIUIState.values().length ? AIUIState.values()[state] : AIUIState.UNKNOWN;
                 Timber.tag(TAG).d("Event, state = %s, value = %d", aiuiState, state);
-                if (mIsFirstStartup && aiuiState == AIUIState.READ && mIsDeviceAuthed) {
+                if (mIsFirstStartup && aiuiState == AIUIState.READ && mIsDeviceAuthSuccess) {
                     autoWakeupSdkWhenFirst();
                 }
                 mAIUIState = state;
@@ -114,7 +117,7 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
                 break;
             case AIUIConstant.EVENT_WAKEUP: // 唤醒事件
                 int type = event.arg1; // 0 （语音唤醒）, 1 （发送CMD_WAKEUP手动唤醒）
-                if (type == 1 && mIsFirstStartup && mIsDeviceAuthed) {
+                if (type == 1 && mIsFirstStartup && mIsDeviceAuthSuccess) {
                     sendMessageAfterInit();
                     mIsFirstStartup = false;
                 }
@@ -136,7 +139,7 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
             case AIUIConstant.EVENT_ERROR: // 出错事件
                 break;
         }
-        if (!mIsDeviceAuthed) return;
+        if (!mIsDeviceAuthSuccess) return;
         mEventProcessor.processEvent(event);
     }
 
@@ -151,7 +154,8 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
         }
         mAIUIState = 0;
         mIsFirstStartup = true;
-        mIsDeviceAuthed = false;
+        mIsDeviceAuthSuccess = false;
+        mIsAuthVerifiedThisSession = false;
         mEventProcessor.release();
     }
 
@@ -161,33 +165,41 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
                 .subscribe(flag -> {
                     mIsAuthenticating = false;
                     Timber.tag(TAG).d("deviceAuth success %b", flag);
-                    mIsDeviceAuthed = flag;
+                    mIsDeviceAuthSuccess = true;
+                    mIsAuthVerifiedThisSession = true;
                     boolean isAuthSuccessBefore = mSpeechStorage.isAuthSuccess();
-                    //if (isAuthSuccessBefore && flag) return;
-                    if (!isAuthSuccessBefore && flag) {
+                    if (!isAuthSuccessBefore) {
                         mSpeechStorage.setAuthSuccess(true);
                         initAIUIAgent();
-                    } else if (mIsFirstStartup && mAIUIState == AIUIState.READ.getState()) {
-                        autoWakeupSdkWhenFirst();
+                    } else {
+                        if (mIsFirstStartup && mAIUIState == AIUIState.READ.getState()) {
+                            autoWakeupSdkWhenFirst();
+                        }
                     }
                 }, throwable -> {
                     mIsAuthenticating = false;
                     Timber.tag(TAG).e(throwable, "deviceAuth failed");
+                    boolean isAuthSuccessBefore = mSpeechStorage.isAuthSuccess();
                     if (throwable instanceof DeviceAuthException) {
-                        boolean isAuthSuccessBefore = mSpeechStorage.isAuthSuccess();
-                        if (isAuthSuccessBefore) {
-                            resetAgentParams();
-                        }
-                        ISpeechInteraction speechInteraction = mSpeechInteractionLazy.get();
-                        if (speechInteraction != null) {
-                            speechInteraction.authFailed(throwable.getMessage());
-                        }
-                        mSpeechStorage.setAuthSuccess(false);
+                        handleAuthFailure(isAuthSuccessBefore, throwable.getMessage());
                     } else {
-                        // TODO 检查是否是网络错误
+                        mIsAuthVerifiedThisSession = false;
                     }
                 });
         addDisposable(disposable);
+    }
+
+    private void handleAuthFailure(boolean isAuthSuccessBefore, String errorMsg) {
+        mIsDeviceAuthSuccess = false;
+        mIsAuthVerifiedThisSession = false;
+        mSpeechStorage.setAuthSuccess(false);
+        if (isAuthSuccessBefore && mAIUIAgent != null) {
+            resetAgentParams();
+        }
+        ISpeechInteraction speechInteraction = mSpeechInteractionLazy.get();
+        if (speechInteraction != null) {
+            speechInteraction.authFailed(errorMsg);
+        }
     }
 
     private void initAIUIAgent() {
@@ -213,7 +225,7 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
         stopRecordAudio();
         mAIUIState = 0;
         mIsFirstStartup = true;
-        mIsDeviceAuthed = false;
+        mIsDeviceAuthSuccess = false;
     }
 
     private void addDisposable(Disposable disposable) {
@@ -259,14 +271,16 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
                 .compose(RxUtil.observableOnMain())
                 .subscribe(networkStatus -> {
                     Timber.tag(TAG).d("Network changed, status = %s", networkStatus);
-                    if (isAIUIReady()) return;
+                    if (mIsAuthVerifiedThisSession) return;
                     boolean isConnect = networkStatus == NetworkStatus.CONNECTED;
-                    if (isConnect && !mIsDeviceAuthed) {
+                    if (isConnect) {
                         createAgent();
-                    } else if (!isConnect && !mIsDeviceAuthed) {
-                        ISpeechInteraction speechInteraction = mSpeechInteractionLazy.get();
-                        if (speechInteraction != null) {
-                            speechInteraction.showWaitingAuth();
+                    } else {
+                        if (!mIsDeviceAuthSuccess) {
+                            ISpeechInteraction speechInteraction = mSpeechInteractionLazy.get();
+                            if (speechInteraction != null) {
+                                speechInteraction.showWaitingAuth();
+                            }
                         }
                     }
                 });
