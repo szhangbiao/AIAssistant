@@ -1,14 +1,18 @@
 package cn.booslink.llm.processor.process;
 
 import android.content.Context;
+import android.content.Intent;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
 import javax.inject.Inject;
 
+import cn.booslink.llm.common.model.DeviceInfo;
 import cn.booslink.llm.common.model.Semantic;
+import cn.booslink.llm.common.model.Slot;
 import cn.booslink.llm.common.model.UIResponse;
 import cn.booslink.llm.common.model.VoiceResult;
 import cn.booslink.llm.common.model.enums.AIUIIntent;
@@ -29,7 +33,12 @@ public class IntentProcessProxy implements IIntentProcess {
 
     private static final String TAG = "IntentProcess";
 
+
+    private static final String KEY_OPERATE_OBJECT = "operateObject";
+    private static final String NAME_SYSTEM_SETTING = "系统设置";
+
     private final Context mContext;
+    private final DeviceInfo mDevice;
     private final IAppProcess mAppProcess;
     private final IVolumeProcess mVolumeProcess;
     private final IControlProcess mControlProcess;
@@ -40,8 +49,9 @@ public class IntentProcessProxy implements IIntentProcess {
     private final ISpeechInteraction mSpeechInteraction;
 
     @Inject
-    public IntentProcessProxy(@ApplicationContext Context context, IAppProcess appProcess, IControlProcess controlProcess, IVolumeProcess volumeProcess, IMusicProcess musicProcess, IVideoProcess videoProcess, IKSongProcess kSongProcess, IWeatherProcess weatherProcess, ISpeechInteraction speechInteraction) {
+    public IntentProcessProxy(@ApplicationContext Context context, DeviceInfo deviceInfo, IAppProcess appProcess, IControlProcess controlProcess, IVolumeProcess volumeProcess, IMusicProcess musicProcess, IVideoProcess videoProcess, IKSongProcess kSongProcess, IWeatherProcess weatherProcess, ISpeechInteraction speechInteraction) {
         this.mContext = context;
+        this.mDevice = deviceInfo;
         this.mAppProcess = appProcess;
         this.mKSongProcess = kSongProcess;
         this.mMusicProcess = musicProcess;
@@ -92,7 +102,45 @@ public class IntentProcessProxy implements IIntentProcess {
             case SETTING_CLOSE:
                 mControlProcess.speechSleep();
                 return VoiceResult.Companion.success("好的");
+            case LAUNCH:
+                String name = parseNameBySlots(semantic.getSlots());
+                if (category == Category.CONTROL && NAME_SYSTEM_SETTING.equals(name)) {
+                    openSystemSetting();
+                    return VoiceResult.Companion.success("好的");
+                }
+                break;
+            case AGENT_VERSION:
+                String versionTxt = buildVersionTxt();
+                return VoiceResult.Companion.success(versionTxt);
+            case AGENT_GUIDE:
+                openGuidePage();
+                return VoiceResult.Companion.success("好的");
         }
         return VoiceResult.Companion.failure();
+    }
+
+    private String buildVersionTxt() {
+        return "应用版本号：\n" + mDevice.getVersionCode() + "\n\n应用版本名：\n" + mDevice.getVersionName();
+    }
+
+    private String parseNameBySlots(@NotNull List<Slot> slots) {
+        if (slots.isEmpty()) return null;
+        for (Slot slot : slots) {
+            if (KEY_OPERATE_OBJECT.equals(slot.getName())) {
+                return slot.getValue();
+            }
+        }
+        return null;
+    }
+
+    private void openSystemSetting() {
+        Intent intent = new Intent(android.provider.Settings.ACTION_SETTINGS);
+        PkgUtils.launchIntent(mContext, intent);
+    }
+
+    private void openGuidePage() {
+        Intent intent = new Intent();
+        intent.setClassName(mContext, "cn.booslink.llm.ui.GuideActivity");
+        PkgUtils.launchIntent(mContext, intent);
     }
 }

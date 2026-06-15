@@ -50,6 +50,13 @@ data class EventData(
             }
         } else if ((response.category == Category.CONTROL || response.category == Category.APP) && semantic?.intent == AIUIIntent.EXIT && "小飞退出" == queryText) {
             semantic.intent = AIUIIntent.EXIT_AGENT
+        } else if (response.category == Category.UNKNOWN && "视频全屏" == queryText) {
+            response.category = Category.KSONG
+            if (semantic == null) {
+                cbmSemantic.text?.semantic = listOf(Semantic.newIntent(AIUIIntent.KSONG_FULLSCREEN))
+            } else {
+                semantic.intent = AIUIIntent.KSONG_FULLSCREEN
+            }
         }
         return EventData(id, text, event, cbmTidy, cbmSemantic, cbmToolPK, nlp, sub, tag, response, !response.isWeatherEmpty())
     }
@@ -97,7 +104,7 @@ data class CBMToolPK(
 data class PKSource(val domain: String?)
 
 data class UIResponse(
-    val category: Category,
+    var category: Category,
     val queryDate: String? = null,
     val weathers: List<Weather>? = null,
     val sleepType: Int? = -1

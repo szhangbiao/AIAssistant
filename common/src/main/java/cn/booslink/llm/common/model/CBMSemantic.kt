@@ -17,7 +17,7 @@ data class CBMSemantic(
     val rc: Int?,
     @SerializedName("save_history")
     val saveHistory: Boolean?,
-    val semantic: List<Semantic>?,
+    var semantic: List<Semantic>?,
     val semanticType: Int?,
     val service: String?,
     val shouldEndSession: String?,
@@ -36,6 +36,7 @@ data class CBMSemantic(
                     Collections.swap(weatherList, 0, 1)
                     UIResponse.weatherData(categoryEnum, semantic?.firstOrNull(), weatherList)
                 }
+
                 Category.CONTROL, Category.MUSIC, Category.APP, Category.VIDEO, Category.VIDEO_ENHANCE, Category.KSONG, Category.PAGE_CONTROL -> UIResponse.withCategory(categoryEnum)
                 else -> UIResponse.empty()
             }
@@ -51,7 +52,11 @@ class Semantic(
     val score: Float?,
     val slots: List<Slot>,
     val template: String?
-)
+) {
+    companion object {
+        fun newIntent(intent: AIUIIntent) = Semantic(null, intent, null, emptyList(), null)
+    }
+}
 
 data class Slot(val begin: Int?, val end: Int?, val name: String?, val normValue: String?, val value: String?)
 

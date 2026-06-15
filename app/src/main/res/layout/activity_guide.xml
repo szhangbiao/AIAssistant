@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_guide_gradient">
+
+    <!-- Left Panel -->
+    <LinearLayout
+        android:id="@+id/ll_left_panel"
+        android:layout_width="240dp"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingStart="24dp"
+        android:paddingTop="24dp"
+        android:paddingBottom="24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/tv_back"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_back_button_selector"
+            android:clickable="true"
+            android:drawableStart="@drawable/ic_arrow_back"
+            android:drawablePadding="8dp"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:nextFocusDown="@+id/rv_menu"
+            android:paddingStart="16dp"
+            android:paddingTop="10dp"
+            android:paddingEnd="20dp"
+            android:paddingBottom="10dp"
+            android:text="返回"
+            android:textColor="#FFFFFF"
+            android:textSize="20sp" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_menu"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="20dp"
+            android:layout_weight="1"
+            android:nextFocusRight="@+id/sv_detail"
+            android:nextFocusUp="@+id/tv_back"
+            android:scrollbars="none" />
+    </LinearLayout>
+
+    <!-- Right Panel -->
+    <FrameLayout
+        android:id="@+id/fl_detail_card"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginBottom="24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/ll_left_panel"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ScrollView
+            android:id="@+id/sv_detail"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_detail_card"
+            android:descendantFocusability="beforeDescendants"
+            android:fillViewport="true"
+            android:focusable="true"
+            android:focusableInTouchMode="false"
+            android:nextFocusLeft="@+id/rv_menu"
+            android:scrollbars="vertical"
+            android:scrollbarSize="6dp"
+            android:scrollbarThumbVertical="@drawable/bg_scrollbar_thumb"
+            android:scrollbarTrackVertical="@drawable/bg_scrollbar_track"
+            android:fadeScrollbars="false"
+            android:paddingTop="16dp"
+            android:paddingBottom="16dp"
+            android:paddingEnd="12dp"
+            android:clipToPadding="false">
+
+            <TextView
+                android:id="@+id/tv_detail_instruction"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:lineSpacingMultiplier="1.3"
+                android:paddingStart="28dp"
+                android:paddingEnd="24dp"
+                android:paddingTop="12dp"
+                android:paddingBottom="12dp"
+                android:textColor="#E5E7EB"
+                android:textSize="17sp" />
+        </ScrollView>
+    </FrameLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -12,4 +12,6 @@ public interface ISpeechAgent {
     boolean isAIUIReady();
 
     void destroyAgent();
+
+    boolean isAgentCreated();
 }

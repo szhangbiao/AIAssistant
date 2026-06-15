@@ -52,6 +52,7 @@ public class KSongProcessImpl implements IKSongProcess {
     private static final String PAGE_FREQUENT = "常唱";
     private static final String PAGE_FREQUENT_2 = "常点歌曲";
     private static final String PAGE_PLAYLIST = "播放列表";
+    private static final String PAGE_PLAYLIST_2 = "已点歌曲";
 
     @Inject
     @Named("quanmin")
@@ -105,6 +106,7 @@ public class KSongProcessImpl implements IKSongProcess {
                         intent == AIUIIntent.KSONG_TOP || intent == AIUIIntent.KSONG_TOP_SONG || intent == AIUIIntent.KSONG_TOP_ARTIST || // 置顶
                         intent == AIUIIntent.OPEN_SCORE ||// 打开评分
                         intent == AIUIIntent.CLOSE_SCORE ||// 关闭评分
+                        intent == AIUIIntent.KSONG_FULLSCREEN ||// 视频全屏
                         intent == AIUIIntent.EXIT ||// 关闭全民K歌
                         intent == AIUIIntent.EXIT_APP // 关闭应用
         ));
@@ -166,6 +168,7 @@ public class KSongProcessImpl implements IKSongProcess {
             case KSONG_REPLAY:
                 return songAction.replay();
             case SCREEN_FULL:
+            case KSONG_FULLSCREEN:
                 return songAction.fullScreen();
             case EXIT_SCREEN_FULL:
                 return songAction.exitFullScreen();
@@ -326,6 +329,7 @@ public class KSongProcessImpl implements IKSongProcess {
                     case PAGE_RECENT:
                         return songAction.openRecent();
                     case PAGE_PLAYLIST:
+                    case PAGE_PLAYLIST_2:
                         return songAction.openPlaylist();
                     case PAGE_LOCAL:
                         return songAction.openLocal();

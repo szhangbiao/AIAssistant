@@ -17,7 +17,6 @@ import androidx.core.content.ContextCompat;
 
 import android.os.IBinder;
 import android.view.WindowManager;
-import android.widget.Button;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -26,15 +25,11 @@ import javax.inject.Inject;
 
 import cn.booslink.llm.R;
 import cn.booslink.llm.common.model.DeviceInfo;
-import cn.booslink.llm.common.model.PkgInfo;
-import cn.booslink.llm.common.model.VoiceQuery;
-import cn.booslink.llm.common.model.enums.QueryState;
 import cn.booslink.llm.common.ui.ISpeechInteraction;
-import cn.booslink.llm.common.utils.FileUtils;
-import cn.booslink.llm.common.utils.GsonProvider;
 import cn.booslink.llm.common.utils.ScreenAdapter;
 import cn.booslink.llm.common.utils.ScreenUtils;
 import cn.booslink.llm.downloader.IAppManager;
+import cn.booslink.llm.common.speech.ISpeechAgent;
 import cn.booslink.llm.service.VoiceAssistantService;
 import dagger.hilt.android.AndroidEntryPoint;
 import timber.log.Timber;
@@ -48,6 +43,8 @@ public class MainActivity extends AppCompatActivity {
     IAppManager mAppManager;
     @Inject
     ISpeechInteraction mSpeechInteraction;
+    @Inject
+    ISpeechAgent mSpeechAgent;
 
     private static final String TAG = "MainActivity";
     private static final int REQUEST_RECORD_AUDIO_PERMISSION = 100;
@@ -92,6 +89,12 @@ public class MainActivity extends AppCompatActivity {
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        if (mDevice.isSystemApp() && mSpeechAgent.isAgentCreated()) {
+            Intent intent = new Intent(this, GuideActivity.class);
+            startActivity(intent);
+            finish();
+            return;
+        }
         startServiceDirectly();
     }
 

@@ -53,6 +53,7 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
     private volatile int mAIUIState = 0;
     private volatile boolean mIsAuthenticating = false;
     private volatile boolean mIsAuthVerifiedThisSession = false;
+    private volatile boolean mIsAgentCreated = false;
 
     @Inject
     public SpeechAgentImpl(@ApplicationContext Context context, Gson gson, Device device, DeviceInfo deviceInfo, ISpeechStorage speechStorage, IEventProcessor eventProcessor, IConfigRepository configRepository, Lazy<ISpeechInteraction> speechInteractionLazy, NetworkMonitor networkMonitor) {
@@ -70,6 +71,7 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
     @Override
     public void createAgent() {
         Timber.tag(TAG).d("createAgent");
+        mIsAgentCreated = true;
         boolean isAuthSuccessBefore = mSpeechStorage.isAuthSuccess();
         if (isAuthSuccessBefore) {
             mIsDeviceAuthSuccess = true;
@@ -98,6 +100,11 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
     @Override
     public boolean isAIUIReady() {
         return mAIUIState == AIUIState.READ.getState() || mAIUIState == AIUIState.WORKING.getState();
+    }
+
+    @Override
+    public boolean isAgentCreated() {
+        return mIsAgentCreated;
     }
 
     @Override

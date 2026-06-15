@@ -62,6 +62,11 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".ui.GuideActivity"
+            android:launchMode="singleTask"
+            android:configChanges="keyboard|keyboardHidden|navigation|touchscreen|screenLayout|orientation|screenSize|uiMode" />
+
         <service
             android:name=".service.VoiceAssistantService"
             android:foregroundServiceType="mediaPlayback" />

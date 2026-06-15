@@ -11,6 +11,8 @@ import cn.booslink.llm.common.utils.ContextUtils;
 import cn.booslink.llm.downloader.AppUpgradeManager;
 import cn.booslink.llm.record.IVoiceInput;
 import cn.booslink.llm.record.VoiceInputImpl;
+import cn.booslink.llm.repository.IGuideRepository;
+import cn.booslink.llm.repository.GuideRepositoryImpl;
 import dagger.Binds;
 import dagger.Module;
 import dagger.Provides;
@@ -48,5 +50,9 @@ public class AppModule {
         @Binds
         @Singleton
         IVoiceInput bindVoiceInput(VoiceInputImpl voiceInputImpl);
+
+        @Binds
+        @Singleton
+        IGuideRepository bindGuideRepository(GuideRepositoryImpl guideRepositoryImpl);
     }
 }

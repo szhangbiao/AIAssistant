@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Active state when ScrollView is focused -->
+    <item android:state_focused="true">
+        <shape>
+            <solid android:color="#FF2ECC71" />
+            <corners android:radius="3dp" />
+        </shape>
+    </item>
+    <item android:state_selected="true">
+        <shape>
+            <solid android:color="#FF2ECC71" />
+            <corners android:radius="3dp" />
+        </shape>
+    </item>
+    <!-- Default state: unfocused, subtle semi-transparent white -->
+    <item>
+        <shape>
+            <solid android:color="#4DFFFFFF" />
+            <corners android:radius="3dp" />
+        </shape>
+    </item>
+</selector>
