@@ -15,13 +15,13 @@ import io.reactivex.rxjava3.core.Single;
 @Singleton
 public class GuideRepositoryImpl implements IGuideRepository {
 
-    private final Context mContext;
     private final Gson mGson;
+    private final Context mContext;
 
     @Inject
     public GuideRepositoryImpl(@ApplicationContext Context context, Gson gson) {
-        this.mContext = context;
         this.mGson = gson;
+        this.mContext = context;
     }
 
     @Override

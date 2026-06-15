@@ -95,6 +95,16 @@
             android:visibility="gone" />
     </FrameLayout>
 
+    <org.libpag.PAGImageView
+        android:id="@+id/pag_loading"
+        android:layout_width="320dp"
+        android:layout_height="200dp"
+        android:layout_marginTop="65dp"
+        app:layout_constraintBottom_toTopOf="@id/fl_result"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/fl_result" />
+
     <cn.booslink.llm.common.widget.ApkDownloadLayout
         android:id="@+id/fl_download_layout"
         android:layout_width="match_parent"

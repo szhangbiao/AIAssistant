@@ -42,8 +42,7 @@ public class AIRootLayout extends ConstraintLayout {
     private ImageView ivMascot;
     private View vContent;
     private PAGImageView pagAnimation;
-    private PAGImageView pagLoading;
-    private AIInteractionLayout llInteraction;
+    private AIInteractionLayout clInteraction;
     private AILeaveLayout flLeave;
     private FrameLayout flContent;
 
@@ -82,8 +81,7 @@ public class AIRootLayout extends ConstraintLayout {
         ivMascot = findViewById(R.id.iv_mascot);
         vContent = findViewById(R.id.v_content);
         pagAnimation = findViewById(R.id.pag_animation);
-        pagLoading = findViewById(R.id.pag_loading);
-        llInteraction = findViewById(R.id.ll_interaction);
+        clInteraction = findViewById(R.id.ll_interaction);
         flLeave = findViewById(R.id.fl_leave);
         flContent = findViewById(R.id.fl_content);
     }
@@ -138,34 +136,34 @@ public class AIRootLayout extends ConstraintLayout {
 
     private void changeUIWithVoiceInput(VoiceQuery query) {
         flLeave.setVisibility(View.GONE);
-        llInteraction.setVisibility(View.VISIBLE);
+        clInteraction.setVisibility(View.VISIBLE);
         String voiceInput = query.getQuery();
         if (!TextUtils.isEmpty(voiceInput)) {
             Timber.tag(TAG).d("changeUIWithVoiceInput, input = %s", voiceInput);
-            llInteraction.voiceInput(voiceInput);
+            clInteraction.voiceInput(voiceInput);
         }
         if (mCurrentQueryState != null && mCurrentQueryState == query.getState()) return;
         mCurrentQueryState = query.getState();
         Timber.tag(TAG).d("changeUIWithVoiceInput, state = %s", query);
         switch (query.getState()) {
             case IDLE:
-                llInteraction.updateTipTitle(getContext().getString(R.string.speech_initial_help));
+                clInteraction.updateTipTitle(getContext().getString(R.string.speech_initial_help));
                 break;
             case WAKE_UP:
-                llInteraction.updateTipTitle(getContext().getString(R.string.speech_voice_listening));
-                llInteraction.showWakeup();
+                clInteraction.updateTipTitle(getContext().getString(R.string.speech_voice_listening));
+                clInteraction.showWakeup();
                 break;
             case QUERYING:
-                llInteraction.updateTipTitle(getContext().getString(R.string.speech_voice_querying));
+                clInteraction.updateTipTitle(getContext().getString(R.string.speech_voice_querying));
                 break;
             case EMPTY:
             case DOWNLOADING:
             case DONE:
-                llInteraction.updateTipTitle(getContext().getString(R.string.speech_voice_result));
+                clInteraction.updateTipTitle(getContext().getString(R.string.speech_voice_result));
                 break;
             case FAILED:
             case ERROR:
-                llInteraction.updateTipTitle(getContext().getString(R.string.speech_voice_sorry));
+                clInteraction.updateTipTitle(getContext().getString(R.string.speech_voice_sorry));
                 break;
             default:
                 break;
@@ -175,14 +173,14 @@ public class AIRootLayout extends ConstraintLayout {
 
     private void changeUIWithNplResponse(String nplText) {
         flLeave.setVisibility(View.GONE);
-        llInteraction.setVisibility(View.VISIBLE);
-        llInteraction.nplReply(nplText);
+        clInteraction.setVisibility(View.VISIBLE);
+        clInteraction.nplReply(nplText);
     }
 
     private void changeUIWithApkDownload(ApkDownload apkDownload) {
         flLeave.setVisibility(View.GONE);
-        llInteraction.setVisibility(View.VISIBLE);
-        llInteraction.showDownloadProcess(apkDownload);
+        clInteraction.setVisibility(View.VISIBLE);
+        clInteraction.showDownloadProcess(apkDownload);
     }
 
     private void changeUIWithUIResponse(UIResponse response) {
@@ -191,16 +189,13 @@ public class AIRootLayout extends ConstraintLayout {
                 if (response.getWeathers() == null) return;
                 WeatherUI weatherUI = WeatherUI.Companion.fromWeatherList(response.getQueryDate(), response.getWeathers());
                 flLeave.setVisibility(View.GONE);
-                llInteraction.setVisibility(View.VISIBLE);
-                llInteraction.showWeatherList(weatherUI);
+                clInteraction.setVisibility(View.VISIBLE);
+                clInteraction.showWeatherList(weatherUI);
                 break;
             case SLEEP:
                 //int sleepType = response.getSleepType() != null ? response.getSleepType() : 0;
-                llInteraction.setVisibility(View.GONE);
-                if (pagLoading != null && pagLoading.getVisibility() == View.VISIBLE) {
-                    pagLoading.setVisibility(View.GONE);
-                    pagLoading.pause();
-                }
+                clInteraction.stopAnimIfNeed();
+                clInteraction.setVisibility(View.GONE);
                 flLeave.setVisibility(View.VISIBLE);
             default:
                 break;
@@ -306,17 +301,9 @@ public class AIRootLayout extends ConstraintLayout {
     private void processLoadingState(QueryState queryState) {
         boolean isQuerying = queryState == QueryState.QUERYING;
         boolean shouldShowLoading = queryState == QueryState.QUERYING || queryState == QueryState.IDLE;
-        llInteraction.showLoading(shouldShowLoading);
-        if (pagLoading != null) {
-            pagLoading.setVisibility(isQuerying ? View.VISIBLE : View.GONE);
-            if (isQuerying) {
-                pagLoading.setPath("assets://pag_loading.pag");
-                pagLoading.setRepeatCount(-1);
-                pagLoading.play();
-            } else {
-                pagLoading.pause();
-            }
-        }
+        clInteraction.showAnimLoading(isQuerying);
+        clInteraction.showTextLoading(shouldShowLoading);
+
     }
 
     private void startScaleAnim(View animView, float startScale, float endScale, long duration) {

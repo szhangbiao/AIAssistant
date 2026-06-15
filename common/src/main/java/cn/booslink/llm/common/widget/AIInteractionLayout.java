@@ -6,11 +6,13 @@ import android.text.method.ScrollingMovementMethod;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.constraintlayout.widget.ConstraintLayout;
+
+import org.libpag.PAGImageView;
 
 import cn.booslink.llm.common.R;
 import cn.booslink.llm.common.model.ApkDownload;
@@ -18,7 +20,7 @@ import cn.booslink.llm.common.model.WeatherUI;
 import cn.booslink.llm.common.utils.ContextUtils;
 import timber.log.Timber;
 
-public class AIInteractionLayout extends LinearLayout {
+public class AIInteractionLayout extends ConstraintLayout {
 
     private final static String TAG = "InteractionLayout";
 
@@ -28,6 +30,8 @@ public class AIInteractionLayout extends LinearLayout {
     private ApkDownloadLayout apkDownloadLayout;
     private ApkDownloadLayout apkDismissLayout;
     private WeatherListLayout weatherListLayout;
+
+    private PAGImageView pagLoading;
     private WakeUpLayout llWakeup;
     private TextView tvNplReply;
 
@@ -41,10 +45,9 @@ public class AIInteractionLayout extends LinearLayout {
 
     public AIInteractionLayout(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        setOrientation(LinearLayout.VERTICAL);
         inflateLayout(context);
         initWidgets();
-        showLoading(true);
+        showTextLoading(true);
         setPadding(0, 0, 0, ContextUtils.dp2px(context, 24));
     }
 
@@ -60,7 +63,7 @@ public class AIInteractionLayout extends LinearLayout {
 
     public void nplReply(String nplText) {
         if (TextUtils.isEmpty(nplText)) return;
-        showLoading(false);
+        showTextLoading(false);
         weatherListLayout.setVisibility(View.GONE);
         llWakeup.setVisibility(View.GONE);
         tvNplReply.setVisibility(View.VISIBLE);
@@ -86,14 +89,14 @@ public class AIInteractionLayout extends LinearLayout {
     }
 
     public void showWeatherList(WeatherUI weatherData) {
-        showLoading(false);
+        showTextLoading(false);
         tvNplReply.setVisibility(GONE);
         llWakeup.setVisibility(GONE);
         weatherListLayout.setVisibility(VISIBLE);
         weatherListLayout.updateWeatherUI(weatherData);
     }
 
-    public void showLoading(boolean isShow) {
+    public void showTextLoading(boolean isShow) {
         if (isShow) {
             tvNplReply.setText("");
             tvNplReply.scrollTo(0, 0);
@@ -102,6 +105,19 @@ public class AIInteractionLayout extends LinearLayout {
             llWakeup.setVisibility(GONE);
         }
         loadingView.setVisibility(isShow ? VISIBLE : GONE);
+    }
+
+    public void showAnimLoading(boolean isQuerying) {
+        if (pagLoading != null) {
+            pagLoading.setVisibility(isQuerying ? View.VISIBLE : View.GONE);
+            if (isQuerying) {
+                pagLoading.setPath("assets://pag_loading.pag");
+                pagLoading.setRepeatCount(-1);
+                pagLoading.play();
+            } else {
+                pagLoading.pause();
+            }
+        }
     }
 
     public void showWakeup() {
@@ -119,6 +135,7 @@ public class AIInteractionLayout extends LinearLayout {
         tvQuestion = findViewById(R.id.tv_question);
         tvResultTitle = findViewById(R.id.tv_result_title);
         tvNplReply = findViewById(R.id.tv_npl);
+        pagLoading = findViewById(R.id.pag_loading);
         apkDownloadLayout = findViewById(R.id.fl_download_layout);
         apkDismissLayout = findViewById(R.id.fl_download_dismiss);
         weatherListLayout = findViewById(R.id.cl_weather_list);
@@ -127,5 +144,12 @@ public class AIInteractionLayout extends LinearLayout {
         tvNplReply.setMovementMethod(new ScrollingMovementMethod());
         tvNplReply.setFocusable(false);
         tvNplReply.setFocusableInTouchMode(false);
+    }
+
+    public void stopAnimIfNeed() {
+        if (pagLoading != null && pagLoading.getVisibility() == View.VISIBLE) {
+            pagLoading.setVisibility(View.GONE);
+            pagLoading.pause();
+        }
     }
 }
