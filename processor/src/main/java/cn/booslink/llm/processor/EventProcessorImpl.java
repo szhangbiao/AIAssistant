@@ -115,10 +115,6 @@ public class EventProcessorImpl implements IEventProcessor {
                 mSpeechStatus.wakeup();
                 mHandler.post(mSpeechInteraction::UIWakeup);
                 if (type == 0) {
-//                    boolean shouldBlockSleepLogic = mAppManager.isAnyPkgTaskRunning();
-//                    if (shouldBlockSleepLogic) {
-//                        return;
-//                    }
                     mSpeechInteraction.updateQuery(new VoiceQuery("Bobo在听，有什么可以帮您~", QueryState.WAKE_UP));
                 }
                 break;
@@ -226,6 +222,12 @@ public class EventProcessorImpl implements IEventProcessor {
                 }, BackpressureStrategy.BUFFER)
                 .map(this::parseEventData)
                 .map(this::processSemanticData)
+                .filter(event -> {
+                    if (event.getSub() == CBMSub.NLP) {
+                        // Timber.tag(TAG).d("filter oldId = %s, newId = %s", event.getId(), mEventData.getId());
+                    }
+                    return mEventData.isEmpty() || event.getSub() != CBMSub.NLP || mEventData.getSemanticHandled() || (event.getId() != null && event.getId().equals(mEventData.getId()));
+                })
                 .compose(RxUtil.flowableOnIO())
                 .subscribe(this::populateEventResult, this::parseOrPopulateEventFailed);
     }
@@ -242,7 +244,7 @@ public class EventProcessorImpl implements IEventProcessor {
             String cntJsonRaw = new String(bytes, StandardCharsets.UTF_8);
             String tag = event.data.getString(KEY_TAG);
             String streamId = event.data.getString(KEY_STREAM_ID);
-            Timber.tag(TAG).d("parseEventData, cnt json = %s", cntJsonRaw);
+            //Timber.tag(TAG).d("parseEventData, cnt json = %s", cntJsonRaw);
             EventData data = mGson.fromJson(cntJsonRaw, EventData.class);
             data.setId(streamId);
             data.setTag(AIUITag.fromTag(tag));
@@ -344,12 +346,24 @@ public class EventProcessorImpl implements IEventProcessor {
             mSpeechStatus.reset();
             String type = event.getType();
             String key = event.getKey();
-            if (TYPE_VAD.equals(type) && VAD_BOS.equals(key)) { // speak start
-                mTTSSpeech.cancel();
+            if (TYPE_VAD.equals(type)) { // speak start
+                switch (key) {
+                    case VAD_BOS:
+                        mTTSSpeech.cancel();
+                        mEventData = EventData.Companion.withId(data.getId());
+                        break;
+                    case VAD_EOS:
+                        mEventData = EventData.Companion.withId(data.getId());
+                        break;
+                    case VAD_SILENCE:
+                        if (mEventData.isEmpty() || (data.getId() != null && data.getId().equals(mEventData.getId()))) {
+                            mEventData = EventData.Companion.withId(data.getId());
+                        }
+                        break;
+                }
             }
             Timber.tag(TAG).d("cbm event, type = %s, key = %s, event id = %s", type, key, data.getId());
             if (TYPE_VAD.equals(type) && (VAD_SILENCE.equals(key) || VAD_EOS.equals(key))) {
-                mEventData = EventData.Companion.withId(data.getId());
                 if (mEventData.getCbmSemantic() == null || mEventData.getCbmSemantic().getText() == null) return;
                 Answer answer = mEventData.getCbmSemantic().getText().getAnswer();
                 String semanticAnswer = answer != null ? answer.getText() : "";
@@ -357,7 +371,6 @@ public class EventProcessorImpl implements IEventProcessor {
                     mSpeechInteraction.customAnswer(semanticAnswer);
                 }
             } else if (TYPE_VAD.equals(type) && VAD_BOS.equals(key)) {
-                mEventData = EventData.Companion.withId(data.getId());
                 if (mEventData.getCbmSemantic() == null || mEventData.getCbmSemantic().getText() == null) return;
                 Answer answer = mEventData.getCbmSemantic().getText().getAnswer();
                 String semanticAnswer = answer != null ? answer.getText() : "";

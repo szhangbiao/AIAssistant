@@ -15,7 +15,7 @@ public class Device {
     public static Device of(Context appContext) {
         Device device = new Device();
         device.wifiMac = DeviceUtils.getWifiMac(appContext);
-        device.serialNo = DeviceUtils.getSn();
+        device.serialNo = DeviceUtils.getSn();//  "1024768003"; H2设备
         device.cpuId = DeviceUtils.getChipIDHex();
         device.model = Build.MODEL;
         device.fingerPrint = Build.FINGERPRINT;

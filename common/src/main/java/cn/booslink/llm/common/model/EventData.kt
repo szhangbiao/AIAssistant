@@ -30,7 +30,7 @@ data class EventData(
         fun withId(id: String?) = EventData(id, null, null, null, null, null, null, semanticHandled = false)
     }
 
-    fun isEmpty(): Boolean = text == null && cbmTidy == null && cbmSemantic == null && cbmToolPK == null && nlp == null
+    fun isEmpty(): Boolean = id == null && text == null && event == null && cbmTidy == null && cbmSemantic == null && cbmToolPK == null && nlp == null
 
     fun copyIat(text: IATText) = EventData(id, text, event, cbmTidy, cbmSemantic, cbmToolPK, nlp, sub, tag, response, semanticHandled)
 
