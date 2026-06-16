@@ -54,6 +54,8 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
 
     private boolean isAttached = false;
     private volatile boolean isActive = false;
+    private WindowManager mWindowManager;
+    private WindowManager.LayoutParams mWindowParams;
 
     @Inject
     public SpeechInteractionImpl(@ApplicationContext Context context, ITTSSpeech ttsSpeech) {
@@ -82,11 +84,14 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
                 // 对于低于 Android 8.0 的系统，直接使用更稳定的 TYPE_SYSTEM_ALERT 级系统窗口，提高层级与渲染优先级
                 params.type = WindowManager.LayoutParams.TYPE_SYSTEM_ALERT;
             }
-            // 允许触摸事件传递到下方，同时监听外部触摸事件，并开启硬件加速防止 Android 4.4 在其它 App 启动时导致重叠区渲染滞后
+            // 允许触摸事件传递到下方，同时监听外部触摸事件
             params.flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
                     | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-                    | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH
-                    | WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED;
+                    | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH;
+            // 在 Android 4.4 (KitKat) 及以下版本关闭硬件加速，防止在其它 App 启动时重叠区域产生渲染残影
+            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT) {
+                params.flags |= WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED;
+            }
             // 如果需要完全透明且不拦截触摸，可以使用下面的配置
             // params.flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
             params.gravity = Gravity.TOP | Gravity.END;
@@ -95,8 +100,11 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
             params.height = WindowManager.LayoutParams.WRAP_CONTENT;
             params.width = width;
             params.format = PixelFormat.RGBA_8888;
+            params.alpha = 0.99f; // 强制系统为悬浮窗启用透明混合通道，避免底色优化导致的旧图层残留
             setupRootViewParams();
             wm.addView(mParentView, params);
+            mWindowManager = wm;
+            mWindowParams = params;
             Timber.tag(TAG).d("View attached to window");
             isAttached = true;
         } catch (Exception e) {
@@ -112,8 +120,12 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
         }
         unBindData(mRootLayoutRef.get());
         try {
-            WindowManager wm = (WindowManager) mContext.getSystemService(WINDOW_SERVICE);
-            wm.removeView(mParentView);
+            if (mWindowManager != null) {
+                mWindowManager.removeView(mParentView);
+            } else {
+                WindowManager wm = (WindowManager) mContext.getSystemService(WINDOW_SERVICE);
+                wm.removeView(mParentView);
+            }
             Timber.tag(TAG).d("View detached from window");
             isAttached = false;
         } catch (Exception e) {
@@ -144,8 +156,11 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
             params.height = WindowManager.LayoutParams.WRAP_CONTENT;
             params.width = width;
             params.format = PixelFormat.RGBA_8888;
+            params.alpha = 0.99f; // 强制系统为悬浮窗启用透明混合通道，避免底色优化导致的旧图层残留
             setupRootViewParams();
             wm.addView(mParentView, params);
+            mWindowManager = wm;
+            mWindowParams = params;
             isAttached = true;
             Timber.tag(TAG).d("View attached to activity");
         } catch (Exception e) {
@@ -163,8 +178,12 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
         }
         unBindData(mRootLayoutRef.get());
         try {
-            WindowManager wm = (WindowManager) activity.getSystemService(WINDOW_SERVICE);
-            wm.removeView(mParentView);
+            if (mWindowManager != null) {
+                mWindowManager.removeView(mParentView);
+            } else {
+                WindowManager wm = (WindowManager) activity.getSystemService(WINDOW_SERVICE);
+                wm.removeView(mParentView);
+            }
             Timber.tag(TAG).d("View detached from activity");
             isAttached = false;
         } catch (Exception e) {
@@ -327,6 +346,10 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
     }
 
     private void setupRootViewParams() {
+        // 在 Android 4.4 (KitKat) 及以下设备强制使用软件渲染层，彻底规避 GPU 双缓冲/三缓冲在转场时的残影 Bug
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT) {
+            mParentView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+        }
         int width = ContextUtils.dp2px(mContext, 554);
         mParentView.removeAllViews();
         FrameLayout.LayoutParams childParams = new FrameLayout.LayoutParams(width, FrameLayout.LayoutParams.WRAP_CONTENT);
@@ -353,5 +376,48 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
     private void unBindData(AIRootLayout rootLayout) {
         if (rootLayout == null) return;
         rootLayout.unObserveData(mEmoteStateLiveData, mVoiceInputLiveData, mNplResponseLiveData, mApkDownloadLiveData, mUIResponseLiveData);
+    }
+
+    @Override
+    public void forceWindowRefresh() {
+        mParentView.post(() -> {
+            if (isAttached && mWindowManager != null && mWindowParams != null) {
+                try {
+                    // 强制重绘根视图
+                    mParentView.invalidate();
+                    mParentView.requestLayout();
+
+                    // 通过微调透明度（Alpha）而不是位置（X），强制 SurfaceFlinger 重新进行合成计算
+                    // 透明度在 0.99 和 0.98 之间微调对人眼完全无感，但能完美触发图层刷新，避免 UI 产生物理抖动
+                    final float originalAlpha = mWindowParams.alpha;
+                    mWindowParams.alpha = originalAlpha - 0.01f;
+                    mWindowManager.updateViewLayout(mParentView, mWindowParams);
+
+                    // 在 App 启动转场的不同关键节点触发重新合成，确保底层被完全替换为新应用的画面
+                    mParentView.postDelayed(() -> {
+                        if (isAttached && mWindowManager != null && mWindowParams != null) {
+                            mWindowParams.alpha = originalAlpha;
+                            mWindowManager.updateViewLayout(mParentView, mWindowParams);
+                        }
+                    }, 150);
+
+                    mParentView.postDelayed(() -> {
+                        if (isAttached && mWindowManager != null && mWindowParams != null) {
+                            mWindowParams.alpha = originalAlpha - 0.01f;
+                            mWindowManager.updateViewLayout(mParentView, mWindowParams);
+                        }
+                    }, 350);
+
+                    mParentView.postDelayed(() -> {
+                        if (isAttached && mWindowManager != null && mWindowParams != null) {
+                            mWindowParams.alpha = originalAlpha;
+                            mWindowManager.updateViewLayout(mParentView, mWindowParams);
+                        }
+                    }, 600);
+                } catch (Exception e) {
+                    Timber.tag(TAG).e(e, "forceWindowRefresh failed");
+                }
+            }
+        });
     }
 }

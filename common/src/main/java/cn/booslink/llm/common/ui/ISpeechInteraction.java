@@ -35,4 +35,6 @@ public interface ISpeechInteraction {
     void authFailed(String failReason);
 
     void showWaitingAuth();
+
+    void forceWindowRefresh();
 }

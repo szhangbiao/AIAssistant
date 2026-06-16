@@ -109,9 +109,11 @@ public class AppProcessImpl implements IAppProcess {
                         if (intent == null) {
                             PkgUtils.launchApp(mContext, deliveryPkgName);
                             mSpeechInteraction.customAnswer("已为你打开应用");
+                            mSpeechInteraction.forceWindowRefresh();
                         } else {
                             PkgUtils.launchIntent(mContext, intent);
                             mSpeechInteraction.customAnswer("好的");
+                            mSpeechInteraction.forceWindowRefresh();
                         }
                         return Single.just(PkgInfo.ignore());
                     }
@@ -188,6 +190,7 @@ public class AppProcessImpl implements IAppProcess {
                     }
                     PkgUtils.launchApp(mContext, appInfo);
                     mSpeechInteraction.customAnswer("已为你打开应用");
+                    mSpeechInteraction.forceWindowRefresh();
                     break;
             }
             return true;
@@ -345,9 +348,11 @@ public class AppProcessImpl implements IAppProcess {
                 if (intent == null) {
                     PkgUtils.launchApp(mContext, download.getPkgName());
                     delayPostMessage("已为你打开应用", VoiceQuery.Companion.stateOnly(QueryState.DONE));
+                    mSpeechInteraction.forceWindowRefresh();
                 } else {
                     PkgUtils.launchIntent(mContext, intent);
                     delayPostMessage("好的", VoiceQuery.Companion.stateOnly(QueryState.DONE));
+                    mSpeechInteraction.forceWindowRefresh();
                 }
                 populateWakeupAfterAppInstall();
             }
