@@ -279,52 +279,41 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
 
     @Override
     public void UIWakeup() {
-        if (!isAttached || isActive) return;
+        if (isActive) return;
         Timber.tag(TAG).d("UIWakeup");
-        boolean isViewVisible = mParentView.getVisibility() == View.VISIBLE;
-        AIRootLayout rootLayout = mRootLayoutRef.get();
-        if (rootLayout != null && !isViewVisible) {
-            rootLayout.startWakeupAnimation();
-        }
-        mParentView.setVisibility(View.VISIBLE);
+        showAndAnimate();
         isActive = true;
     }
 
     @Override
     public void UISleep() {
-        if (!isAttached || !isActive) return;
+        if (!isActive) return;
         Timber.tag(TAG).d("UISleep");
         AIRootLayout rootLayout = mRootLayoutRef.get();
         if (rootLayout != null) {
-            rootLayout.startHideAnimation(() -> mParentView.setVisibility(View.GONE));
+            rootLayout.startHideAnimation(() -> {
+                mParentView.setVisibility(View.GONE);
+                detachFromWindow(); // 休眠时彻底移出 WindowManager，释放焦点，恢复遥控器按键响应
+            });
+        } else {
+            mParentView.setVisibility(View.GONE);
+            detachFromWindow();
         }
         isActive = false;
     }
 
     @Override
     public void authFailed(String failReason) {
-        if (!isAttached) return;
         Timber.tag(TAG).d("authFailed");
-        boolean isViewVisible = mParentView.getVisibility() == View.VISIBLE;
-        AIRootLayout rootLayout = mRootLayoutRef.get();
-        if (rootLayout != null && !isViewVisible) {
-            rootLayout.startWakeupAnimation();
-        }
-        mParentView.setVisibility(View.VISIBLE);
+        showAndAnimate();
         updateQuery(VoiceQuery.Companion.stateOnly(QueryState.FAILED));
         customAnswer(failReason);
     }
 
     @Override
     public void showWaitingAuth() {
-        if (!isAttached) return;
         Timber.tag(TAG).d("showWaitingAuth");
-        boolean isViewVisible = mParentView.getVisibility() == View.VISIBLE;
-        AIRootLayout rootLayout = mRootLayoutRef.get();
-        if (rootLayout != null && !isViewVisible) {
-            rootLayout.startWakeupAnimation();
-        }
-        mParentView.setVisibility(View.VISIBLE);
+        showAndAnimate();
         updateQuery(VoiceQuery.Companion.stateOnly(QueryState.IDLE));
         customAnswer("等待联网鉴权");
     }
@@ -376,6 +365,15 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
     private void unBindData(AIRootLayout rootLayout) {
         if (rootLayout == null) return;
         rootLayout.unObserveData(mEmoteStateLiveData, mVoiceInputLiveData, mNplResponseLiveData, mApkDownloadLiveData, mUIResponseLiveData);
+        resetLiveDataValue();
+    }
+
+    private void resetLiveDataValue() {
+        mEmoteStateLiveData.postValue(EmoteState.IDLE);
+        mVoiceInputLiveData.postValue(VoiceQuery.Companion.startup());
+        mNplResponseLiveData.postValue("");
+        mApkDownloadLiveData.postValue(ApkDownload.empty());
+        mUIResponseLiveData.postValue(UIResponse.Companion.empty());
     }
 
     @Override
@@ -419,5 +417,22 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
                 }
             }
         });
+    }
+
+    private void showAndAnimate() {
+        boolean wasAttached = isAttached;
+        boolean wasVisible = isAttached && (mParentView.getVisibility() == View.VISIBLE);
+        if (!isAttached) {
+            attachToWindow();
+        }
+        mParentView.setVisibility(View.VISIBLE);
+        AIRootLayout rootLayout = mRootLayoutRef.get();
+        if (rootLayout != null) {
+            if (!wasAttached) {
+                mParentView.post(rootLayout::startWakeupAnimation);
+            } else if (!wasVisible) {
+                rootLayout.startWakeupAnimation();
+            }
+        }
     }
 }

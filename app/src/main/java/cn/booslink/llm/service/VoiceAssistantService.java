@@ -59,10 +59,7 @@ public class VoiceAssistantService extends Service {
     public void onCreate() {
         super.onCreate();
         Timber.tag(TAG).d("onCreate");
-        // 创建交互UIView
-        // 把View添加到WindowManager
         if (mDevice.isSystemApp()) {
-            mSpeechInteraction.attachToWindow();
             keepServiceWithNotification();
         }
         mSpeechAgent.createAgent();
