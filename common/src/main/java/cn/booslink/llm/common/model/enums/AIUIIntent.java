@@ -8,6 +8,7 @@ public enum AIUIIntent {
     EXIT_AGENT("EXIT_AGENT"),
     AGENT_VERSION("AGENT_VERSION"),
     AGENT_GUIDE("AGENT_GUIDE"),
+    BACK_HOME("BACK_HOME"),
     // 页面跳转
     PAGE_BACK("PAGE_BACK"),
     PAGE_OPEN("PAGE_OPEN"),

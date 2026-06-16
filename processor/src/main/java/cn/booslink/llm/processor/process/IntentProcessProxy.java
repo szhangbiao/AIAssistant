@@ -1,7 +1,9 @@
 package cn.booslink.llm.processor.process;
 
+import android.app.Instrumentation;
 import android.content.Context;
 import android.content.Intent;
+import android.view.KeyEvent;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -115,6 +117,9 @@ public class IntentProcessProxy implements IIntentProcess {
             case AGENT_GUIDE:
                 openGuidePage();
                 return VoiceResult.Companion.success("好的");
+            case BACK_HOME:
+                simulateHomePress();
+                return VoiceResult.Companion.success("好的");
         }
         return VoiceResult.Companion.failure();
     }
@@ -142,5 +147,15 @@ public class IntentProcessProxy implements IIntentProcess {
         Intent intent = new Intent();
         intent.setClassName(mContext, "cn.booslink.llm.ui.GuideActivity");
         PkgUtils.launchIntent(mContext, intent);
+    }
+
+    private void simulateHomePress() {
+        try {
+            Instrumentation inst = new Instrumentation();
+            inst.sendKeyDownUpSync(KeyEvent.KEYCODE_HOME);
+        } catch (Exception e) {
+            // 记录错误日志
+            Timber.tag(TAG).e(e, "Failed to simulate back press");
+        }
     }
 }
