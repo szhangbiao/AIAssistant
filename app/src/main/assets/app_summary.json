@@ -18,15 +18,6 @@
     "pkg_name": "com.qiyi.video.iv"
   },
   {
-    "name": "炫舞未来",
-    "pkg_name": "com.newtv.vltdance"
-  },
-  {
-    "name": "雷石K歌",
-    "nickname": "金麦客专业K歌",
-    "pkg_name": "cn.jmake.karaoke.box.ott"
-  },
-  {
     "name": "听戏唱曲",
     "pkg_name": "cn.jmake.karaoke.opera"
   },
@@ -36,16 +27,8 @@
   },
   {
     "name": "央视频TV版",
+    "nickname": "新视听",
     "pkg_name": "com.newtv.cboxtv"
-  },
-  {
-    "name": "优酷视频",
-    "nickname": "CIBN酷喵影视",
-    "pkg_name": "com.cibn.tv"
-  },
-  {
-    "name": "多唱K歌",
-    "pkg_name": "com.evideo.kmbox"
   },
   {
     "name": "智能K歌",
@@ -54,5 +37,28 @@
   {
     "name": "唱吧",
     "pkg_name": "com.changba.sd"
+  },
+  {
+    "name": "NewTV少儿",
+    "pkg_name": "com.ktkid.video"
+  },
+  {
+    "name": "糖豆广场舞",
+    "pkg_name": "com.dancetv.bokecc.sqaredancetv"
+  },
+  {
+    "name": "梨园行",
+    "nickname": "梨园行戏曲",
+    "pkg_name": "com.iptv.liyuanhang_ott"
+  },
+  {
+    "name": "乐播投屏",
+    "nickname": "乐播",
+    "pkg_name": "com.hpplay.happyplay.aw"
+  },
+  {
+    "name": "云青来市场",
+    "nickname": "云青来应用市场",
+    "pkg_name": "com.yunqinglai.market"
   }
 ]

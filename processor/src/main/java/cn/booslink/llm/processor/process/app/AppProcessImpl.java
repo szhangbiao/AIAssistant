@@ -86,7 +86,11 @@ public class AppProcessImpl implements IAppProcess {
         String appName = null;
         for (Slot slot : slots) {
             if ("name".equals(slot.getName()) && !TextUtils.isEmpty(slot.getValue())) {
-                appName = slot.getValue();
+                if (!TextUtils.isEmpty(slot.getNormValue()) && !slot.getNormValue().equals(slot.getValue())) {
+                    appName = slot.getNormValue();
+                } else {
+                    appName = slot.getValue();
+                }
                 break;
             }
         }

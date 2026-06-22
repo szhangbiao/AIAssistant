@@ -54,7 +54,7 @@ public class PkgInfo {
     }
 
     public boolean isEmpty() {
-        return apkId == -1;
+        return apkId == -1 || apkId == 0;
     }
 
     public boolean isIgnore() {
