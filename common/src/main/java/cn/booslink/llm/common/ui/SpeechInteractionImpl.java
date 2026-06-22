@@ -17,6 +17,7 @@ import androidx.lifecycle.MutableLiveData;
 
 import javax.inject.Inject;
 
+import cn.booslink.llm.common.R;
 import cn.booslink.llm.common.model.ApkDownload;
 import cn.booslink.llm.common.model.UIResponse;
 import cn.booslink.llm.common.model.VoiceQuery;
@@ -355,6 +356,13 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
         if (rootLayout != null) {
             bindData(rootLayout);
             mParentView.addView(rootLayout, childParams);
+            if (mParentView instanceof SpeechWindowLayout) {
+                SpeechWindowLayout windowLayout = (SpeechWindowLayout) mParentView;
+                windowLayout.clearTouchableViews();
+                windowLayout.addTouchableView(rootLayout.findViewById(R.id.tv_npl));
+                windowLayout.addTouchableView(rootLayout.findViewById(R.id.tv_positive));
+                windowLayout.addTouchableView(rootLayout.findViewById(R.id.tv_negative));
+            }
         }
     }
 
