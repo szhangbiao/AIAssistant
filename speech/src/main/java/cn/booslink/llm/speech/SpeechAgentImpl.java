@@ -210,6 +210,7 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
     }
 
     private void initAIUIAgent() {
+        Timber.tag(TAG).d("initAIUIAgent");
         if (mAIUIAgent == null) {
             Disposable disposable = mConfigRepository.readConfig()
                     .map(aiuiConfig -> {
@@ -225,12 +226,16 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
                         }
                     });
             addDisposable(disposable);
+        } else if (mDevice.isAutoAudioRecord()) { // 对应 resetAgentParams，恢复语音相关功能
+            startRecordAudio();
+            if (mIsFirstStartup && mAIUIState == AIUIState.READ.getState() && mIsDeviceAuthSuccess) {
+                autoWakeupSdkWhenFirst();
+            }
         }
     }
 
     private void resetAgentParams() {
         stopRecordAudio();
-        mAIUIState = 0;
         mIsFirstStartup = true;
         mIsDeviceAuthSuccess = false;
     }
