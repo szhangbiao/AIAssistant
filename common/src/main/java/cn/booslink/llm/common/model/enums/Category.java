@@ -10,6 +10,7 @@ public enum Category {
     VIDEO_ENHANCE("BOOSLINK.video_control"),
     DRAMA("IFLYTEK.drama"),
     CONTROL("AIUI.control"),
+    CONTROL_V2("BOOSLINK.control_v2"),
     KSONG("BOOSLINK.ksong"),
     PAGE_CONTROL("BOOSLINK.page_control"),
     DANCE("BOOSLINK.square_dance"),

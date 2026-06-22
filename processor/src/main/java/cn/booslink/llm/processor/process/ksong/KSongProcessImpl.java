@@ -93,7 +93,9 @@ public class KSongProcessImpl implements IKSongProcess {
                         intent == AIUIIntent.PLAYLIST_OPEN || // 打开播放列表
                         intent == AIUIIntent.CHOOSE_WHICH || // 选择第几首
                         intent == AIUIIntent.CHOOSE_PREVIOUS // 上一页
-        )) || (isKSongAppStartup && category == Category.PAGE_CONTROL && (
+        )) || (isKSongAppStartup && category == Category.CONTROL_V2 &&
+                intent == AIUIIntent.PLAY_NEXT //下一首/个
+        ) || (isKSongAppStartup && category == Category.PAGE_CONTROL && (
                 intent == AIUIIntent.PAGE_OPEN || //打开最近播放,收藏,本地
                         intent == AIUIIntent.OPEN_FREQUENT || //打开常唱
                         intent == AIUIIntent.PAGE_BACK // 关闭当前页 or 返回到上一级页面
@@ -158,6 +160,8 @@ public class KSongProcessImpl implements IKSongProcess {
                 return songAction.play();
             case PAUSE:
                 return songAction.pause();
+            case PLAY_NEXT:
+                return songAction.next();
             case CHOOSE_NEXT:
                 String nextUnit = parseUnitBySlot(slots);
                 if (UNIT_PAGE.equals(nextUnit)) {

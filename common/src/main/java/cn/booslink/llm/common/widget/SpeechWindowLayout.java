@@ -92,7 +92,8 @@ public class SpeechWindowLayout extends FrameLayout {
 
                         @Override
                         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                            if ("onComputeInternalInsets".equals(method.getName())) {
+                            String methodName = method.getName();
+                            if ("onComputeInternalInsets".equals(methodName)) {
                                 Object info = args[0];
                                 try {
                                     if (touchableInsetsField == null || touchableRegionField == null) {
@@ -131,6 +132,13 @@ public class SpeechWindowLayout extends FrameLayout {
                                 } catch (Exception e) {
                                     Timber.tag(TAG).e(e, "Error updating InternalInsetsInfo");
                                 }
+                                return null;
+                            } else if ("equals".equals(methodName)) {
+                                return proxy == args[0];
+                            } else if ("hashCode".equals(methodName)) {
+                                return System.identityHashCode(proxy);
+                            } else if ("toString".equals(methodName)) {
+                                return "OnComputeInternalInsetsListenerProxy";
                             }
                             return null;
                         }
