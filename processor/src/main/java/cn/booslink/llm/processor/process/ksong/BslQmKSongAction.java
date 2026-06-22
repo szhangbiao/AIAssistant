@@ -167,9 +167,7 @@ public class BslQmKSongAction implements IKSongAction {
 
     private Intent getIntentWithParams(int action, int m0, String artist, String song) {
         StringBuilder deeplink = new StringBuilder("booslink_kg://?action=").append(action);
-        if (m0 != -1) {
-            deeplink.append("&m0=").append(m0);
-        }
+        deeplink.append("&m0=").append(m0);
         if (!TextUtils.isEmpty(artist)) {
             deeplink.append("&m1=").append(artist);
         }
@@ -186,9 +184,7 @@ public class BslQmKSongAction implements IKSongAction {
 
     private Intent getIntentWithParams(int action, int m0, String artist, String song, int m3) {
         StringBuilder deeplink = new StringBuilder("booslink_kg://?action=").append(action);
-        if (m0 != -1) {
-            deeplink.append("&m0=").append(m0);
-        }
+        deeplink.append("&m0=").append(m0);
         if (!TextUtils.isEmpty(artist)) {
             deeplink.append("&m1=").append(artist);
         }
