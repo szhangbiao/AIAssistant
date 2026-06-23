@@ -210,7 +210,12 @@ public class GuideActivity extends AppCompatActivity {
             });
 
             // Handle touch clicks (for tablets or touch screens)
-            holder.itemView.setOnClickListener(View::requestFocus);
+            holder.itemView.setOnClickListener(v -> {
+                v.requestFocus();
+                if (selectListener != null) {
+                    selectListener.onItemSelect(item, holder.getAdapterPosition());
+                }
+            });
         }
 
         @Override
