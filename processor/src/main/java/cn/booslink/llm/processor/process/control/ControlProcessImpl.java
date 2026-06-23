@@ -39,8 +39,8 @@ public class ControlProcessImpl implements IControlProcess {
     @Override
     public void pageBack() {
         try {
-            Instrumentation inst = new Instrumentation();
-            inst.sendKeyDownUpSync(KeyEvent.KEYCODE_BACK);
+            // 使用异步的 Shell 命令发送返回键，避免目标应用 ANR 时阻塞 Instrumentation
+            Runtime.getRuntime().exec("input keyevent " + KeyEvent.KEYCODE_BACK);
         } catch (Exception e) {
             // 记录错误日志
             Timber.tag(TAG).e(e, "Failed to simulate back press");

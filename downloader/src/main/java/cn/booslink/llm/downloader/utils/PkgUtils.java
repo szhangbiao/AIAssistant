@@ -104,7 +104,9 @@ public class PkgUtils {
             launchIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             launchIntent.addFlags(Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
             // 针对 Android 4.4 及以下版本，禁用转场动画，防止 SurfaceFlinger 截取到残留图层渲染出残影
-            launchIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+            if (android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.KITKAT) {
+                launchIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+            }
             context.startActivity(launchIntent);
             Timber.tag(TAG).i("Successfully launched app: %s", appInfo.getPkgName());
         } catch (Exception e) {
@@ -118,7 +120,9 @@ public class PkgUtils {
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             intent.addFlags(Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
             // 针对 Android 4.4 及以下版本，禁用转场动画，防止 SurfaceFlinger 截取到残留图层渲染出残影
-            intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+            if (android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.KITKAT) {
+                intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+            }
             context.startActivity(intent);
         } catch (Exception e) {
             Timber.tag(TAG).e(e, "Failed to launch app");

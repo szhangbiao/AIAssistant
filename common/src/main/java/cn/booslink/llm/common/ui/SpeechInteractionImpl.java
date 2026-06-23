@@ -324,33 +324,35 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
                     mParentView.invalidate();
                     mParentView.requestLayout();
 
-                    // 通过微调透明度（Alpha）而不是位置（X），强制 SurfaceFlinger 重新进行合成计算
-                    // 透明度在 0.99 和 0.98 之间微调对人眼完全无感，但能完美触发图层刷新，避免 UI 产生物理抖动
-                    final float originalAlpha = mWindowParams.alpha;
-                    mWindowParams.alpha = originalAlpha - 0.01f;
-                    mWindowManager.updateViewLayout(mParentView, mWindowParams);
+                    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT) {
+                        // 通过微调透明度（Alpha）而不是位置（X），强制 SurfaceFlinger 重新进行合成计算
+                        // 透明度在 0.99 和 0.98 之间微调对人眼完全无感，但能完美触发图层刷新，避免 UI 产生物理抖动
+                        final float originalAlpha = mWindowParams.alpha;
+                        mWindowParams.alpha = originalAlpha - 0.01f;
+                        mWindowManager.updateViewLayout(mParentView, mWindowParams);
 
-                    // 在 App 启动转场的不同关键节点触发重新合成，确保底层被完全替换为新应用的画面
-                    mParentView.postDelayed(() -> {
-                        if (isAttached && mWindowManager != null && mWindowParams != null) {
-                            mWindowParams.alpha = originalAlpha;
-                            mWindowManager.updateViewLayout(mParentView, mWindowParams);
-                        }
-                    }, 150);
+                        // 在 App 启动转场的不同关键节点触发重新合成，确保底层被完全替换为新应用的画面
+                        mParentView.postDelayed(() -> {
+                            if (isAttached && mWindowManager != null && mWindowParams != null) {
+                                mWindowParams.alpha = originalAlpha;
+                                mWindowManager.updateViewLayout(mParentView, mWindowParams);
+                            }
+                        }, 150);
 
-                    mParentView.postDelayed(() -> {
-                        if (isAttached && mWindowManager != null && mWindowParams != null) {
-                            mWindowParams.alpha = originalAlpha - 0.01f;
-                            mWindowManager.updateViewLayout(mParentView, mWindowParams);
-                        }
-                    }, 350);
+                        mParentView.postDelayed(() -> {
+                            if (isAttached && mWindowManager != null && mWindowParams != null) {
+                                mWindowParams.alpha = originalAlpha - 0.01f;
+                                mWindowManager.updateViewLayout(mParentView, mWindowParams);
+                            }
+                        }, 350);
 
-                    mParentView.postDelayed(() -> {
-                        if (isAttached && mWindowManager != null && mWindowParams != null) {
-                            mWindowParams.alpha = originalAlpha;
-                            mWindowManager.updateViewLayout(mParentView, mWindowParams);
-                        }
-                    }, 600);
+                        mParentView.postDelayed(() -> {
+                            if (isAttached && mWindowManager != null && mWindowParams != null) {
+                                mWindowParams.alpha = originalAlpha;
+                                mWindowManager.updateViewLayout(mParentView, mWindowParams);
+                            }
+                        }, 600);
+                    }
                 } catch (Exception e) {
                     Timber.tag(TAG).e(e, "forceWindowRefresh failed");
                 }
