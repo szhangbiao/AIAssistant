@@ -12,7 +12,7 @@ val systemLabel = "system"
 val channelPub = "pub"
 val channelBjbs = "bjbs"
 val channelVoice = "voice"
-val isDevMode = true
+val isDevMode = false
 val isLogPrint = true
 
 android {
