@@ -292,13 +292,9 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
         Timber.tag(TAG).d("UISleep");
         AIRootLayout rootLayout = mRootLayoutRef.get();
         if (rootLayout != null) {
-            rootLayout.startHideAnimation(() -> {
-                mParentView.setVisibility(View.GONE);
-                detachFromWindow(); // 休眠时彻底移出 WindowManager，释放焦点，恢复遥控器按键响应
-            });
+            rootLayout.startHideAnimation(this::hideWindow);
         } else {
-            mParentView.setVisibility(View.GONE);
-            detachFromWindow();
+            hideWindow();
         }
         isActive = false;
     }
@@ -317,6 +313,49 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
         showAndAnimate();
         updateQuery(VoiceQuery.Companion.stateOnly(QueryState.IDLE));
         customAnswer("等待联网鉴权");
+    }
+
+    @Override
+    public void forceWindowRefresh() {
+        mParentView.post(() -> {
+            if (isAttached && mWindowManager != null && mWindowParams != null) {
+                try {
+                    // 强制重绘根视图
+                    mParentView.invalidate();
+                    mParentView.requestLayout();
+
+                    // 通过微调透明度（Alpha）而不是位置（X），强制 SurfaceFlinger 重新进行合成计算
+                    // 透明度在 0.99 和 0.98 之间微调对人眼完全无感，但能完美触发图层刷新，避免 UI 产生物理抖动
+                    final float originalAlpha = mWindowParams.alpha;
+                    mWindowParams.alpha = originalAlpha - 0.01f;
+                    mWindowManager.updateViewLayout(mParentView, mWindowParams);
+
+                    // 在 App 启动转场的不同关键节点触发重新合成，确保底层被完全替换为新应用的画面
+                    mParentView.postDelayed(() -> {
+                        if (isAttached && mWindowManager != null && mWindowParams != null) {
+                            mWindowParams.alpha = originalAlpha;
+                            mWindowManager.updateViewLayout(mParentView, mWindowParams);
+                        }
+                    }, 150);
+
+                    mParentView.postDelayed(() -> {
+                        if (isAttached && mWindowManager != null && mWindowParams != null) {
+                            mWindowParams.alpha = originalAlpha - 0.01f;
+                            mWindowManager.updateViewLayout(mParentView, mWindowParams);
+                        }
+                    }, 350);
+
+                    mParentView.postDelayed(() -> {
+                        if (isAttached && mWindowManager != null && mWindowParams != null) {
+                            mWindowParams.alpha = originalAlpha;
+                            mWindowManager.updateViewLayout(mParentView, mWindowParams);
+                        }
+                    }, 600);
+                } catch (Exception e) {
+                    Timber.tag(TAG).e(e, "forceWindowRefresh failed");
+                }
+            }
+        });
     }
 
     /**
@@ -384,54 +423,25 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
         mUIResponseLiveData.postValue(UIResponse.Companion.empty());
     }
 
-    @Override
-    public void forceWindowRefresh() {
-        mParentView.post(() -> {
-            if (isAttached && mWindowManager != null && mWindowParams != null) {
-                try {
-                    // 强制重绘根视图
-                    mParentView.invalidate();
-                    mParentView.requestLayout();
-
-                    // 通过微调透明度（Alpha）而不是位置（X），强制 SurfaceFlinger 重新进行合成计算
-                    // 透明度在 0.99 和 0.98 之间微调对人眼完全无感，但能完美触发图层刷新，避免 UI 产生物理抖动
-                    final float originalAlpha = mWindowParams.alpha;
-                    mWindowParams.alpha = originalAlpha - 0.01f;
-                    mWindowManager.updateViewLayout(mParentView, mWindowParams);
-
-                    // 在 App 启动转场的不同关键节点触发重新合成，确保底层被完全替换为新应用的画面
-                    mParentView.postDelayed(() -> {
-                        if (isAttached && mWindowManager != null && mWindowParams != null) {
-                            mWindowParams.alpha = originalAlpha;
-                            mWindowManager.updateViewLayout(mParentView, mWindowParams);
-                        }
-                    }, 150);
-
-                    mParentView.postDelayed(() -> {
-                        if (isAttached && mWindowManager != null && mWindowParams != null) {
-                            mWindowParams.alpha = originalAlpha - 0.01f;
-                            mWindowManager.updateViewLayout(mParentView, mWindowParams);
-                        }
-                    }, 350);
-
-                    mParentView.postDelayed(() -> {
-                        if (isAttached && mWindowManager != null && mWindowParams != null) {
-                            mWindowParams.alpha = originalAlpha;
-                            mWindowManager.updateViewLayout(mParentView, mWindowParams);
-                        }
-                    }, 600);
-                } catch (Exception e) {
-                    Timber.tag(TAG).e(e, "forceWindowRefresh failed");
-                }
-            }
-        });
-    }
-
     private void showAndAnimate() {
         boolean wasAttached = isAttached;
         boolean wasVisible = isAttached && (mParentView.getVisibility() == View.VISIBLE);
         if (!isAttached) {
             attachToWindow();
+        } else {
+            if (mWindowManager != null && mWindowParams != null) {
+                try {
+                    mWindowParams.width = ContextUtils.dp2px(mContext, 554);
+                    mWindowParams.height = WindowManager.LayoutParams.WRAP_CONTENT;
+                    mWindowParams.flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH;
+                    if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT) {
+                        mWindowParams.flags |= WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED;
+                    }
+                    mWindowManager.updateViewLayout(mParentView, mWindowParams);
+                } catch (Exception e) {
+                    Timber.tag(TAG).e(e, "update view layout to restore failed!");
+                }
+            }
         }
         mParentView.setVisibility(View.VISIBLE);
         AIRootLayout rootLayout = mRootLayoutRef.get();
@@ -442,5 +452,22 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
                 rootLayout.startWakeupAnimation();
             }
         }
+    }
+
+    private void hideWindow() {
+        mParentView.setVisibility(View.GONE);
+        mParentView.clearFocus();
+        if (isAttached && mWindowManager != null && mWindowParams != null) {
+            try {
+                mWindowParams.width = 0;
+                mWindowParams.height = 0;
+                mWindowParams.flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
+                mWindowManager.updateViewLayout(mParentView, mWindowParams);
+                Timber.tag(TAG).d("Window params hidden (0x0)");
+            } catch (Exception e) {
+                Timber.tag(TAG).e(e, "update view layout to hide failed!");
+            }
+        }
+        resetLiveDataValue();
     }
 }

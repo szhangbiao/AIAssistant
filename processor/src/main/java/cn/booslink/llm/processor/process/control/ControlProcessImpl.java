@@ -1,5 +1,10 @@
 package cn.booslink.llm.processor.process.control;
 
+import android.app.Instrumentation;
+import android.content.Context;
+import android.content.Intent;
+import android.view.KeyEvent;
+
 import com.iflytek.aiui.AIUIConstant;
 import com.iflytek.aiui.AIUIMessage;
 
@@ -7,12 +12,19 @@ import javax.inject.Inject;
 
 import cn.booslink.llm.common.speech.ISpeechAgent;
 import dagger.Lazy;
+import dagger.hilt.android.qualifiers.ApplicationContext;
+import timber.log.Timber;
 
 public class ControlProcessImpl implements IControlProcess {
+
+    private static final String TAG = "ControlProcess";
+
+    private final Context mContext;
     private final Lazy<ISpeechAgent> mSpeechAgentLazy;
 
     @Inject
-    public ControlProcessImpl(Lazy<ISpeechAgent> speechAgentLazy) {
+    public ControlProcessImpl(@ApplicationContext Context context, Lazy<ISpeechAgent> speechAgentLazy) {
+        this.mContext = context;
         this.mSpeechAgentLazy = speechAgentLazy;
     }
 
@@ -26,11 +38,24 @@ public class ControlProcessImpl implements IControlProcess {
 
     @Override
     public void pageBack() {
-
+        try {
+            Instrumentation inst = new Instrumentation();
+            inst.sendKeyDownUpSync(KeyEvent.KEYCODE_BACK);
+        } catch (Exception e) {
+            // 记录错误日志
+            Timber.tag(TAG).e(e, "Failed to simulate back press");
+        }
     }
 
     @Override
     public void backToDesktop() {
-
+        try {
+            Intent intent = new Intent(Intent.ACTION_MAIN);
+            intent.addCategory(Intent.CATEGORY_HOME);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            mContext.startActivity(intent);
+        } catch (Exception e) {
+            Timber.tag(TAG).e(e, "Failed to send back home intent");
+        }
     }
 }

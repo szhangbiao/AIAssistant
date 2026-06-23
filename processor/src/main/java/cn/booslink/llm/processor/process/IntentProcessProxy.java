@@ -151,11 +151,12 @@ public class IntentProcessProxy implements IIntentProcess {
 
     private void simulateHomePress() {
         try {
-            Instrumentation inst = new Instrumentation();
-            inst.sendKeyDownUpSync(KeyEvent.KEYCODE_HOME);
+            Intent intent = new Intent(Intent.ACTION_MAIN);
+            intent.addCategory(Intent.CATEGORY_HOME);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            mContext.startActivity(intent);
         } catch (Exception e) {
-            // 记录错误日志
-            Timber.tag(TAG).e(e, "Failed to simulate back press");
+            Timber.tag(TAG).e(e, "Failed to send back home intent");
         }
     }
 }
