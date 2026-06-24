@@ -165,6 +165,7 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
         mIsDeviceAuthSuccess = false;
         mIsAuthVerifiedThisSession = false;
         mIsInitializingAgent = false;
+        mIsAgentCreated = false;
         mEventProcessor.release();
     }
 

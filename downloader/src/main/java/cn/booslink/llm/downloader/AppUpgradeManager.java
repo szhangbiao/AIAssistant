@@ -18,6 +18,7 @@ import cn.booslink.llm.common.model.DeviceInfo;
 import cn.booslink.llm.common.model.PkgInfo;
 import cn.booslink.llm.common.model.enums.ApkStatus;
 import cn.booslink.llm.common.utils.ContextUtils;
+import cn.booslink.llm.common.utils.FileUtils;
 import cn.booslink.llm.downloader.listener.OnApkDownloadListener;
 import cn.booslink.llm.downloader.listener.SimpleDownloadListener;
 import cn.booslink.llm.downloader.model.InstallState;
@@ -150,7 +151,7 @@ public class AppUpgradeManager {
                                 InstallState installState = InstallStateUtils.checkInstallReturnCode(returnCode);
                                 String installPkgName = TextUtils.isEmpty(packageName) ? pkgName : packageName;
                                 Timber.tag(TAG).d("custom install code: %s, packageName: %s", returnCode, installPkgName);
-                                onAppInstalled(installState, installPkgName);
+                                onAppInstalled(installState, installPkgName, apkPath);
                             }
                         });
                     }
@@ -160,15 +161,24 @@ public class AppUpgradeManager {
                     ApkInfo apkInfo = PkgUtils.getApkInfoByFile(mContext, new File(apkPath));
                     if (apkInfo != null) {
                         InstallState state = "Requested internal only, but not enough space".equals(throwable.getMessage()) ? InstallState.INSUFFICIENT_STORAGE : InstallState.UNKNOWN;
-                        onAppInstalled(state, apkInfo.getPkgName());
+                        onAppInstalled(state, apkInfo.getPkgName(), apkPath);
                     }
                     return false;
                 });
     }
 
-    private void onAppInstalled(InstallState state, String packageName) {
+    private void onAppInstalled(InstallState state, String packageName, String apkPath) {
         boolean isInstallSuccess = state == InstallState.SUCCESS;
         Timber.tag(TAG).d("app upgrade %s and package: %s", isInstallSuccess ? "success" : "fail", packageName);
+        
+        if (isInstallSuccess && mContext.getPackageName().equals(packageName)) {
+            Timber.tag(TAG).d("Self update cleanup finished instantly. Killing self to prevent ClassLoader conflict.");
+            if (!TextUtils.isEmpty(apkPath)) {
+                FileUtils.deleteFile(new File(apkPath));
+            }
+            android.os.Process.killProcess(android.os.Process.myPid());
+            System.exit(0);
+        }
     }
 
     private void clear() {

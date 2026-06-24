@@ -38,6 +38,7 @@ public class TTSSpeechImpl implements ITTSSpeech {
 
     @Override
     public void speak(String text) {
+        Timber.tag(TAG).d("speak text = %s", text);
         if (TextUtils.isEmpty(text)) return;
         byte[] ttsBytes = text.getBytes(StandardCharsets.UTF_8);
         String params = "vcn=x4_lingxiaoying_em_v2,speed=50,pitch=50,volume=50";

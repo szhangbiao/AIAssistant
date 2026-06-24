@@ -12,7 +12,6 @@ import androidx.work.Configuration;
 
 import cn.booslink.llm.common.model.DeviceInfo;
 import cn.booslink.llm.common.utils.ScreenAdapter;
-import cn.booslink.llm.common.utils.ScreenUtils;
 import dagger.hilt.android.HiltAndroidApp;
 import timber.log.Timber;
 
@@ -40,12 +39,12 @@ public class AIApplication extends Application implements Configuration.Provider
 
     @Override
     protected void attachBaseContext(Context base) {
-        Context context = ScreenUtils.fixFontScale(base);
-        super.attachBaseContext(context);
+        super.attachBaseContext(base);
+        ScreenAdapter.adapt(this, getResources());
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            BoostMultiDex.install(context);
+            BoostMultiDex.install(base);
         } else {
-            MultiDex.install(context);
+            MultiDex.install(base);
         }
     }
 
