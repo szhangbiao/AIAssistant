@@ -1,11 +1,8 @@
 package cn.booslink.llm.ui;
 
-import android.app.Application;
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.Manifest;
 import android.content.pm.PackageManager;
@@ -16,18 +13,15 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.os.IBinder;
-import android.view.WindowManager;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 
 import javax.inject.Inject;
 
 import cn.booslink.llm.R;
 import cn.booslink.llm.common.model.DeviceInfo;
+import cn.booslink.llm.common.ui.BaseActivity;
 import cn.booslink.llm.common.ui.ISpeechInteraction;
-import cn.booslink.llm.common.utils.ScreenAdapter;
-import cn.booslink.llm.common.utils.ScreenUtils;
 import cn.booslink.llm.downloader.IAppManager;
 import cn.booslink.llm.common.speech.ISpeechAgent;
 import cn.booslink.llm.service.VoiceAssistantService;
@@ -35,7 +29,7 @@ import dagger.hilt.android.AndroidEntryPoint;
 import timber.log.Timber;
 
 @AndroidEntryPoint
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends BaseActivity {
 
     @Inject
     DeviceInfo mDevice;
@@ -70,25 +64,11 @@ public class MainActivity extends AppCompatActivity {
     };
 
     @Override
-    protected void attachBaseContext(Context newBase) {
-        Context context = ScreenUtils.fixFontScale(newBase);
-        Context appContext = context.getApplicationContext();
-        if (appContext instanceof Application) {
-            ScreenAdapter.adaptWidth((Application) appContext, context.getResources(), 1280.0f);
-        }
-        super.attachBaseContext(context);
-    }
-
-    @Override
     protected void onCreate(Bundle savedInstanceState) {
-        // 在设置内容视图之前切换回正常主题
         setTheme(R.style.Theme_AIAssistant);
-        Timber.tag(TAG).d("onCreate");
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        ScreenUtils.setupFullScreen(getWindow());
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Timber.tag(TAG).d("onCreate");
         if (mDevice.isSystemApp() && mSpeechAgent.isAgentCreated()) {
             Intent intent = new Intent(this, GuideActivity.class);
             startActivity(intent);

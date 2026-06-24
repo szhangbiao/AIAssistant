@@ -1,17 +1,14 @@
 package cn.booslink.llm.ui;
 
-import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -21,15 +18,15 @@ import java.util.List;
 import javax.inject.Inject;
 
 import cn.booslink.llm.R;
+import cn.booslink.llm.common.ui.BaseActivity;
 import cn.booslink.llm.common.utils.RxUtil;
-import cn.booslink.llm.common.utils.ScreenUtils;
 import cn.booslink.llm.common.model.GuideItem;
 import cn.booslink.llm.repository.IGuideRepository;
 import dagger.hilt.android.AndroidEntryPoint;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 
 @AndroidEntryPoint
-public class GuideActivity extends AppCompatActivity {
+public class GuideActivity extends BaseActivity {
 
     @Inject
     IGuideRepository mGuideRepository;
@@ -45,9 +42,6 @@ public class GuideActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        ScreenUtils.setupFullScreen(getWindow());
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_guide);
         initViews();
