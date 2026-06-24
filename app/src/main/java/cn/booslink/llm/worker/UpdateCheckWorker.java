@@ -6,6 +6,7 @@ import androidx.annotation.NonNull;
 import androidx.hilt.work.HiltWorker;
 import androidx.work.Constraints;
 import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.ExistingWorkPolicy;
 import androidx.work.NetworkType;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.PeriodicWorkRequest;
@@ -64,7 +65,7 @@ public class UpdateCheckWorker extends Worker {
                 .build();
         WorkManager.getInstance(context).enqueueUniqueWork(
                 STARTUP_WORK_NAME,
-                androidx.work.ExistingWorkPolicy.REPLACE, // 每次启动都替换旧的，确保执行
+                ExistingWorkPolicy.REPLACE, // 每次启动都替换旧的，确保执行
                 startupRequest
         );
         // 2. 调度每 24 小时的周期性检查

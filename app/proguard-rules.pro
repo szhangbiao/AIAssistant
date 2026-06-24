@@ -270,7 +270,8 @@
 -dontoptimize
 -keep class com.iflytek.** { *; }
 
-# 4. WorkManager & Room (修复 WorkDatabase 实例化失败)
+# 4. WorkManager & Room (修复 WorkDatabase 实例化失败及 InputMerger 反射异常)
+-keep class androidx.work.** { *; }
 -keep class androidx.work.impl.** { *; }
 -keep class * extends androidx.room.RoomDatabase {
     <init>(...);

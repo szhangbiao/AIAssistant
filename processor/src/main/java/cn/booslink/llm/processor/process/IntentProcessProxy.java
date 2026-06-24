@@ -1,9 +1,7 @@
 package cn.booslink.llm.processor.process;
 
-import android.app.Instrumentation;
 import android.content.Context;
 import android.content.Intent;
-import android.view.KeyEvent;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -37,6 +35,7 @@ public class IntentProcessProxy implements IIntentProcess {
 
 
     private static final String KEY_OPERATE_OBJECT = "operateObject";
+    private static final String NAME_SETTING = "设置";
     private static final String NAME_SYSTEM_SETTING = "系统设置";
 
     private final Context mContext;
@@ -106,7 +105,7 @@ public class IntentProcessProxy implements IIntentProcess {
                 return VoiceResult.Companion.success("好的");
             case LAUNCH:
                 String name = parseNameBySlots(semantic.getSlots());
-                if (category == Category.CONTROL && NAME_SYSTEM_SETTING.equals(name)) {
+                if (category == Category.CONTROL && (NAME_SYSTEM_SETTING.equals(name) || NAME_SETTING.equals(name))) {
                     openSystemSetting();
                     return VoiceResult.Companion.success("好的");
                 }
@@ -140,7 +139,12 @@ public class IntentProcessProxy implements IIntentProcess {
 
     private void openSystemSetting() {
         Intent intent = new Intent(android.provider.Settings.ACTION_SETTINGS);
-        PkgUtils.launchIntent(mContext, intent);
+        if (intent.resolveActivity(mContext.getPackageManager()) != null) {
+            PkgUtils.launchIntent(mContext, intent);
+        } else {
+            Timber.tag(TAG).w("ACTION_SETTINGS not resolved, fallback to com.booslink.settings");
+            PkgUtils.launchApp(mContext, "com.booslink.settings");
+        }
     }
 
     private void openGuidePage() {

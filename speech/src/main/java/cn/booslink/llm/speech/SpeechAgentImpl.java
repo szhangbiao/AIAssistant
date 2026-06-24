@@ -54,6 +54,7 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
     private volatile boolean mIsAuthenticating = false;
     private volatile boolean mIsAuthVerifiedThisSession = false;
     private volatile boolean mIsAgentCreated = false;
+    private volatile boolean mIsInitializingAgent = false;
 
     @Inject
     public SpeechAgentImpl(@ApplicationContext Context context, Gson gson, Device device, DeviceInfo deviceInfo, ISpeechStorage speechStorage, IEventProcessor eventProcessor, IConfigRepository configRepository, Lazy<ISpeechInteraction> speechInteractionLazy, NetworkMonitor networkMonitor) {
@@ -163,6 +164,7 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
         mIsFirstStartup = true;
         mIsDeviceAuthSuccess = false;
         mIsAuthVerifiedThisSession = false;
+        mIsInitializingAgent = false;
         mEventProcessor.release();
     }
 
@@ -212,6 +214,8 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
     private void initAIUIAgent() {
         Timber.tag(TAG).d("initAIUIAgent");
         if (mAIUIAgent == null) {
+            if (mIsInitializingAgent) return;
+            mIsInitializingAgent = true;
             Disposable disposable = mConfigRepository.readConfig()
                     .map(aiuiConfig -> {
                         mAIUIConfig = aiuiConfig;
@@ -219,11 +223,18 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
                     })
                     .compose(RxUtil.singleOnMain())
                     .subscribe(aiuiParams -> {
+                        mIsInitializingAgent = false;
                         // init aiui agent
-                        mAIUIAgent = AIUIAgent.createAgent(mContext, aiuiParams, this);
+                        Timber.tag(TAG).d("mAIUIAgent init");
+                        if (mAIUIAgent == null) {
+                            mAIUIAgent = AIUIAgent.createAgent(mContext, aiuiParams, this);
+                        }
                         if (mAIUIAgent != null && mDevice.isAutoAudioRecord()) {
                             startRecordAudio();
                         }
+                    }, throwable -> {
+                        mIsInitializingAgent = false;
+                        Timber.tag(TAG).e(throwable, "initAIUIAgent failed");
                     });
             addDisposable(disposable);
         } else if (mDevice.isAutoAudioRecord()) { // 对应 resetAgentParams，恢复语音相关功能
