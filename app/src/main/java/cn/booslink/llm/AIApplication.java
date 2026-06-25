@@ -40,7 +40,6 @@ public class AIApplication extends Application implements Configuration.Provider
     @Override
     protected void attachBaseContext(Context base) {
         super.attachBaseContext(base);
-        ScreenAdapter.adapt(this, getResources());
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
             BoostMultiDex.install(base);
         } else {
@@ -51,6 +50,7 @@ public class AIApplication extends Application implements Configuration.Provider
     @Override
     public void onCreate() {
         super.onCreate();
+        ScreenAdapter.adapt(this, getResources());
         if (mDeviceInfo.getLogSwitch()) {
             Timber.plant(new Timber.DebugTree());
         }
@@ -59,6 +59,6 @@ public class AIApplication extends Application implements Configuration.Provider
 
     @Override
     public Resources getResources() {
-        return ScreenAdapter.adaptWidth(this, super.getResources(), 1280.0f);
+        return ScreenAdapter.adapt(this, super.getResources());
     }
 }

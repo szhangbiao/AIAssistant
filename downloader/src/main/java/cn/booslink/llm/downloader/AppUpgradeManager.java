@@ -17,6 +17,7 @@ import cn.booslink.llm.common.model.AppUpgrade;
 import cn.booslink.llm.common.model.DeviceInfo;
 import cn.booslink.llm.common.model.PkgInfo;
 import cn.booslink.llm.common.model.enums.ApkStatus;
+import cn.booslink.llm.common.storage.ISpeechStorage;
 import cn.booslink.llm.common.utils.ContextUtils;
 import cn.booslink.llm.common.utils.FileUtils;
 import cn.booslink.llm.downloader.listener.OnApkDownloadListener;
@@ -39,13 +40,15 @@ public class AppUpgradeManager {
 
     private final Context mContext;
     private final DeviceInfo mDevice;
+    private final ISpeechStorage mSpeechStorage;
 
     private Disposable mInstallDisposable;
     private DownloadTask mDownloadingTask;
 
-    public AppUpgradeManager(Context context, DeviceInfo deviceInfo) {
+    public AppUpgradeManager(Context context, DeviceInfo deviceInfo, ISpeechStorage speechStorage) {
         this.mContext = context;
         this.mDevice = deviceInfo;
+        this.mSpeechStorage = speechStorage;
     }
 
     public void startDownload(AppUpgrade upgrade) {
@@ -176,6 +179,7 @@ public class AppUpgradeManager {
             if (!TextUtils.isEmpty(apkPath)) {
                 FileUtils.deleteFile(new File(apkPath));
             }
+            mSpeechStorage.setJustUpgraded(true);
             android.os.Process.killProcess(android.os.Process.myPid());
             System.exit(0);
         }

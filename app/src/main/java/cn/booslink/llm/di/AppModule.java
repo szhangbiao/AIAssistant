@@ -7,6 +7,7 @@ import javax.inject.Singleton;
 import cn.booslink.llm.BuildConfig;
 import cn.booslink.llm.common.model.DeviceInfo;
 import cn.booslink.llm.common.model.enums.Channel;
+import cn.booslink.llm.common.storage.ISpeechStorage;
 import cn.booslink.llm.common.utils.ContextUtils;
 import cn.booslink.llm.downloader.AppUpgradeManager;
 import cn.booslink.llm.record.IVoiceInput;
@@ -39,8 +40,8 @@ public class AppModule {
 
     @Singleton
     @Provides
-    public AppUpgradeManager provideAppUpgradeManager(@ApplicationContext Context context, DeviceInfo deviceInfo) {
-        return new AppUpgradeManager(context, deviceInfo);
+    public AppUpgradeManager provideAppUpgradeManager(@ApplicationContext Context context, DeviceInfo deviceInfo, ISpeechStorage speechStorage) {
+        return new AppUpgradeManager(context, deviceInfo, speechStorage);
     }
 
     @Module

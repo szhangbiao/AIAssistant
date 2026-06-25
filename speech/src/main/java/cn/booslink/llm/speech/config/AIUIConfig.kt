@@ -48,7 +48,7 @@ data class AIUIConfig(
     }
 
     fun updateLogConfig(logSwitch: Boolean) {
-        log.debugLog = "0"//if (logSwitch) "1" else "0"
+        log.debugLog = if (logSwitch) "1" else "0"
     }
 
     fun updateGlobalScene(isDevMode: Boolean) {

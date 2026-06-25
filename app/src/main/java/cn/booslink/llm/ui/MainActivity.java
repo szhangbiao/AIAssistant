@@ -20,6 +20,7 @@ import javax.inject.Inject;
 
 import cn.booslink.llm.R;
 import cn.booslink.llm.common.model.DeviceInfo;
+import cn.booslink.llm.common.storage.ISpeechStorage;
 import cn.booslink.llm.common.ui.BaseActivity;
 import cn.booslink.llm.common.ui.ISpeechInteraction;
 import cn.booslink.llm.downloader.IAppManager;
@@ -36,9 +37,11 @@ public class MainActivity extends BaseActivity {
     @Inject
     IAppManager mAppManager;
     @Inject
-    ISpeechInteraction mSpeechInteraction;
-    @Inject
     ISpeechAgent mSpeechAgent;
+    @Inject
+    ISpeechStorage mSpeechStorage;
+    @Inject
+    ISpeechInteraction mSpeechInteraction;
 
     private static final String TAG = "MainActivity";
     private static final int REQUEST_RECORD_AUDIO_PERMISSION = 100;
@@ -69,6 +72,14 @@ public class MainActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Timber.tag(TAG).d("onCreate");
+
+        if (mSpeechStorage.isJustUpgraded()) {
+            Timber.tag(TAG).d("App just upgraded. Suppressing GuideActivity popup.");
+            mSpeechStorage.setJustUpgraded(false);
+            startServiceDirectly();
+            return;
+        }
+
         if (mDevice.isSystemApp() && mSpeechAgent.isAgentCreated()) {
             Intent intent = new Intent(this, GuideActivity.class);
             startActivity(intent);
