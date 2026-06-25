@@ -40,8 +40,8 @@ public class AppModule {
 
     @Singleton
     @Provides
-    public AppUpgradeManager provideAppUpgradeManager(@ApplicationContext Context context, DeviceInfo deviceInfo, ISpeechStorage speechStorage) {
-        return new AppUpgradeManager(context, deviceInfo, speechStorage);
+    public AppUpgradeManager provideAppUpgradeManager(@ApplicationContext Context context, DeviceInfo deviceInfo) {
+        return new AppUpgradeManager(context, deviceInfo);
     }
 
     @Module

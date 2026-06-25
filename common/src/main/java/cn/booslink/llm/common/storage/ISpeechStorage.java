@@ -16,8 +16,4 @@ public interface ISpeechStorage {
     String getAuthHost();
 
     void setAuthHost(String host);
-
-    boolean isJustUpgraded();
-
-    void setJustUpgraded(boolean justUpgraded);
 }

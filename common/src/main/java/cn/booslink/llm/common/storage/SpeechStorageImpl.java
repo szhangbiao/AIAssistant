@@ -16,7 +16,6 @@ public class SpeechStorageImpl implements ISpeechStorage {
     private static final String KEY_LAST_UPDATE_CHECK_TIME = "last_update_check_time";
     private static final String KEY_AUTH_EXPERIENCED = "auth_experienced";
     private static final String KEY_AUTH_HOST = "auth_host";
-    private static final String KEY_JUST_UPGRADED = "just_upgraded";
     //---------- Preference Key ----------
 
     private final SharedPreferences mPrefs;
@@ -66,15 +65,5 @@ public class SpeechStorageImpl implements ISpeechStorage {
     @Override
     public void setAuthHost(String host) {
         mEditor.putString(KEY_AUTH_HOST, host).apply();
-    }
-
-    @Override
-    public boolean isJustUpgraded() {
-        return mPrefs.getBoolean(KEY_JUST_UPGRADED, false);
-    }
-
-    @Override
-    public void setJustUpgraded(boolean justUpgraded) {
-        mEditor.putBoolean(KEY_JUST_UPGRADED, justUpgraded).commit();
     }
 }

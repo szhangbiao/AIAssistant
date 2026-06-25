@@ -26,7 +26,6 @@ import cn.booslink.llm.common.model.ApkInfo;
 import cn.booslink.llm.common.model.DeviceInfo;
 import cn.booslink.llm.common.model.PkgInfo;
 import cn.booslink.llm.common.model.enums.ApkStatus;
-import cn.booslink.llm.common.storage.ISpeechStorage;
 import cn.booslink.llm.common.ui.IToast;
 import cn.booslink.llm.common.utils.ContextUtils;
 import cn.booslink.llm.common.utils.FileUtils;
@@ -62,7 +61,6 @@ public class AppManagerImpl implements IAppManager {
     private final DeviceInfo mDevice;
     private final IRxApkBus mRxApkBus;
     private final Lazy<IToast> mToastLazy;
-    private final ISpeechStorage mSpeechStorage;
     private final CompositeDisposable mCompositeDisposable;
     private final LinkedHashMap<String, ApkDownload> mApkDownloadMap;
     private final PkgInstallBroadcastReceiver mPkgInstallBroadcastReceiver;
@@ -72,12 +70,11 @@ public class AppManagerImpl implements IAppManager {
     private OnAppManagerListener mOnAppManagerListener;
 
     @Inject
-    public AppManagerImpl(@ApplicationContext Context context, Lazy<IToast> toastLazy, DeviceInfo deviceInfo, IRxApkBus rxApkBus, PkgInstallBroadcastReceiver receiver, ISpeechStorage speechStorage) {
+    public AppManagerImpl(@ApplicationContext Context context, Lazy<IToast> toastLazy, DeviceInfo deviceInfo, IRxApkBus rxApkBus, PkgInstallBroadcastReceiver receiver) {
         this.mContext = context;
         this.mDevice = deviceInfo;
         this.mRxApkBus = rxApkBus;
         this.mToastLazy = toastLazy;
-        this.mSpeechStorage = speechStorage;
         this.mPkgInstallBroadcastReceiver = receiver;
         this.mApkDownloadMap = new LinkedHashMap<>();
         this.mCompositeDisposable = new CompositeDisposable();
@@ -140,9 +137,6 @@ public class AppManagerImpl implements IAppManager {
         // 如果packageName和installingPackageName都为空，则说明发生了安装错误
         final String currentPkgName = !TextUtils.isEmpty(packageName) ? packageName : (!TextUtils.isEmpty(currentPackageName) ? currentPackageName : "");
         Timber.tag(TAG).d("app install %s and package: %s", isInstallSuccess ? "success" : "fail", currentPkgName);
-        // 核心修复：清理安装包文件并强制自杀
-        checkAndHandleSelfUpdate(isInstallSuccess, currentPkgName);
-
         Disposable disposable = Single.just(currentPkgName)
                 .map(deliveryPkgName -> handleApkDownloadAfterInstall(isInstallSuccess, state, deliveryPkgName))
                 .delay(500, TimeUnit.MILLISECONDS)
@@ -495,33 +489,5 @@ public class AppManagerImpl implements IAppManager {
 
     private void addDisposable(Disposable disposable) {
         mCompositeDisposable.add(disposable);
-    }
-
-    private void checkAndHandleSelfUpdate(boolean isInstallSuccess, String currentPkgName) {
-        // 如果是从 AppUpgradeManager 发起的 Android 10+ 自升级，或者是其他的覆盖安装自己
-        // 立刻同步清理安装包文件并强制自杀，绝对不能进入 RxJava 的延迟流程！
-        if (isInstallSuccess && mContext.getPackageName().equals(currentPkgName)) {
-            ApkDownload apkDownload = mApkDownloadMap.get(currentPkgName);
-            if (apkDownload != null) {
-                FileUtils.deleteFile(apkDownload.isLocalApkInstall() ? new File(apkDownload.getApkPath()) : ContextUtils.getDownloadFile(mContext, apkDownload.getFileName(), apkDownload.getNewFileName()));
-            } else {
-                // 兜底清理：如果 mApkDownloadMap 里没有记录，直接扫描下载目录删除对应包名的残留文件
-                File parentDir = ContextUtils.getDownloadParentFile(mContext);
-                if (parentDir != null && parentDir.exists()) {
-                    File[] files = parentDir.listFiles();
-                    if (files != null) {
-                        for (File f : files) {
-                            if (f.getName().startsWith(currentPkgName) && f.getName().endsWith(".apk")) {
-                                FileUtils.deleteFile(f);
-                            }
-                        }
-                    }
-                }
-            }
-            Timber.tag(TAG).d("Self update cleanup finished instantly. Killing self to prevent ClassLoader conflict.");
-            mSpeechStorage.setJustUpgraded(true);
-            android.os.Process.killProcess(android.os.Process.myPid());
-            System.exit(0);
-        }
     }
 }

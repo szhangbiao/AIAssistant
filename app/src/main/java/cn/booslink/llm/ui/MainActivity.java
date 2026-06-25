@@ -20,7 +20,6 @@ import javax.inject.Inject;
 
 import cn.booslink.llm.R;
 import cn.booslink.llm.common.model.DeviceInfo;
-import cn.booslink.llm.common.storage.ISpeechStorage;
 import cn.booslink.llm.common.ui.BaseActivity;
 import cn.booslink.llm.common.ui.ISpeechInteraction;
 import cn.booslink.llm.downloader.IAppManager;
@@ -38,8 +37,6 @@ public class MainActivity extends BaseActivity {
     IAppManager mAppManager;
     @Inject
     ISpeechAgent mSpeechAgent;
-    @Inject
-    ISpeechStorage mSpeechStorage;
     @Inject
     ISpeechInteraction mSpeechInteraction;
 
@@ -73,13 +70,6 @@ public class MainActivity extends BaseActivity {
         setContentView(R.layout.activity_main);
         Timber.tag(TAG).d("onCreate");
 
-        if (mSpeechStorage.isJustUpgraded()) {
-            Timber.tag(TAG).d("App just upgraded. Suppressing GuideActivity popup.");
-            mSpeechStorage.setJustUpgraded(false);
-            startServiceDirectly();
-            return;
-        }
-
         if (mDevice.isSystemApp() && mSpeechAgent.isAgentCreated()) {
             Intent intent = new Intent(this, GuideActivity.class);
             startActivity(intent);
@@ -87,6 +77,12 @@ public class MainActivity extends BaseActivity {
             return;
         }
         startServiceDirectly();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        Timber.tag(TAG).d("onNewIntent");
     }
 
     private void startServiceDirectly() {

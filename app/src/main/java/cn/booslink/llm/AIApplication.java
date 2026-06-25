@@ -2,7 +2,6 @@ package cn.booslink.llm;
 
 import android.app.Application;
 import android.content.Context;
-import android.content.res.Resources;
 import android.os.Build;
 
 import androidx.annotation.NonNull;
@@ -55,10 +54,5 @@ public class AIApplication extends Application implements Configuration.Provider
             Timber.plant(new Timber.DebugTree());
         }
         Timber.tag(TAG).d("onCreate");
-    }
-
-    @Override
-    public Resources getResources() {
-        return ScreenAdapter.adapt(this, super.getResources());
     }
 }

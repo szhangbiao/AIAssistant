@@ -40,15 +40,13 @@ public class AppUpgradeManager {
 
     private final Context mContext;
     private final DeviceInfo mDevice;
-    private final ISpeechStorage mSpeechStorage;
 
     private Disposable mInstallDisposable;
     private DownloadTask mDownloadingTask;
 
-    public AppUpgradeManager(Context context, DeviceInfo deviceInfo, ISpeechStorage speechStorage) {
+    public AppUpgradeManager(Context context, DeviceInfo deviceInfo) {
         this.mContext = context;
         this.mDevice = deviceInfo;
-        this.mSpeechStorage = speechStorage;
     }
 
     public void startDownload(AppUpgrade upgrade) {
@@ -98,7 +96,7 @@ public class AppUpgradeManager {
             public void onDownloadUpdate(String apkPath, ApkDownload downloadItem) {
                 Timber.tag(TAG).d("onDownloadUpdate");
                 if (downloadItem.getStatus() == ApkStatus.INSTALL_PADDING) {
-                    installDownloadApk(downloadItem);
+                    installRandom(downloadItem);
                 } else if (downloadItem.isDownloadError()) {
                     Timber.tag(TAG).d("onDownloadUpdate, download fail");
                 }
@@ -119,70 +117,17 @@ public class AppUpgradeManager {
         };
     }
 
-    private void installDownloadApk(ApkDownload downloadItem) {
-        Timber.tag(TAG).d("installDownloadApk");
-        mInstallDisposable = Single.just(downloadItem)
+    private void installRandom(ApkDownload downloadApk) {
+        mInstallDisposable = Single.just(downloadApk)
                 .map(apkDownload -> {
-                    apkDownload.setStatus(ApkStatus.INSTALL_GOING);
-                    return apkDownload;
-                })
-                .delay(500, TimeUnit.MILLISECONDS)
-                .flatMap((Function<ApkDownload, SingleSource<Boolean>>) apkDownload -> {
-                    String apkPath = apkDownload.isLocalApkInstall() ? apkDownload.getApkPath() : ContextUtils.getDownloadFilePath(mContext, apkDownload.getFileName(), apkDownload.getNewFileName());
-                    String pkgName = apkDownload.getPkgName();
-                    return install(apkPath, pkgName);
-                })
-                .observeOn(Schedulers.io())
-                .subscribe(aBoolean -> clear());
-    }
-
-    private Single<Boolean> install(String apkPath, String pkgName) {
-        Timber.tag(TAG).d("install");
-        return Single.fromCallable(() -> {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                        ApkInstallUtils.installerInstall(mContext, apkPath);
-                    } else {
-                        ApkInstallUtils.customInstall(mContext, apkPath, new PackageInstallObserver() {
-                            /**
-                             * @param packageName 包名
-                             * @param returnCode 请参考lib下的classes_secure.jar中PackageManager的常量声明
-                             * @throws RemoteException 远程调用异常
-                             */
-                            @Override
-                            public void packageInstalled(String packageName, int returnCode) throws RemoteException {
-                                super.packageInstalled(packageName, returnCode);
-                                InstallState installState = InstallStateUtils.checkInstallReturnCode(returnCode);
-                                String installPkgName = TextUtils.isEmpty(packageName) ? pkgName : packageName;
-                                Timber.tag(TAG).d("custom install code: %s, packageName: %s", returnCode, installPkgName);
-                                onAppInstalled(installState, installPkgName, apkPath);
-                            }
-                        });
-                    }
+                    String apkPath = downloadApk.isLocalApkInstall() ? downloadApk.getApkPath() : ContextUtils.getDownloadFilePath(mContext, downloadApk.getFileName(), downloadApk.getNewFileName());
+                    Timber.tag(TAG).d("installRandom apkPath: %s", apkPath);
+                    ApkInstallUtils.install(mContext, apkPath);
                     return true;
                 })
-                .onErrorReturn(throwable -> {
-                    ApkInfo apkInfo = PkgUtils.getApkInfoByFile(mContext, new File(apkPath));
-                    if (apkInfo != null) {
-                        InstallState state = "Requested internal only, but not enough space".equals(throwable.getMessage()) ? InstallState.INSUFFICIENT_STORAGE : InstallState.UNKNOWN;
-                        onAppInstalled(state, apkInfo.getPkgName(), apkPath);
-                    }
-                    return false;
-                });
-    }
-
-    private void onAppInstalled(InstallState state, String packageName, String apkPath) {
-        boolean isInstallSuccess = state == InstallState.SUCCESS;
-        Timber.tag(TAG).d("app upgrade %s and package: %s", isInstallSuccess ? "success" : "fail", packageName);
-        
-        if (isInstallSuccess && mContext.getPackageName().equals(packageName)) {
-            Timber.tag(TAG).d("Self update cleanup finished instantly. Killing self to prevent ClassLoader conflict.");
-            if (!TextUtils.isEmpty(apkPath)) {
-                FileUtils.deleteFile(new File(apkPath));
-            }
-            mSpeechStorage.setJustUpgraded(true);
-            android.os.Process.killProcess(android.os.Process.myPid());
-            System.exit(0);
-        }
+                .observeOn(Schedulers.io())
+                .subscribeOn(Schedulers.io())
+                .subscribe();
     }
 
     private void clear() {
