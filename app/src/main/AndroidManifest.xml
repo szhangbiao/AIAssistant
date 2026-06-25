@@ -25,17 +25,16 @@
 
     <application
         android:name=".AIApplication"
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
-        android:fullBackupContent="@xml/backup_rules"
+        android:fullBackupContent="false"
         android:hardwareAccelerated="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:networkSecurityConfig="@xml/network_security_config"
         android:roundIcon="@drawable/ic_launcher"
         android:supportsRtl="true"
-        android:theme="@style/Theme.AIAssistant"
-        tools:targetApi="31">
+        android:theme="@style/Theme.AIAssistant">
 
         <!-- 禁用默认的 WorkManager 初始化器，以便使用 Hilt 进行自定义初始化 -->
         <provider
@@ -52,7 +51,6 @@
 
         <activity
             android:name=".ui.MainActivity"
-            android:launchMode="singleTask"
             android:configChanges="keyboard|keyboardHidden|navigation|touchscreen|screenLayout|orientation|screenSize|uiMode"
             android:exported="true">
             <intent-filter>
