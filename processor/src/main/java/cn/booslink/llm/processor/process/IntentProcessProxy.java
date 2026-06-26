@@ -35,6 +35,7 @@ public class IntentProcessProxy implements IIntentProcess {
 
 
     private static final String KEY_OPERATE_OBJECT = "operateObject";
+    private static final String APP_MARKET_PACKAGE = "com.yunqinglai.market";
     private static final String NAME_SETTING = "设置";
     private static final String NAME_SYSTEM_SETTING = "系统设置";
 
@@ -119,6 +120,13 @@ public class IntentProcessProxy implements IIntentProcess {
             case BACK_HOME:
                 simulateHomePress();
                 return VoiceResult.Companion.success("好的");
+            case LAUNCH_MARKET:
+                if (APP_MARKET_PACKAGE.equals(foregroundPkgName)) {
+                    return VoiceResult.Companion.success("当前已处于应用内");
+                } else {
+                    mAppProcess.launchAppWithIntent(APP_MARKET_PACKAGE, null);
+                    return VoiceResult.Companion.ignore();
+                }
         }
         return VoiceResult.Companion.failure();
     }

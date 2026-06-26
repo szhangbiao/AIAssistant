@@ -57,9 +57,9 @@ data class EventData(
             } else {
                 semantic.intent = AIUIIntent.KSONG_FULLSCREEN
             }
-        } else if (response.category == Category.APP_PLUS && semantic?.intent == AIUIIntent.LAUNCH_APP) {
+        } else if (response.category == Category.APP_PLUS && (semantic?.intent == AIUIIntent.LAUNCH_APP || semantic?.intent == AIUIIntent.LAUNCH_MARKET)) {
             val slot = semantic.slots.firstOrNull()
-            if ("name" == slot?.name && slot.normValue?.isNotEmpty() == true && slot.value?.isNotEmpty() == true && slot.normValue != slot.value) {
+            if (("name" == slot?.name || "market" == slot?.name) && slot.normValue?.isNotEmpty() == true && slot.value?.isNotEmpty() == true && slot.normValue != slot.value) {
                 cbmTidy?.text?.query = cbmTidy.text.query?.replace(slot.value, slot.normValue)
             }
         }
