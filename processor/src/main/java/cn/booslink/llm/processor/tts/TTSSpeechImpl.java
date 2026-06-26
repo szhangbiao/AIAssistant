@@ -56,7 +56,7 @@ public class TTSSpeechImpl implements ITTSSpeech {
                 Timber.tag(TAG).d("Speak begin");
                 break;
             case AIUIConstant.TTS_SPEAK_PROGRESS:
-                Timber.tag(TAG).d("Speak progress = %d", event.data.getInt(KEY_PERCENT));
+                //Timber.tag(TAG).d("Speak progress = %d", event.data.getInt(KEY_PERCENT));
                 break;
             case AIUIConstant.TTS_SPEAK_PAUSED:
                 Timber.tag(TAG).d("Speak pause");

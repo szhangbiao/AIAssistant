@@ -19,7 +19,7 @@ public class BootReceiver extends BroadcastReceiver {
             String action = intent.getAction();
             Timber.tag(TAG).d("Received broadcast: %s", action);
             if (Intent.ACTION_BOOT_COMPLETED.equals(action)
-                    || Intent.ACTION_MY_PACKAGE_REPLACED.equals(action)
+                    // || Intent.ACTION_MY_PACKAGE_REPLACED.equals(action)
                     || "android.intent.action.QUICKBOOT_POWERON".equals(action)
                     || "com.htc.intent.action.QUICKBOOT_POWERON".equals(action)) {
                 Timber.tag(TAG).d("Device boot completed or app upgraded, starting app auto-start process");

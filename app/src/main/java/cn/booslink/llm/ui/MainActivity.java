@@ -37,7 +37,7 @@ public class MainActivity extends BaseActivity {
     IAppManager mAppManager;
     @Inject
     ISpeechAgent mSpeechAgent;
-    @Inject
+
     ISpeechInteraction mSpeechInteraction;
 
     private static final String TAG = "MainActivity";
@@ -68,21 +68,17 @@ public class MainActivity extends BaseActivity {
         setTheme(R.style.Theme_AIAssistant);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Timber.tag(TAG).d("onCreate");
-
-        if (mDevice.isSystemApp() && mSpeechAgent.isAgentCreated()) {
-            Intent intent = new Intent(this, GuideActivity.class);
-            startActivity(intent);
+        Intent intent = getIntent();
+        logIntentDetails(intent, "onCreate");
+        // 判断是否是从桌面启动
+        boolean isFromLauncher = isFromLauncher(intent);
+        Timber.tag(TAG).d("isFromLauncher = %b", isFromLauncher);
+        if (isFromLauncher && mDevice.isSystemApp() && mSpeechAgent.isAgentCreated()) {
+            startActivity(new Intent(this, GuideActivity.class));
             finish();
             return;
         }
         startServiceDirectly();
-    }
-
-    @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-        Timber.tag(TAG).d("onNewIntent");
     }
 
     private void startServiceDirectly() {
@@ -205,5 +201,45 @@ public class MainActivity extends BaseActivity {
     private void bindVoiceAssistantService() {
         Intent intent = new Intent(this, VoiceAssistantService.class);
         bindService(intent, connection, BIND_AUTO_CREATE);
+    }
+
+    /**
+     * 记录Intent的详细信息
+     */
+    private void logIntentDetails(Intent intent, String source) {
+        if (intent == null) {
+            Timber.tag(TAG).d("[%s] Intent is null", source);
+            return;
+        }
+
+        Timber.tag(TAG).d("[%s] Intent details:", source);
+        Timber.tag(TAG).d("  Action: %s", intent.getAction());
+        Timber.tag(TAG).d("  Categories: %s", intent.getCategories());
+        Timber.tag(TAG).d("  Flags: 0x%X", intent.getFlags());
+        Timber.tag(TAG).d("  Data: %s", intent.getData());
+        Timber.tag(TAG).d("  Extras: %s", intent.getExtras());
+        Timber.tag(TAG).d("  Component: %s", intent.getComponent());
+        Timber.tag(TAG).d("  Package: %s", intent.getPackage());
+        Timber.tag(TAG).d("  Type: %s", intent.getType());
+    }
+
+    /**
+     * 判断是否是从桌面启动器启动的
+     */
+    private boolean isFromLauncher(Intent intent) {
+        if (intent == null) {
+            return false;
+        }
+        // 方式1: 检查标准的启动器Intent
+        boolean hasMainAction = Intent.ACTION_MAIN.equals(intent.getAction());
+        boolean hasLauncherCategory = intent.hasCategory(Intent.CATEGORY_LAUNCHER);
+        // 方式2: 检查Flags
+        boolean hasNewTaskFlag = (intent.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK) != 0;
+        // 方式3: 如果activity是被重新带到前台的，也可能是从最近任务进入的
+        boolean isLaunchedFromHistory = (intent.getFlags() & Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) != 0;
+        Timber.tag(TAG).d("isFromLauncher check: hasMainAction=%b, hasLauncherCategory=%b, hasNewTaskFlag=%b, isLaunchedFromHistory=%b", hasMainAction, hasLauncherCategory, hasNewTaskFlag, isLaunchedFromHistory);
+        // 标准的桌面启动应该是ACTION_MAIN + CATEGORY_LAUNCHER
+        // 但有时从最近任务或其他方式启动时，可能没有这些
+        return (hasMainAction && hasLauncherCategory) || (hasNewTaskFlag && intent.getAction() == null) || isLaunchedFromHistory;
     }
 }
