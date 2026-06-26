@@ -5,10 +5,6 @@ public interface ISpeechStorage {
 
     void setShowLeaveConfirm(boolean show);
 
-    long getLastUpdateCheckTime();
-
-    void setLastUpdateCheckTime(long time);
-
     boolean isAuthSuccess();
 
     void setAuthSuccess(boolean success);

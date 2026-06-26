@@ -49,7 +49,7 @@ public class AIApplication extends Application implements Configuration.Provider
     @Override
     public void onCreate() {
         super.onCreate();
-        ScreenAdapter.adapt(this, getResources());
+        ScreenAdapter.adaptWidth(this, getResources(), 1280.0f);
         if (mDeviceInfo.getLogSwitch()) {
             Timber.plant(new Timber.DebugTree());
         }

@@ -19,7 +19,7 @@ public class BaseActivity extends AppCompatActivity {
         Context context = ScreenUtils.fixFontScale(newBase);
         Context appContext = context.getApplicationContext();
         if (appContext instanceof Application) {
-            ScreenAdapter.adapt((Application) appContext, context.getResources());
+            ScreenAdapter.adaptWidth((Application) appContext, context.getResources(), 1280.0f);
         }
         super.attachBaseContext(context);
     }
@@ -28,7 +28,7 @@ public class BaseActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         Context appContext = getApplicationContext();
         if (appContext instanceof Application) {
-            ScreenAdapter.adapt((Application) appContext, getResources());
+            ScreenAdapter.adaptWidth((Application) appContext, getResources(), 1280.0f);
         }
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         ScreenUtils.setupFullScreen(getWindow());
