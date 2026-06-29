@@ -1,13 +1,12 @@
-package cn.booslink.llm.downloader.service;
+package cn.booslink.llm.downloader.receiver;
 
-import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInstaller;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.IBinder;
 
-import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import javax.inject.Inject;
@@ -19,7 +18,7 @@ import dagger.hilt.android.AndroidEntryPoint;
 import timber.log.Timber;
 
 @AndroidEntryPoint
-public class SilentInstallService extends Service {
+public class SilentInstallReceiver extends BroadcastReceiver {
 
     public static final String ACTION_SILENT_INSTALL = "cn.booslink.llm.silent.install";
 
@@ -28,27 +27,19 @@ public class SilentInstallService extends Service {
     @Inject
     IAppManager mInstallManager;
 
-
-    @Nullable
     @Override
-    public IBinder onBind(Intent intent) {
-        return null;
-    }
-
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
+    public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
         Timber.tag(TAG).d("intent extras is %s", intent.getExtras() == null ? "null" : "not null");
         Bundle extras = intent.getExtras() != null ? intent.getExtras() : new Bundle();
         Timber.tag(TAG).d("intent = %s", action);
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-            populateInstallAction(action, extras);
+            populateInstallAction(context, action, extras);
         }
-        return super.onStartCommand(intent, flags, startId);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    private void populateInstallAction(String action, Bundle extras) {
+    private void populateInstallAction(Context context, String action, Bundle extras) {
         if (ACTION_SILENT_INSTALL.equals(action)) {
             int status = extras.getInt(PackageInstaller.EXTRA_STATUS, PackageInstaller.STATUS_FAILURE);
             Timber.tag(TAG).d("status = %s", status);
@@ -61,7 +52,7 @@ public class SilentInstallService extends Service {
                     Intent confirmIntent = (Intent) extras.get(Intent.EXTRA_INTENT);
                     if (confirmIntent != null) {
                         confirmIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        startActivity(confirmIntent);
+                        context.startActivity(confirmIntent);
                     }
                     break;
                 case PackageInstaller.STATUS_SUCCESS:

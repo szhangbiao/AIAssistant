@@ -327,12 +327,12 @@ public class EventProcessorImpl implements IEventProcessor {
         } else if (sub == CBMSub.CBM_SEMANTIC) {
             if (data.getResponse() == null || data.getTag() == AIUITag.LAUNCH || data.getCbmSemantic() == null) return;
             mEventData = mEventData.copySemantic(data.getCbmSemantic(), data.getResponse());
+            String queryText = mEventData.getCbmTidy() != null && mEventData.getCbmTidy().getText() != null ? mEventData.getCbmTidy().getText().getQuery() : null;
+            mSpeechInteraction.updateQuery(VoiceQuery.Companion.replace(queryText, QueryState.DONE));
             CBMSemantic cbmSemantic = data.getCbmSemantic().getText();
             if (cbmSemantic != null && cbmSemantic.getSemantic() != null) {
                 VoiceResult voiceResult = mIntentProcess.processIntent(data.getResponse(), cbmSemantic.getSemantic());
                 mEventData.setSemanticHandled(voiceResult.getHandled());
-                String queryText = mEventData.getCbmTidy() != null && mEventData.getCbmTidy().getText() != null ? mEventData.getCbmTidy().getText().getQuery() : null;
-                mSpeechInteraction.updateQuery(VoiceQuery.Companion.replace(queryText, voiceResult.getHandled() ? QueryState.DONE : QueryState.QUERYING));
                 if (cbmSemantic.getSemantic().isEmpty()) return;
                 Timber.tag(TAG).d("cbm semantic category = %s, intent = %s", data.getResponse().getCategory(), cbmSemantic.getSemantic().get(0).getIntent());
             }

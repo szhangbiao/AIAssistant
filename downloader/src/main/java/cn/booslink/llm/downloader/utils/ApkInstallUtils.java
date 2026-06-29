@@ -23,7 +23,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import cn.booslink.llm.downloader.observer.PackageInstallObserver;
-import cn.booslink.llm.downloader.service.SilentInstallService;
+import cn.booslink.llm.downloader.receiver.SilentInstallReceiver;
 import timber.log.Timber;
 
 public class ApkInstallUtils {
@@ -46,15 +46,15 @@ public class ApkInstallUtils {
             addApkToInstallSession(apkFile, session);
             // 创建一个安装接收器
             Intent intent = new Intent();
-            intent.setComponent(new ComponentName(context.getPackageName(), "cn.booslink.llm.downloader.service.SilentInstallService"));
-            intent.setAction(SilentInstallService.ACTION_SILENT_INSTALL);
+            intent.setComponent(new ComponentName(context.getPackageName(), "cn.booslink.llm.downloader.receiver.SilentInstallReceiver"));
+            intent.setAction(SilentInstallReceiver.ACTION_SILENT_INSTALL);
             int flags;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 flags = PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_MUTABLE;
             } else {
                 flags = PendingIntent.FLAG_UPDATE_CURRENT;
             }
-            PendingIntent pendingIntent = PendingIntent.getService(context, 1, intent, flags);
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 1, intent, flags);
             session.commit(pendingIntent.getIntentSender());
         } catch (IOException | RuntimeException e) {
             Timber.tag("Install").e(e, "Install failed");

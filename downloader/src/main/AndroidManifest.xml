@@ -16,8 +16,9 @@
 
     <application>
         <!-- 安装服务 -->
-        <service
-            android:name=".service.SilentInstallService"
+        <!-- 安装接收器 -->
+        <receiver
+            android:name=".receiver.SilentInstallReceiver"
             android:exported="false" />
     </application>
 

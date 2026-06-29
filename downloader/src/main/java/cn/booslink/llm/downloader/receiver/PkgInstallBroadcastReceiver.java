@@ -13,9 +13,12 @@ import cn.booslink.llm.common.utils.DeviceUtils;
 import cn.booslink.llm.downloader.IAppManager;
 import cn.booslink.llm.downloader.model.InstallState;
 import dagger.Lazy;
+import timber.log.Timber;
 
 
 public class PkgInstallBroadcastReceiver extends BroadcastReceiver {
+
+    private final static String TAG = "InstallBroadcast";
 
     private final DeviceInfo mDevice;
     private final Lazy<IAppManager> mAppManagerProvider;
@@ -32,6 +35,7 @@ public class PkgInstallBroadcastReceiver extends BroadcastReceiver {
         if (intent == null || intent.getAction() == null) {
             return;
         }
+        Timber.tag(TAG).d("onReceive, action: %s", intent.getAction());
         String action = intent.getAction();
         if (Intent.ACTION_PACKAGE_ADDED.equals(action)) {
             String packageName = null;
