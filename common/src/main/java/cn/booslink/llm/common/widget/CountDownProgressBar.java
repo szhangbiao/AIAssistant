@@ -1,8 +1,5 @@
 package cn.booslink.llm.common.widget;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
@@ -11,9 +8,9 @@ import android.graphics.Paint;
 import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.drawable.Drawable;
+import android.os.SystemClock;
 import android.util.AttributeSet;
 import android.view.View;
-import android.view.animation.LinearInterpolator;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -43,10 +40,43 @@ public class CountDownProgressBar extends View {
 
     // 倒计时长 5 秒
     private static final long DEFAULT_DURATION_MS = 5000L;
-    private ValueAnimator mAnimator;
     private float mProgressFraction = 1.0f; // 1.0 -> 0.0
+    private long mDurationMs = DEFAULT_DURATION_MS;
+    private long mEndTimeMs;
+    private int mLastSeconds;
+    private boolean mIsCountingDown;
 
     private OnCountDownListener mListener;
+    private final Runnable mCountDownRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (!mIsCountingDown) {
+                return;
+            }
+            long remainingMs = mEndTimeMs - SystemClock.elapsedRealtime();
+            if (remainingMs <= 0L) {
+                mIsCountingDown = false;
+                mProgressFraction = 0.0f;
+                invalidate();
+                if (mListener != null) {
+                    mListener.onFinish();
+                }
+                return;
+            }
+            mProgressFraction = Math.min(1.0f, Math.max(0.0f, remainingMs / (float) mDurationMs));
+            invalidate();
+            if (mListener != null) {
+                int seconds = (int) Math.ceil(remainingMs / 1000.0f);
+                if (seconds < mLastSeconds) {
+                    mLastSeconds = seconds;
+                    if (seconds > 0) {
+                        mListener.onTick(seconds);
+                    }
+                }
+            }
+            postOnAnimation(this);
+        }
+    };
 
     public interface OnCountDownListener {
         void onTick(int second);
@@ -181,48 +211,25 @@ public class CountDownProgressBar extends View {
 
     public void startCountDown(final long durationMs) {
         cancelCountDown();
+        if (durationMs <= 0L) {
+            mProgressFraction = 0.0f;
+            invalidate();
+            if (mListener != null) {
+                mListener.onFinish();
+            }
+            return;
+        }
+        mDurationMs = durationMs;
+        mEndTimeMs = SystemClock.elapsedRealtime() + durationMs;
+        mLastSeconds = (int) Math.ceil(durationMs / 1000.0f);
+        mIsCountingDown = true;
         mProgressFraction = 1.0f;
-        mAnimator = ValueAnimator.ofFloat(1.0f, 0.0f);
-        mAnimator.setDuration(durationMs);
-        mAnimator.setInterpolator(new LinearInterpolator());
-        mAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            private int lastSeconds = (int) Math.ceil(durationMs / 1000.0f);
-
-            @Override
-            public void onAnimationUpdate(@NonNull ValueAnimator animation) {
-                mProgressFraction = (float) animation.getAnimatedValue();
-                invalidate();
-                if (mListener != null) {
-                    long elapsed = (long) (animation.getAnimatedFraction() * durationMs);
-                    long remainingMs = durationMs - elapsed;
-                    int seconds = (int) Math.ceil(remainingMs / 1000.0f);
-                    if (seconds < lastSeconds) {
-                        lastSeconds = seconds;
-                        if (seconds > 0) {
-                            mListener.onTick(seconds);
-                        }
-                    }
-                }
-            }
-        });
-        mAnimator.addListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                mProgressFraction = 0.0f;
-                invalidate();
-                if (mListener != null) {
-                    mListener.onFinish();
-                }
-            }
-        });
-        mAnimator.start();
+        invalidate();
+        postOnAnimation(mCountDownRunnable);
     }
 
     public void cancelCountDown() {
-        if (mAnimator != null) {
-            mAnimator.removeAllListeners();
-            mAnimator.cancel();
-            mAnimator = null;
-        }
+        mIsCountingDown = false;
+        removeCallbacks(mCountDownRunnable);
     }
 }

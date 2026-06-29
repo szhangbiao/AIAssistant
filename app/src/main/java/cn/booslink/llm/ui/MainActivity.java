@@ -21,7 +21,6 @@ import javax.inject.Inject;
 import cn.booslink.llm.R;
 import cn.booslink.llm.common.model.DeviceInfo;
 import cn.booslink.llm.common.ui.BaseActivity;
-import cn.booslink.llm.common.ui.ISpeechInteraction;
 import cn.booslink.llm.downloader.IAppManager;
 import cn.booslink.llm.common.speech.ISpeechAgent;
 import cn.booslink.llm.service.VoiceAssistantService;
@@ -37,8 +36,6 @@ public class MainActivity extends BaseActivity {
     IAppManager mAppManager;
     @Inject
     ISpeechAgent mSpeechAgent;
-
-    ISpeechInteraction mSpeechInteraction;
 
     private static final String TAG = "MainActivity";
     private static final int REQUEST_RECORD_AUDIO_PERMISSION = 100;
