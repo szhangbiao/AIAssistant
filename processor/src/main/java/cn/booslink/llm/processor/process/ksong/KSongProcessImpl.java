@@ -47,6 +47,7 @@ public class KSongProcessImpl implements IKSongProcess {
     private static final String UNIT_PAGE = "页";
 
     private static final String PAGE_FAVORITE = "收藏";
+    private static final String PAGE_MY_FAVORITE = "我的收藏";
     private static final String PAGE_RECENT = "最近播放";
     private static final String PAGE_LOCAL = "本地";
     private static final String PAGE_FREQUENT = "常唱";
@@ -329,6 +330,7 @@ public class KSongProcessImpl implements IKSongProcess {
                 String pageValue = slot.getValue().equals(slot.getNormValue()) ? slot.getValue() : slot.getNormValue();
                 switch (pageValue) {
                     case PAGE_FAVORITE:
+                    case PAGE_MY_FAVORITE:
                         return songAction.openFavorite();
                     case PAGE_RECENT:
                         return songAction.openRecent();
