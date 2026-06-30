@@ -104,6 +104,13 @@ public class SpeechAgentImpl implements ISpeechAgent, AIUIListener {
     }
 
     @Override
+    public void restartAudioRecord() {
+        if (mAIUIAgent != null && mDevice.isAutoAudioRecord()) {
+            startRecordAudio();
+        }
+    }
+
+    @Override
     public boolean isAgentCreated() {
         return mIsAgentCreated;
     }

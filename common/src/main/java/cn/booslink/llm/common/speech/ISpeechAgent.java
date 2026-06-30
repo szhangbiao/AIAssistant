@@ -11,6 +11,8 @@ public interface ISpeechAgent {
 
     boolean isAIUIReady();
 
+    void restartAudioRecord();
+
     void destroyAgent();
 
     boolean isAgentCreated();

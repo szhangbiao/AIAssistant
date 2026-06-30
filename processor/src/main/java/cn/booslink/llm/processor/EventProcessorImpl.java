@@ -62,6 +62,7 @@ public class EventProcessorImpl implements IEventProcessor {
     private final static int RESULT_NETWORK_ERROR = 10120;
     private final static int RESULT_NETWORK_TIMEOUT = 10114;
     private final static int RESULT_NO_NETWORK = 20001;
+    private static final int RECORD_ERROR_CODE = 20006;
 
     private final Gson mGson;
     private final Handler mHandler;
@@ -187,6 +188,9 @@ public class EventProcessorImpl implements IEventProcessor {
                     mTTSSpeech.networkError();
                     mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.ERROR));
                     mSpeechInteraction.nlpAnswer("网络出现错误", false);
+                } else if (RECORD_ERROR_CODE == code) {
+                    // record audio error
+                    speechAgent.restartAudioRecord();
                 }
                 break;
         }
