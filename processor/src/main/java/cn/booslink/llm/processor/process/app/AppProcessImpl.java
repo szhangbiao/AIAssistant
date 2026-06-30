@@ -176,7 +176,9 @@ public class AppProcessImpl implements IAppProcess {
             return true;
         }
         AppInfo appInfo = PkgUtils.getAppInfo(mContext, summary.getPkgName());
-        if (appInfo != null) {
+        IAppManager downloadManager = mAppManagerLazy.get();
+        if (downloadManager == null) return false;
+        if (appInfo != null && !downloadManager.isPkgInTaskQueue(summary.getPkgName())) {
             mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.DONE));
             switch (intent) {
                 case DOWNLOAD:

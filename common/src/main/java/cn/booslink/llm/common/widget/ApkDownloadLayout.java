@@ -162,4 +162,12 @@ public class ApkDownloadLayout extends RelativeLayout {
         builder.append(" 秒后自动消失");
         tvCountdown.setText(builder);
     }
+
+    @Override
+    public boolean hasOverlappingRendering() {
+        // 禁用过渡渲染层的创建。
+        // 这能彻底解决在一些定制设备（如Mali GPU）上对 ViewGroup 执行 Alpha 动画时，
+        // 底层 EGL Fence 阻塞 3000ms 的驱动级 Bug。
+        return false;
+    }
 }

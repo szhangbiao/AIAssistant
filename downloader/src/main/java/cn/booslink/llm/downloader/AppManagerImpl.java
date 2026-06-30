@@ -116,6 +116,7 @@ public class AppManagerImpl implements IAppManager {
 
     @Override
     public boolean isPkgInTaskQueue(String packageName) {
+        Timber.tag(TAG).d("isPkgInTaskQueue, value = %b", mApkDownloadMap.containsKey(packageName));
         return mApkDownloadMap.containsKey(packageName);
     }
 

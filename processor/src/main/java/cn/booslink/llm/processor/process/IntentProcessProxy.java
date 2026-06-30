@@ -100,6 +100,12 @@ public class IntentProcessProxy implements IIntentProcess {
         }
         switch (intent) {
             case EXIT:
+                if (category == Category.APP && !semantic.getSlots().isEmpty()) {
+                    break;
+                }
+                mControlProcess.speechSleep();
+                return VoiceResult.Companion.success("好的");
+            case EXIT_APP:
             case EXIT_AGENT:
             case SETTING_CLOSE:
                 mControlProcess.speechSleep();

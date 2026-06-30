@@ -51,6 +51,7 @@ public class VideoProcessImpl implements IVideoProcess {
 
     private static final String CURRENT_NAME = "当前";
     private static final String IQIYI_APP_NAME = "爱奇艺";
+    private static final String IQIYI_APP_NAME_2 = "银河奇异果";
     private static final String TENCENT_APP_NAME = "腾讯视频";
     private static final String TENCENT_APP_NAME2 = "云视听极光";
     private final String IQIYI_PACKAGE_NAME = "com.qiyi.video.iv";
@@ -497,7 +498,7 @@ public class VideoProcessImpl implements IVideoProcess {
         }
         switch (foregroundPkgName) {
             case IQIYI_PACKAGE_NAME:
-                return IQIYI_APP_NAME;
+                return IQIYI_APP_NAME + IQIYI_APP_NAME_2;
             case TENCENT_PACKAGE_NAME:
                 return TENCENT_APP_NAME + TENCENT_APP_NAME2;
         }
