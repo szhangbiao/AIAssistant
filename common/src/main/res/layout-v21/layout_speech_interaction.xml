@@ -6,104 +6,109 @@
     android:layout_height="wrap_content"
     tools:orientation="vertical"
     tools:paddingBottom="24dp"
-    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout">
+    tools:parentTag="android.widget.LinearLayout">
 
-    <TextView
-        android:id="@+id/tv_question"
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="24dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="136dp"
-        android:includeFontPadding="true"
-        android:textColor="@android:color/white"
-        android:textSize="26sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:text="您好，我是Bobo！" />
-
-    <TextView
-        android:id="@+id/tv_result_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="24dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="136dp"
-        android:includeFontPadding="true"
-        android:text="@string/speech_initial_help"
-        android:textColor="#AEAEAE"
-        android:textSize="20sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tv_question"
-        tools:text="想问什么尽管问我！" />
-
-    <FrameLayout
-        android:id="@+id/fl_result"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="24dp"
-        android:layout_marginTop="16dp"
-        android:background="@drawable/bg_answer_content"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tv_result_title"
-        tools:minHeight="72dp">
+        android:layout_height="wrap_content">
 
         <TextView
-            android:id="@+id/tv_npl"
+            android:id="@+id/tv_question"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginVertical="20dp"
-            android:layout_marginEnd="8dp"
-            android:fadeScrollbars="false"
-            android:focusable="false"
-            android:lineSpacingExtra="2dp"
-            android:maxHeight="304dp"
-            android:paddingStart="20dp"
-            android:paddingEnd="8dp"
-            android:scrollbarSize="6dp"
-            android:scrollbarStyle="outsideOverlay"
-            android:scrollbarThumbVertical="@drawable/scrollbar_thumb"
-            android:scrollbarTrackVertical="@drawable/scrollbar_track"
-            android:scrollbars="vertical"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="136dp"
+            android:includeFontPadding="true"
             android:textColor="@android:color/white"
-            android:textSize="22sp"
-            tools:text="上午好！现在是北京时间2024年7月23日11:46。您所在的地区：苏州市今日小雨转多云，气温10°C，注意天冷加衣哦～"
-            tools:visibility="gone" />
+            android:textSize="26sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="您好，我是Bobo！" />
 
-        <cn.booslink.llm.common.widget.LoadingView
-            android:id="@+id/loadingView"
+        <TextView
+            android:id="@+id/tv_result_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            app:animationDuration="500"
-            app:dotRadius="6dp"
-            app:dotSpacing="20dp"
-            app:enlargedColor="#FFFFFF"
-            app:enlargedRadiusScale="1.5"
-            app:normalColor="#CCCCCC" />
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="136dp"
+            android:includeFontPadding="true"
+            android:text="@string/speech_initial_help"
+            android:textColor="#AEAEAE"
+            android:textSize="20sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_question"
+            tools:text="想问什么尽管问我！" />
 
-        <cn.booslink.llm.common.widget.WeatherListLayout
-            android:id="@+id/cl_weather_list"
+        <FrameLayout
+            android:id="@+id/fl_result"
             android:layout_width="match_parent"
-            android:layout_height="385dp"
-            android:visibility="gone" />
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="24dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/bg_answer_content"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_result_title"
+            tools:minHeight="72dp">
 
-        <cn.booslink.llm.common.widget.WakeUpLayout
-            android:id="@+id/ll_wakeup"
-            android:layout_width="match_parent"
-            android:layout_height="278dp"
-            android:visibility="gone" />
-    </FrameLayout>
+            <TextView
+                android:id="@+id/tv_npl"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="20dp"
+                android:layout_marginEnd="8dp"
+                android:fadeScrollbars="false"
+                android:focusable="false"
+                android:lineSpacingExtra="2dp"
+                android:maxHeight="304dp"
+                android:paddingStart="20dp"
+                android:paddingEnd="8dp"
+                android:scrollbarSize="6dp"
+                android:scrollbarStyle="outsideOverlay"
+                android:scrollbarThumbVertical="@drawable/scrollbar_thumb"
+                android:scrollbarTrackVertical="@drawable/scrollbar_track"
+                android:scrollbars="vertical"
+                android:textColor="@android:color/white"
+                android:textSize="22sp"
+                tools:text="上午好！现在是北京时间2024年7月23日11:46。您所在的地区：苏州市今日小雨转多云，气温10°C，注意天冷加衣哦～"
+                tools:visibility="gone" />
 
-    <org.libpag.PAGImageView
-        android:id="@+id/pag_loading"
-        android:layout_width="320dp"
-        android:layout_height="200dp"
-        android:layout_marginTop="65dp"
-        app:layout_constraintBottom_toTopOf="@id/fl_result"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/fl_result" />
+            <cn.booslink.llm.common.widget.LoadingView
+                android:id="@+id/loadingView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                app:animationDuration="500"
+                app:dotRadius="6dp"
+                app:dotSpacing="20dp"
+                app:enlargedColor="#FFFFFF"
+                app:enlargedRadiusScale="1.5"
+                app:normalColor="#CCCCCC" />
+
+            <cn.booslink.llm.common.widget.WeatherListLayout
+                android:id="@+id/cl_weather_list"
+                android:layout_width="match_parent"
+                android:layout_height="385dp"
+                android:visibility="gone" />
+
+            <cn.booslink.llm.common.widget.WakeUpLayout
+                android:id="@+id/ll_wakeup"
+                android:layout_width="match_parent"
+                android:layout_height="278dp"
+                android:visibility="gone" />
+        </FrameLayout>
+
+        <org.libpag.PAGImageView
+            android:id="@+id/pag_loading"
+            android:layout_width="320dp"
+            android:layout_height="200dp"
+            android:layout_marginTop="65dp"
+            app:layout_constraintBottom_toTopOf="@id/fl_result"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@id/fl_result" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <cn.booslink.llm.common.widget.ApkDownloadLayout
         android:id="@+id/fl_download_layout"
@@ -113,7 +118,6 @@
         android:layout_marginTop="16dp"
         android:background="@drawable/bg_answer_content"
         android:visibility="gone"
-        app:layout_constraintTop_toBottomOf="@id/fl_result"
         tools:visibility="visible" />
 
     <cn.booslink.llm.common.widget.ApkDownloadLayout
@@ -124,8 +128,5 @@
         android:layout_marginTop="16dp"
         android:background="@drawable/bg_answer_content"
         android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/fl_download_layout"
-        app:layout_goneMarginTop="16dp"
         tools:visibility="visible" />
 </merge>

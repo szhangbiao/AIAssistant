@@ -6,7 +6,7 @@
     android:layout_height="wrap_content"
     tools:orientation="vertical"
     tools:paddingBottom="24dp"
-    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout">
+    tools:parentTag="android.widget.LinearLayout">
 
     <TextView
         android:id="@+id/tv_question"
@@ -18,8 +18,6 @@
         android:includeFontPadding="true"
         android:textColor="@android:color/white"
         android:textSize="26sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
         tools:text="您好，我是Bobo！" />
 
     <TextView
@@ -33,8 +31,6 @@
         android:text="@string/speech_initial_help"
         android:textColor="#AEAEAE"
         android:textSize="20sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tv_question"
         tools:text="想问什么尽管问我！" />
 
     <FrameLayout
@@ -44,8 +40,6 @@
         android:layout_marginHorizontal="24dp"
         android:layout_marginTop="16dp"
         android:background="@drawable/bg_answer_content"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tv_result_title"
         tools:minHeight="72dp">
 
         <TextView
@@ -103,7 +97,6 @@
         android:layout_marginTop="16dp"
         android:background="@drawable/bg_answer_content"
         android:visibility="gone"
-        app:layout_constraintTop_toBottomOf="@id/fl_result"
         tools:visibility="visible" />
 
     <cn.booslink.llm.common.widget.ApkDownloadLayout
@@ -114,8 +107,5 @@
         android:layout_marginTop="16dp"
         android:background="@drawable/bg_answer_content"
         android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/fl_download_layout"
-        app:layout_goneMarginTop="16dp"
         tools:visibility="visible" />
 </merge>

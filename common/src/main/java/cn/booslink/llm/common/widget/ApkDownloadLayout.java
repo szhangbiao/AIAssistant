@@ -4,6 +4,7 @@ import android.content.Context;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -91,6 +92,7 @@ public class ApkDownloadLayout extends RelativeLayout {
 
     public void resetViews() {
         clearAnimation();
+        setAlpha(1.0f);
         tvName.setText("");
         pbDone.setVisibility(GONE);
         pbDone.cancelCountDown();
@@ -136,14 +138,19 @@ public class ApkDownloadLayout extends RelativeLayout {
         updateCountDownText(0);
         animate().alpha(0.0f)
                 .setDuration(1000L)
-                .setListener(new AnimatorListenerAdapter() {
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        setVisibility(GONE);
-                        updateCountDownText(5);
-                        setAlpha(1.0f);
-                    }
-                })
+                .setListener(null)
+                .withEndAction(() ->
+                        post(() -> {
+                            setVisibility(GONE);
+                            updateCountDownText(5);
+                            setAlpha(1.0f);
+                            requestLayout();
+                            if (getParent() instanceof View) {
+                                View parent = (View) getParent();
+                                parent.requestLayout();
+                                parent.invalidate();
+                            }
+                        }))
                 .start();
     }
 

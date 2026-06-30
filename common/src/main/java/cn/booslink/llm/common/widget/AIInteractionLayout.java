@@ -6,11 +6,11 @@ import android.text.method.ScrollingMovementMethod;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.constraintlayout.widget.ConstraintLayout;
 
 import org.libpag.PAGImageView;
 
@@ -20,7 +20,7 @@ import cn.booslink.llm.common.model.WeatherUI;
 import cn.booslink.llm.common.utils.ContextUtils;
 import timber.log.Timber;
 
-public class AIInteractionLayout extends ConstraintLayout {
+public class AIInteractionLayout extends LinearLayout {
 
     private final static String TAG = "InteractionLayout";
 
@@ -49,6 +49,7 @@ public class AIInteractionLayout extends ConstraintLayout {
         initWidgets();
         showTextLoading(true);
         setPadding(0, 0, 0, ContextUtils.dp2px(context, 24));
+        setOrientation(VERTICAL);
     }
 
     public void voiceInput(String voiceTxt) {
