@@ -57,6 +57,16 @@ public class AIInteractionLayout extends LinearLayout {
         setOrientation(VERTICAL);
     }
 
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        if (pagLoading != null) {
+            pagLoading.pause();
+            pagLoading.setComposition(null); // 切断底层强引用
+            pagLoading.freeCache();
+        }
+    }
+
     public void voiceInput(String voiceTxt) {
         if (TextUtils.isEmpty(voiceTxt)) return;
         tvQuestion.setText(voiceTxt);
@@ -127,7 +137,11 @@ public class AIInteractionLayout extends LinearLayout {
                     if (loadingFile != null) {
                         pagLoading.setComposition(loadingFile);
                     } else {
-                        pagLoading.setPath("assets://" + LOADING_NAME);
+                        pagLoading.setPathAsync("assets://" + LOADING_NAME, pagFile -> {
+                            if (pagLoader != null) {
+                                pagLoader.putPagFile(LOADING_NAME, pagFile);
+                            }
+                        });
                     }
                     isLoadingAnimSet = true;
                     pagLoading.play();

@@ -88,9 +88,9 @@ public class AIRootLayout extends ConstraintLayout {
         clInteraction = findViewById(R.id.ll_interaction);
         flLeave = findViewById(R.id.fl_leave);
         flContent = findViewById(R.id.fl_content);
-        if(pagAnimation != null) {
+        if (pagAnimation != null) {
             pagAnimation.setRepeatCount(-1);
-            pagAnimation.setMaxFrameRate(30f); 
+            pagAnimation.setMaxFrameRate(30f);
         }
     }
 
@@ -135,6 +135,7 @@ public class AIRootLayout extends ConstraintLayout {
         super.onDetachedFromWindow();
         if (pagAnimation != null) {
             pagAnimation.pause();
+            pagAnimation.setComposition(null); // 切断底层强引用
             pagAnimation.freeCache();
         }
     }
@@ -229,18 +230,12 @@ public class AIRootLayout extends ConstraintLayout {
             pagAnimation.setComposition(targetFile);
         } else {
             String pagFileName = emoteState.getFileKey();
-            if (pagLoader != null) {
-                PAGFile weatherFile = PAGFile.Load(getContext().getAssets(), pagFileName);
-                pagLoader.putPagFile(pagFileName, weatherFile);
-                pagAnimation.setComposition(weatherFile);
-            } else {
-                pagAnimation.setPath("assets://" + pagFileName);
-            }
+            pagAnimation.setPathAsync("assets://" + pagFileName, pagFile -> {
+                if (pagLoader != null) {
+                    pagLoader.putPagFile(pagFileName, pagFile);
+                }
+            });
         }
-        
-        // 关键优化：统一在 play 前重置进度并同步渲染首帧，彻底消灭任意情况下的残影
-        pagAnimation.setProgress(0);
-        pagAnimation.flush();
         pagAnimation.play();
     }
 

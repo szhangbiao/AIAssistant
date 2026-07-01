@@ -18,6 +18,7 @@ import androidx.lifecycle.MutableLiveData;
 import javax.inject.Inject;
 
 import cn.booslink.llm.common.R;
+import cn.booslink.llm.common.loader.IPAGLoader;
 import cn.booslink.llm.common.model.ApkDownload;
 import cn.booslink.llm.common.model.UIResponse;
 import cn.booslink.llm.common.model.VoiceQuery;
@@ -46,6 +47,7 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
 
     private final Context mContext;
     private final ITTSSpeech mTTSSpeech;
+    private final IPAGLoader mPagLoader;
     private final FrameLayout mParentView;
     private final MutableLiveData<String> mNplResponseLiveData;
     private final MutableLiveData<EmoteState> mEmoteStateLiveData;
@@ -59,9 +61,10 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
     private WindowManager.LayoutParams mWindowParams;
 
     @Inject
-    public SpeechInteractionImpl(@ApplicationContext Context context, ITTSSpeech ttsSpeech) {
+    public SpeechInteractionImpl(@ApplicationContext Context context, ITTSSpeech ttsSpeech, IPAGLoader pagLoader) {
         this.mContext = context;
         this.mTTSSpeech = ttsSpeech;
+        this.mPagLoader = pagLoader;
         this.mParentView = new SpeechWindowLayout(context);
         this.mEmoteStateLiveData = new MutableLiveData<>(EmoteState.IDLE);
         this.mVoiceInputLiveData = new MutableLiveData<>(VoiceQuery.Companion.startup());
@@ -459,6 +462,7 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
     private void hideWindow() {
         mParentView.setVisibility(View.GONE);
         mParentView.clearFocus();
+        mPagLoader.release();
         if (isAttached && mWindowManager != null && mWindowParams != null) {
             try {
                 mWindowParams.width = 0;
