@@ -79,7 +79,7 @@
         <cn.booslink.llm.common.widget.WeatherListLayout
             android:id="@+id/cl_weather_list"
             android:layout_width="match_parent"
-            android:layout_height="385dp"
+            android:layout_height="304dp"
             android:visibility="gone" />
 
         <cn.booslink.llm.common.widget.WakeUpLayout

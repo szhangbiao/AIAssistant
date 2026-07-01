@@ -48,7 +48,7 @@ data class EventData(
             if (targetName && slot.normValue?.isNotEmpty() == true && slot.value?.isNotEmpty() == true && slot.normValue != slot.value) {
                 cbmTidy?.text?.query = cbmTidy.text.query?.replace(slot.value, slot.normValue)
             }
-        } else if ((response.category == Category.CONTROL || response.category == Category.APP) && semantic?.intent == AIUIIntent.EXIT && "小飞退出" == queryText) {
+        } else if ((response.category == Category.CONTROL || response.category == Category.APP) && semantic?.intent == AIUIIntent.EXIT && queryText?.contains("小飞退") == true) {
             semantic.intent = AIUIIntent.EXIT_AGENT
         } else if (response.category == Category.UNKNOWN && "视频全屏" == queryText) {
             response.category = Category.KSONG
