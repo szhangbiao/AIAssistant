@@ -9,6 +9,7 @@ import androidx.hilt.work.HiltWorkerFactory;
 import androidx.multidex.MultiDex;
 import androidx.work.Configuration;
 
+import cn.booslink.llm.common.loader.IPAGLoader;
 import cn.booslink.llm.common.model.DeviceInfo;
 import cn.booslink.llm.common.utils.ScreenAdapter;
 import dagger.hilt.android.HiltAndroidApp;
@@ -24,7 +25,8 @@ public class AIApplication extends Application implements Configuration.Provider
     private static final String TAG = "AIApplication";
     @Inject
     DeviceInfo mDeviceInfo;
-
+    @Inject
+    IPAGLoader mPAGLoader;
     @Inject
     HiltWorkerFactory workerFactory;
 
@@ -53,6 +55,7 @@ public class AIApplication extends Application implements Configuration.Provider
         if (mDeviceInfo.getLogSwitch()) {
             Timber.plant(new Timber.DebugTree());
         }
+        mPAGLoader.loadPagFiles();
         Timber.tag(TAG).d("onCreate");
     }
 }

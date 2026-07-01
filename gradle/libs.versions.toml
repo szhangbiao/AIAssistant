@@ -17,7 +17,7 @@ glide = "4.16.0"
 hilt = "2.59.2"
 #不要升级retrofit,后面的版本使用的okhttp超过2.6.4，其最低Api是21
 retrofit = "2.6.4"
-libpag = "4.5.46"
+libpag = "4.5.70"
 # 更高版本不支持 DebugTree
 timber = "4.7.1"
 media = "1.7.0"

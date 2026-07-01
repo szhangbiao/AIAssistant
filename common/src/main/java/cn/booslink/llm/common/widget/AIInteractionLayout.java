@@ -12,18 +12,23 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import org.libpag.PAGImageView;
+import org.libpag.PAGFile;
+import org.libpag.PAGView;
 
 import cn.booslink.llm.common.R;
+import cn.booslink.llm.common.di.CommonEntryPoint;
+import cn.booslink.llm.common.loader.IPAGLoader;
 import cn.booslink.llm.common.model.ApkDownload;
 import cn.booslink.llm.common.model.WeatherUI;
 import cn.booslink.llm.common.utils.ContextUtils;
+import dagger.hilt.android.EntryPointAccessors;
 import timber.log.Timber;
 
 public class AIInteractionLayout extends LinearLayout {
 
     private final static String TAG = "InteractionLayout";
 
+    private final static String LOADING_NAME = "pag_loading.pag";
     private TextView tvQuestion;
     private TextView tvResultTitle;
     private LoadingView loadingView;
@@ -31,7 +36,7 @@ public class AIInteractionLayout extends LinearLayout {
     private ApkDownloadLayout apkDismissLayout;
     private WeatherListLayout weatherListLayout;
 
-    private PAGImageView pagLoading;
+    private PAGView pagLoading;
     private WakeUpLayout llWakeup;
     private TextView tvNplReply;
 
@@ -108,17 +113,39 @@ public class AIInteractionLayout extends LinearLayout {
         loadingView.setVisibility(isShow ? VISIBLE : GONE);
     }
 
+    private boolean isLoadingAnimSet = false;
+
     public void showAnimLoading(boolean isQuerying) {
         if (pagLoading != null) {
             pagLoading.setVisibility(isQuerying ? View.VISIBLE : View.GONE);
             if (isQuerying) {
-                pagLoading.setPath("assets://pag_loading.pag");
-                pagLoading.setRepeatCount(-1);
-                pagLoading.play();
+                if (isLoadingAnimSet) {
+                    pagLoading.play();
+                } else {
+                    IPAGLoader pagLoader = getPagLoader();
+                    PAGFile loadingFile = pagLoader != null ? pagLoader.getPagFile(LOADING_NAME) : null;
+                    if (loadingFile != null) {
+                        pagLoading.setComposition(loadingFile);
+                    } else {
+                        pagLoading.setPath("assets://" + LOADING_NAME);
+                    }
+                    isLoadingAnimSet = true;
+                    pagLoading.play();
+                }
             } else {
                 pagLoading.pause();
             }
         }
+    }
+
+    private IPAGLoader mPagLoader;
+
+    private IPAGLoader getPagLoader() {
+        if (mPagLoader == null) {
+            CommonEntryPoint hiltEntryPoint = EntryPointAccessors.fromApplication(getContext().getApplicationContext(), CommonEntryPoint.class);
+            mPagLoader = hiltEntryPoint.lazyPAGLoader().get();
+        }
+        return mPagLoader;
     }
 
     public void showWakeup() {
@@ -145,12 +172,17 @@ public class AIInteractionLayout extends LinearLayout {
         tvNplReply.setMovementMethod(new ScrollingMovementMethod());
         tvNplReply.setFocusable(false);
         tvNplReply.setFocusableInTouchMode(false);
+        if (pagLoading != null) {
+            pagLoading.setRepeatCount(-1);
+            pagLoading.setMaxFrameRate(30f);
+        }
     }
 
     public void stopAnimIfNeed() {
         if (pagLoading != null && pagLoading.getVisibility() == View.VISIBLE) {
             pagLoading.setVisibility(View.GONE);
             pagLoading.pause();
+            pagLoading.freeCache();
         }
     }
 }

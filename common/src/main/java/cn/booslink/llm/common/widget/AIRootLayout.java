@@ -21,17 +21,21 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
 
-import org.libpag.PAGImageView;
+import org.libpag.PAGFile;
+import org.libpag.PAGView;
 
 import javax.inject.Inject;
 
 import cn.booslink.llm.common.R;
+import cn.booslink.llm.common.di.CommonEntryPoint;
+import cn.booslink.llm.common.loader.IPAGLoader;
 import cn.booslink.llm.common.model.ApkDownload;
 import cn.booslink.llm.common.model.UIResponse;
 import cn.booslink.llm.common.model.VoiceQuery;
 import cn.booslink.llm.common.model.WeatherUI;
 import cn.booslink.llm.common.model.enums.EmoteState;
 import cn.booslink.llm.common.model.enums.QueryState;
+import dagger.hilt.android.EntryPointAccessors;
 import dagger.hilt.android.qualifiers.ApplicationContext;
 import timber.log.Timber;
 
@@ -41,7 +45,7 @@ public class AIRootLayout extends ConstraintLayout {
 
     private ImageView ivMascot;
     private View vContent;
-    private PAGImageView pagAnimation;
+    private PAGView pagAnimation;
     private AIInteractionLayout clInteraction;
     private AILeaveLayout flLeave;
     private FrameLayout flContent;
@@ -84,6 +88,10 @@ public class AIRootLayout extends ConstraintLayout {
         clInteraction = findViewById(R.id.ll_interaction);
         flLeave = findViewById(R.id.fl_leave);
         flContent = findViewById(R.id.fl_content);
+        if(pagAnimation != null) {
+            pagAnimation.setRepeatCount(-1);
+            pagAnimation.setMaxFrameRate(30f); 
+        }
     }
 
     public void observeData(LiveData<EmoteState> emoteStateLiveData, LiveData<VoiceQuery> voiceInputLiveData, LiveData<String> nplResponseLiveData, LiveData<ApkDownload> apkDownloadLiveData, LiveData<UIResponse> uiResponseLiveData) {
@@ -120,6 +128,15 @@ public class AIRootLayout extends ConstraintLayout {
         startAlphaAnim(flContent, 1.0f, 0.6f, 300, 0, null);
         // vContent: alpha 1.0 -> 0.6, duration 300ms
         startAlphaAnim(vContent, 1.0f, 0.6f, 300, 0, runnable);
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        if (pagAnimation != null) {
+            pagAnimation.pause();
+            pagAnimation.freeCache();
+        }
     }
 
     private void changeUIWithState(EmoteState emoteState) {
@@ -206,51 +223,35 @@ public class AIRootLayout extends ConstraintLayout {
         if (pagAnimation.isPlaying()) {
             pagAnimation.pause();
         }
-        switch (emoteState) {
-            case WEATHER_SUNNY:
-                pagAnimation.setPath("assets://pag_sunny.pag");
-                break;
-            case WEATHER_CLOUDY:
-                pagAnimation.setPath("assets://pag_cloudy.pag");
-                break;
-            case WEATHER_FOG:
-                pagAnimation.setPath("assets://pag_fog.pag");
-                break;
-            case WEATHER_OVERCAST:
-                pagAnimation.setPath("assets://pag_overcast.pag");
-                break;
-            case WEATHER_RAINSTORM:
-                pagAnimation.setPath("assets://pag_rain_storm.pag");
-                break;
-            case WEATHER_SANDSTORM:
-                pagAnimation.setPath("assets://pag_sand_storm.pag");
-                break;
-            case WEATHER_SMALL_RAIN:
-                pagAnimation.setPath("assets://pag_small_rain.pag");
-                break;
-            case WEATHER_SNOW:
-                pagAnimation.setPath("assets://pag_snow.pag");
-                break;
-            case NORMAL:
-                pagAnimation.setPath("assets://pag_wink.pag");
-                break;
-            case CRYING:
-                pagAnimation.setPath("assets://pag_crying.pag");
-                break;
-            case LAUGHING:
-                pagAnimation.setPath("assets://pag_laughing.pag");
-                break;
-            case THINKING:
-                pagAnimation.setPath("assets://pag_thinking.pag");
-                break;
-            case IDLE:
-                pagAnimation.setPath("assets://pag_hello.pag");
-                break;
-            default:
-                break;
+        IPAGLoader pagLoader = getPagLoader();
+        PAGFile targetFile = pagLoader != null ? pagLoader.getPagFile(emoteState.getFileKey()) : null;
+        if (targetFile != null) {
+            pagAnimation.setComposition(targetFile);
+        } else {
+            String pagFileName = emoteState.getFileKey();
+            if (pagLoader != null) {
+                PAGFile weatherFile = PAGFile.Load(getContext().getAssets(), pagFileName);
+                pagLoader.putPagFile(pagFileName, weatherFile);
+                pagAnimation.setComposition(weatherFile);
+            } else {
+                pagAnimation.setPath("assets://" + pagFileName);
+            }
         }
-        pagAnimation.setRepeatCount(-1);
+        
+        // 关键优化：统一在 play 前重置进度并同步渲染首帧，彻底消灭任意情况下的残影
+        pagAnimation.setProgress(0);
+        pagAnimation.flush();
         pagAnimation.play();
+    }
+
+    private IPAGLoader mPagLoader;
+
+    private IPAGLoader getPagLoader() {
+        if (mPagLoader == null) {
+            CommonEntryPoint hiltEntryPoint = EntryPointAccessors.fromApplication(getContext().getApplicationContext(), CommonEntryPoint.class);
+            mPagLoader = hiltEntryPoint.lazyPAGLoader().get();
+        }
+        return mPagLoader;
     }
 
     private void populateMascotImage(EmoteState emoteState) {

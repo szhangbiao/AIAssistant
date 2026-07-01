@@ -1,6 +1,7 @@
 package cn.booslink.llm.common.di;
 
 import cn.booslink.llm.common.image.ImageLoader;
+import cn.booslink.llm.common.loader.IPAGLoader;
 import cn.booslink.llm.common.speech.ISpeechAgent;
 import cn.booslink.llm.common.storage.ISpeechStorage;
 import cn.booslink.llm.common.ui.ISpeechInteraction;
@@ -23,4 +24,6 @@ public interface CommonEntryPoint {
     Lazy<ISpeechStorage> lazySpeechStorage();
 
     Lazy<ISpeechInteraction> lazySpeechInteraction();
+
+    Lazy<IPAGLoader> lazyPAGLoader();
 }

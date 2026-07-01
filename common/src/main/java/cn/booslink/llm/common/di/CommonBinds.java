@@ -6,6 +6,8 @@ import cn.booslink.llm.common.cache.IAppCache;
 import cn.booslink.llm.common.cache.MemoryCacheImpl;
 import cn.booslink.llm.common.image.ImageLoader;
 import cn.booslink.llm.common.image.ImageLoaderImpl;
+import cn.booslink.llm.common.loader.IPAGLoader;
+import cn.booslink.llm.common.loader.PAGLoaderImpl;
 import cn.booslink.llm.common.storage.ISpeechStorage;
 import cn.booslink.llm.common.storage.SpeechStorageImpl;
 import cn.booslink.llm.common.ui.ISpeechInteraction;
@@ -39,4 +41,8 @@ public interface CommonBinds {
     @Binds
     @Singleton
     IAppCache bindAppCache(MemoryCacheImpl memoryCacheImpl);
+
+    @Binds
+    @Singleton
+    IPAGLoader bindPAGLoader(PAGLoaderImpl pagLoaderImpl);
 }

@@ -99,7 +99,7 @@
                 android:visibility="gone" />
         </FrameLayout>
 
-        <org.libpag.PAGImageView
+        <org.libpag.PAGView
             android:id="@+id/pag_loading"
             android:layout_width="320dp"
             android:layout_height="60dp"

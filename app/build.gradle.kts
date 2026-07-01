@@ -157,6 +157,7 @@ dependencies {
     annotationProcessor(libs.hilt.compiler)
 
     implementation(libs.bundles.android.widget)
+    implementation(libs.libpag)
 
     implementation(libs.bundles.jetpack)
     implementation(libs.media)
