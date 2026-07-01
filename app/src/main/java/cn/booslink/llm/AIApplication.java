@@ -2,6 +2,7 @@ package cn.booslink.llm;
 
 import android.app.Application;
 import android.content.Context;
+import android.content.res.Resources;
 import android.os.Build;
 
 import androidx.annotation.NonNull;
@@ -51,11 +52,20 @@ public class AIApplication extends Application implements Configuration.Provider
     @Override
     public void onCreate() {
         super.onCreate();
-        ScreenAdapter.adaptWidth(this, getResources(), 1280.0f);
         if (mDeviceInfo.getLogSwitch()) {
             Timber.plant(new Timber.DebugTree());
         }
-        mPAGLoader.loadPagFiles();
         Timber.tag(TAG).d("onCreate");
+    }
+
+    @Override
+    public Resources getResources() {
+        return ScreenAdapter.adaptWidth(this, super.getResources(), 1280.0f);
+    }
+
+    @Override
+    public void onTerminate() {
+        super.onTerminate();
+        mPAGLoader.release();
     }
 }
