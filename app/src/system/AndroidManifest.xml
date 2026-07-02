@@ -81,6 +81,7 @@
             android:exported="true"> <!-- 如果需要在解锁前运行，需加上这个 -->
             <intent-filter android:priority="1000"> <!-- 系统应用可以设置高优先级 -->
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
 
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>

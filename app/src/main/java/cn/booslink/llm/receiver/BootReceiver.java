@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
 
+import cn.booslink.llm.common.utils.DeviceUtils;
 import timber.log.Timber;
 
 public class BootReceiver extends BroadcastReceiver {
@@ -19,12 +20,13 @@ public class BootReceiver extends BroadcastReceiver {
             String action = intent.getAction();
             Timber.tag(TAG).d("Received broadcast: %s", action);
             if (Intent.ACTION_BOOT_COMPLETED.equals(action)
-                    // || Intent.ACTION_MY_PACKAGE_REPLACED.equals(action)
+                    || (Intent.ACTION_MY_PACKAGE_REPLACED.equals(action) && DeviceUtils.isAndroid11And3568Device())
                     || "android.intent.action.QUICKBOOT_POWERON".equals(action)
                     || "com.htc.intent.action.QUICKBOOT_POWERON".equals(action)) {
                 Timber.tag(TAG).d("Device boot completed or app upgraded, starting app auto-start process");
                 // 延迟启动，确保系统完全启动
                 new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    Timber.tag(TAG).d("Starting main activity");
                     startMainActivity(context);
                 }, 2000); // 延迟2秒
             }

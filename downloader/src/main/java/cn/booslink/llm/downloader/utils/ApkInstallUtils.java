@@ -136,4 +136,15 @@ public class ApkInstallUtils {
         intent.setDataAndType(uri, "application/vnd.android.package-archive");
         context.startActivity(intent);
     }
+
+    @WorkerThread
+    public static void installForAndroid11_3568(Context context, String apkPath) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            try {
+                installerInstall(context, apkPath);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
 }
