@@ -131,7 +131,7 @@ public class IntentProcessProxy implements IIntentProcess {
                     return VoiceResult.Companion.success("当前已处于应用内");
                 } else {
                     mAppProcess.launchAppWithIntent(APP_MARKET_PACKAGE, null);
-                    return VoiceResult.Companion.ignore();
+                    return VoiceResult.Companion.success("正在为你处理");
                 }
         }
         return VoiceResult.Companion.failure();
