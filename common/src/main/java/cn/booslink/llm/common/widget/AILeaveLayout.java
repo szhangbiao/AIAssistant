@@ -11,7 +11,6 @@ import androidx.annotation.Nullable;
 
 import cn.booslink.llm.common.R;
 import cn.booslink.llm.common.di.CommonEntryPoint;
-import cn.booslink.llm.common.speech.ISpeechAgent;
 import cn.booslink.llm.common.storage.ISpeechStorage;
 import cn.booslink.llm.common.ui.ISpeechInteraction;
 import dagger.Lazy;
@@ -21,7 +20,6 @@ public class AILeaveLayout extends FrameLayout {
     private TextView tvPositive;
     private TextView tvNegative;
 
-    private Lazy<ISpeechAgent> mSpeechAgentLazy;
     private Lazy<ISpeechStorage> mSpeechStorageLazy;
     private Lazy<ISpeechInteraction> mSpeechInteractionLazy;
 
@@ -42,9 +40,8 @@ public class AILeaveLayout extends FrameLayout {
     }
 
     public void initializeDependencies() {
-        if (mSpeechInteractionLazy == null || mSpeechStorageLazy == null || mSpeechAgentLazy == null) {
+        if (mSpeechInteractionLazy == null || mSpeechStorageLazy == null) {
             CommonEntryPoint entryPoint = EntryPointAccessors.fromApplication(getContext().getApplicationContext(), CommonEntryPoint.class);
-            mSpeechAgentLazy = entryPoint.lazySpeechAgent();
             mSpeechStorageLazy = entryPoint.lazySpeechStorage();
             mSpeechInteractionLazy = entryPoint.lazySpeechInteraction();
         }

@@ -132,6 +132,7 @@ public class EventProcessorImpl implements IEventProcessor {
                     wakeupNetworkResumeOrDownloadContinue();
                     return;
                 }
+                mTTSSpeech.cancel();
                 mSpeechStatus.sleep();
                 //if (!isNetworkConnected) return;
                 boolean showLeaveConfirm = mSpeechStorage.shouldShowLeaveConfirm();

@@ -388,7 +388,9 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
         mParentView.removeAllViews();
         FrameLayout.LayoutParams childParams = new FrameLayout.LayoutParams(width, FrameLayout.LayoutParams.WRAP_CONTENT);
         childParams.gravity = Gravity.TOP | Gravity.END;
-        childParams.topMargin = ContextUtils.dp2px(mContext, 32);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S_V2) {
+            childParams.topMargin = ContextUtils.dp2px(mContext, 32);
+        }
         AIRootLayout rootLayout = mRootLayoutRef.get();
         // mParentView.setBackgroundResource(R.drawable.bg_full_screen);
         ISpeechAgent speechAgent = mSpeechAgentLazy.get();
@@ -406,6 +408,10 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
                 windowLayout.addTouchableView(rootLayout.findViewById(R.id.tv_npl));
                 windowLayout.addTouchableView(rootLayout.findViewById(R.id.tv_positive));
                 windowLayout.addTouchableView(rootLayout.findViewById(R.id.tv_negative));
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S_V2) {
+                    windowLayout.addTouchableView(rootLayout.findViewById(R.id.space_top));
+                    windowLayout.addTouchableView(rootLayout.findViewById(R.id.space_end));
+                }
             }
         }
     }

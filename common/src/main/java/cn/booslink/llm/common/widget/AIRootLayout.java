@@ -21,6 +21,9 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
 
+import com.iflytek.aiui.AIUIConstant;
+import com.iflytek.aiui.AIUIMessage;
+
 import org.libpag.PAGFile;
 import org.libpag.PAGView;
 
@@ -35,6 +38,8 @@ import cn.booslink.llm.common.model.VoiceQuery;
 import cn.booslink.llm.common.model.WeatherUI;
 import cn.booslink.llm.common.model.enums.EmoteState;
 import cn.booslink.llm.common.model.enums.QueryState;
+import cn.booslink.llm.common.speech.ISpeechAgent;
+import dagger.Lazy;
 import dagger.hilt.android.EntryPointAccessors;
 import dagger.hilt.android.qualifiers.ApplicationContext;
 import timber.log.Timber;
@@ -49,6 +54,10 @@ public class AIRootLayout extends ConstraintLayout {
     private AIInteractionLayout clInteraction;
     private AILeaveLayout flLeave;
     private FrameLayout flContent;
+    private View spaceTop;
+    private View spaceEnd;
+
+    private Lazy<ISpeechAgent> mSpeechAgentLazy;
 
     private final Observer<EmoteState> mEmoteStateObserver = this::changeUIWithState;
     private final Observer<VoiceQuery> mVoiceInputObserver = this::changeUIWithVoiceInput;
@@ -64,6 +73,8 @@ public class AIRootLayout extends ConstraintLayout {
         super(context);
         inflateLayout(context);
         initWidgets();
+        setKeepScreenOn(true);
+        initializeDependencies(context);
     }
 
     public AIRootLayout(@NonNull Context context, @Nullable AttributeSet attrs) {
@@ -75,6 +86,14 @@ public class AIRootLayout extends ConstraintLayout {
         inflateLayout(context);
         initWidgets();
         setKeepScreenOn(true);
+        initializeDependencies(context);
+    }
+
+    public void initializeDependencies(Context context) {
+        if (mSpeechAgentLazy == null) {
+            CommonEntryPoint entryPoint = EntryPointAccessors.fromApplication(context.getApplicationContext(), CommonEntryPoint.class);
+            mSpeechAgentLazy = entryPoint.lazySpeechAgent();
+        }
     }
 
     private void inflateLayout(Context context) {
@@ -91,6 +110,11 @@ public class AIRootLayout extends ConstraintLayout {
         if (pagAnimation != null) {
             pagAnimation.setRepeatCount(-1);
             pagAnimation.setMaxFrameRate(30f);
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S_V2) {
+            spaceTop = findViewById(R.id.space_top);
+            spaceEnd = findViewById(R.id.space_end);
+            initSpaceClickListener();
         }
     }
 
@@ -196,6 +220,8 @@ public class AIRootLayout extends ConstraintLayout {
     }
 
     private void changeUIWithApkDownload(ApkDownload apkDownload) {
+        ISpeechAgent speechAgent = mSpeechAgentLazy.get();
+        if (speechAgent == null || !speechAgent.isAIUIWorking()) return;
         flLeave.setVisibility(View.GONE);
         clInteraction.setVisibility(View.VISIBLE);
         clInteraction.showDownloadProcess(apkDownload);
@@ -331,5 +357,22 @@ public class AIRootLayout extends ConstraintLayout {
                 })
                 .setInterpolator(new LinearInterpolator())
                 .start();
+    }
+
+    private void initSpaceClickListener() {
+        spaceTop.setOnClickListener(v -> {
+            if (flLeave.getVisibility() == View.VISIBLE) return;
+            sleepSpeech();
+        });
+        spaceEnd.setOnClickListener(v -> {
+            if (flLeave.getVisibility() == View.VISIBLE) return;
+            sleepSpeech();
+        });
+    }
+
+    private void sleepSpeech() {
+        ISpeechAgent speechAgent = mSpeechAgentLazy.get();
+        if (speechAgent == null) return;
+        speechAgent.sendMessage(new AIUIMessage(AIUIConstant.CMD_RESET_WAKEUP, 0, 0, null, null));
     }
 }
