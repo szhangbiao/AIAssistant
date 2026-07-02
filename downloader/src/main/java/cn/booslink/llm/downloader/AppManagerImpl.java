@@ -160,7 +160,7 @@ public class AppManagerImpl implements IAppManager {
                     handlePaddingInstallList(installedApk);
                     currentPackageName = null;
                     if (installedApk.isEmpty()) return;
-                    if (mOnAppManagerListener != null) {
+                    if (mOnAppManagerListener != null && installedApk.isInstallFinish()) {
                         mOnAppManagerListener.onAppInstalled(installedApk);
                     }
                     mRxApkBus.post(installedApk);
