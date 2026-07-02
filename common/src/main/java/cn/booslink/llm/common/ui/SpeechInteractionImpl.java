@@ -29,6 +29,7 @@ import cn.booslink.llm.common.model.enums.QueryState;
 import cn.booslink.llm.common.speech.ISpeechAgent;
 import cn.booslink.llm.common.speech.ITTSSpeech;
 import cn.booslink.llm.common.utils.ContextUtils;
+import cn.booslink.llm.common.utils.DeviceUtils;
 import cn.booslink.llm.common.utils.WeatherExtKt;
 import cn.booslink.llm.common.widget.AIRootLayout;
 import cn.booslink.llm.common.widget.SpeechWindowLayout;
@@ -389,7 +390,7 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
         FrameLayout.LayoutParams childParams = new FrameLayout.LayoutParams(width, FrameLayout.LayoutParams.WRAP_CONTENT);
         childParams.gravity = Gravity.TOP | Gravity.END;
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S_V2) {
-            childParams.topMargin = ContextUtils.dp2px(mContext, 32);
+            childParams.topMargin = ContextUtils.dp2px(mContext, DeviceUtils.adaptMarginTop(mContext));
         }
         AIRootLayout rootLayout = mRootLayoutRef.get();
         // mParentView.setBackgroundResource(R.drawable.bg_full_screen);
