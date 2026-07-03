@@ -146,12 +146,7 @@ public class AppManagerImpl implements IAppManager {
                 .map(apkDownload -> {
                     // 安装失败Toast失败原因
                     if (!isInstallSuccess && apkDownload.getRetryCount() == ApkDownload.FLAG_APK_FAIL) {
-                        if (state == InstallState.INSUFFICIENT_STORAGE) {
-                            IToast toast = mToastLazy.get();
-                            if (toast != null) {
-                                toast.showMessage(state.getMessage());
-                            }
-                        }
+                        showFailedToast(state.getMessage());
                     }
                     return apkDownload;
                 })
@@ -247,6 +242,7 @@ public class AppManagerImpl implements IAppManager {
                     }
                 } else if (downloadItem.isDownloadError()) {
                     Timber.tag(TAG).d("onDownloadUpdate, download fail");
+                    showFailedToast(downloadItem.getFailedReason());
                     mApkDownloadMap.remove(downloadItem.getPkgName());
                     if (mOnAppManagerListener != null) {
                         mOnAppManagerListener.onAppFailed(true, downloadItem);
@@ -264,10 +260,7 @@ public class AppManagerImpl implements IAppManager {
 
             @Override
             public void onDownloadFailed(ApkDownload downloadItem) {
-                IToast toast = mToastLazy.get();
-                if (toast != null) {
-                    toast.showMessage(downloadItem.getFailedReason());
-                }
+                showFailedToast(downloadItem.getFailedReason());
                 mApkDownloadMap.remove(downloadItem.getPkgName());
                 if (mOnAppManagerListener != null) {
                     mOnAppManagerListener.onAppFailed(true, downloadItem);
@@ -486,6 +479,13 @@ public class AppManagerImpl implements IAppManager {
             }
         }
         return nextDownload;
+    }
+
+    private void showFailedToast(String failMessage) {
+        IToast toast = mToastLazy.get();
+        if (toast != null) {
+            toast.showMessage(failMessage);
+        }
     }
 
     private void addDisposable(Disposable disposable) {

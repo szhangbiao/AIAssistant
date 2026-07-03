@@ -199,4 +199,17 @@ public class AIInteractionLayout extends LinearLayout {
             pagLoading.freeCache();
         }
     }
+
+    public void resetViews() {
+        tvNplReply.scrollTo(0, 0);
+        tvNplReply.setText("");
+        tvNplReply.setVisibility(View.VISIBLE);
+        weatherListLayout.setVisibility(GONE);
+        llWakeup.setVisibility(GONE);
+        loadingView.setVisibility(View.GONE);
+        apkDownloadLayout.resetViews();
+        apkDownloadLayout.setVisibility(View.GONE);
+        apkDismissLayout.resetViews();
+        apkDismissLayout.setVisibility(View.GONE);
+    }
 }

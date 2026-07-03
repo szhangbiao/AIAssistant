@@ -51,7 +51,7 @@
             android:fadeScrollbars="false"
             android:focusable="false"
             android:lineSpacingExtra="2dp"
-            android:maxHeight="284dp"
+            android:maxHeight="264dp"
             android:paddingStart="20dp"
             android:paddingEnd="8dp"
             android:scrollbarSize="6dp"

@@ -9,8 +9,6 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
 import android.graphics.Color;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
@@ -70,6 +68,8 @@ public class ApkDownloadLayout extends RelativeLayout {
         pbDone.setVisibility(download.isDownloadComplete() ? VISIBLE : GONE);
         pbProgress.setVisibility(download.isDownloadComplete() ? GONE : VISIBLE);
         tvProgress.setVisibility(download.isDownloadComplete() ? GONE : VISIBLE);
+        tvLabel.setVisibility(View.GONE);
+        tvCountdown.setVisibility(View.GONE);
         if (download.isDownloadComplete()) {
             tvStatus.setText(R.string.download_done);
         } else {

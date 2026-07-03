@@ -260,7 +260,8 @@ public class AppProcessImpl implements IAppProcess {
                 public void onAppFailed(boolean isDownloadFailed, ApkDownload download) {
                     super.onAppFailed(isDownloadFailed, download);
                     Timber.tag(TAG).d("populateAppDownload onAppFailed");
-                    delayPostMessage(download.getFailedReason(), VoiceQuery.Companion.stateOnly(QueryState.FAILED));
+                    mSpeechInteraction.customAnswer(download.getFailedReason());
+                    mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.FAILED));
                 }
             });
             if (downloadManager.isAnyPkgTaskRunning()) {
@@ -302,7 +303,8 @@ public class AppProcessImpl implements IAppProcess {
             public void onAppFailed(boolean isDownloadFailed, ApkDownload download) {
                 super.onAppFailed(isDownloadFailed, download);
                 Timber.tag(TAG).d("populateAppInstall onAppFailed");
-                delayPostMessage(download.getFailedReason(), VoiceQuery.Companion.stateOnly(QueryState.FAILED));
+                mSpeechInteraction.customAnswer(download.getFailedReason());
+                mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.FAILED));
             }
         });
         if (downloadManager.isAnyPkgTaskRunning()) {
@@ -340,12 +342,15 @@ public class AppProcessImpl implements IAppProcess {
             public void onAppFailed(boolean isDownloadFailed, ApkDownload download) {
                 super.onAppFailed(isDownloadFailed, download);
                 Timber.tag(TAG).d("populateAppLaunchWithPkgInfo onAppFailed");
-                delayPostMessage(download.getFailedReason(), VoiceQuery.Companion.stateOnly(QueryState.FAILED));
+                mSpeechInteraction.customAnswer(download.getFailedReason());
+                mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.FAILED));
             }
 
             @Override
             public void onAppInstalled(ApkDownload download) {
                 super.onAppInstalled(download);
+                ISpeechAgent speechAgent = mSpeechAgentLazy.get();
+                if (speechAgent == null || !speechAgent.isAIUIWorking()) return;
                 Timber.tag(TAG).d("populateAppLaunchWithPkgInfo onAppInstalled");
                 String foregroundPkgName = PkgUtils.getForegroundPkgName(mContext);
                 if (NetEaseMusicProcessImpl.NETEASE_PACKAGE_NAME.equals(foregroundPkgName)) {
@@ -379,7 +384,7 @@ public class AppProcessImpl implements IAppProcess {
 
     private void populateWakeupAfterAppInstall() {
         ISpeechAgent speechAgent = mSpeechAgentLazy.get();
-        if (speechAgent == null) return;
+        if (speechAgent == null || !speechAgent.isAIUIWorking()) return;
         speechAgent.sendMessage(new AIUIMessage(AIUIConstant.CMD_WAKEUP, 0, 0, null, null));
     }
 

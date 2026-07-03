@@ -51,7 +51,8 @@
         android:paddingVertical="4dp"
         android:text="@string/download_finish"
         android:textColor="#00F0FF"
-        android:textSize="16sp" />
+        android:textSize="16sp"
+        android:visibility="gone" />
 
     <TextView
         android:id="@+id/tv_countdown"
@@ -64,6 +65,7 @@
         android:includeFontPadding="false"
         android:textColor="#AEAEAE"
         android:textSize="20sp"
+        android:visibility="gone"
         tools:text=" 3 秒后自动消失" />
 
     <TextView

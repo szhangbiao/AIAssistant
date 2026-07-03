@@ -278,6 +278,7 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
     @Override
     public void downloadUpdate(ApkDownload download) {
         if (download == null) return;
+        Timber.tag(TAG).d("downloadUpdate, status = %s", download.getStatus());
         mApkDownloadLiveData.postValue(download);
         mEmoteStateLiveData.postValue(download.isDownloadComplete() ? EmoteState.LAUGHING : EmoteState.NORMAL);
     }
@@ -431,8 +432,15 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
         mEmoteStateLiveData.postValue(EmoteState.IDLE);
         mVoiceInputLiveData.postValue(VoiceQuery.Companion.startup());
         mNplResponseLiveData.postValue("");
-        mApkDownloadLiveData.postValue(ApkDownload.empty());
         mUIResponseLiveData.postValue(UIResponse.Companion.empty());
+        ApkDownload apkDownload = mApkDownloadLiveData.getValue();
+        if (apkDownload == null || apkDownload.isEmpty() || apkDownload.isDownloadError() || apkDownload.isDownloadFail() || apkDownload.isInstallFail() || apkDownload.isInstallFinish()) {
+            mApkDownloadLiveData.postValue(ApkDownload.empty());
+            AIRootLayout rootLayout = mRootLayoutRef.get();
+            if (rootLayout != null) {
+                rootLayout.resetViews();
+            }
+        }
     }
 
     private void showAndAnimate() {

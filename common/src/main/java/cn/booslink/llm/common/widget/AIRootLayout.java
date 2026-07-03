@@ -220,6 +220,7 @@ public class AIRootLayout extends ConstraintLayout {
     }
 
     private void changeUIWithApkDownload(ApkDownload apkDownload) {
+        Timber.tag(TAG).d("changeUIWithApkDownload, download status = %s", apkDownload.getStatus());
         ISpeechAgent speechAgent = mSpeechAgentLazy.get();
         if (speechAgent == null || !speechAgent.isAIUIWorking()) return;
         flLeave.setVisibility(View.GONE);
@@ -374,5 +375,11 @@ public class AIRootLayout extends ConstraintLayout {
         ISpeechAgent speechAgent = mSpeechAgentLazy.get();
         if (speechAgent == null) return;
         speechAgent.sendMessage(new AIUIMessage(AIUIConstant.CMD_RESET_WAKEUP, 0, 0, null, null));
+    }
+
+    public void resetViews() {
+        clInteraction.setVisibility(View.VISIBLE);
+        flLeave.setVisibility(View.GONE);
+        clInteraction.resetViews();
     }
 }
