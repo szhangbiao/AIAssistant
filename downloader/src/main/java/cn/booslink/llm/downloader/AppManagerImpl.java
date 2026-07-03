@@ -29,6 +29,7 @@ import cn.booslink.llm.common.model.enums.ApkStatus;
 import cn.booslink.llm.common.ui.IToast;
 import cn.booslink.llm.common.utils.ContextUtils;
 import cn.booslink.llm.common.utils.FileUtils;
+import cn.booslink.llm.common.utils.RxUtil;
 import cn.booslink.llm.downloader.bus.IRxApkBus;
 import cn.booslink.llm.downloader.listener.OnApkDownloadListener;
 import cn.booslink.llm.downloader.listener.OnAppManagerListener;
@@ -41,7 +42,6 @@ import cn.booslink.llm.downloader.utils.InstallStateUtils;
 import cn.booslink.llm.downloader.utils.PkgUtils;
 import dagger.Lazy;
 import dagger.hilt.android.qualifiers.ApplicationContext;
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.core.SingleSource;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
@@ -141,16 +141,7 @@ public class AppManagerImpl implements IAppManager {
         Disposable disposable = Single.just(currentPkgName)
                 .map(deliveryPkgName -> handleApkDownloadAfterInstall(isInstallSuccess, state, deliveryPkgName))
                 .delay(500, TimeUnit.MILLISECONDS)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .map(apkDownload -> {
-                    // 安装失败Toast失败原因
-                    if (!isInstallSuccess && apkDownload.getRetryCount() == ApkDownload.FLAG_APK_FAIL) {
-                        showFailedToast(state.getMessage());
-                    }
-                    return apkDownload;
-                })
-                .observeOn(Schedulers.io())
+                .compose(RxUtil.singleOnIO())
                 .subscribe(installedApk -> {
                     handlePaddingInstallList(installedApk);
                     currentPackageName = null;
@@ -323,8 +314,9 @@ public class AppManagerImpl implements IAppManager {
         String installPkgName = !TextUtils.isEmpty(installPackage) ? installPackage : currentPackageName;
         ApkDownload apkDownload = mApkDownloadMap.get(installPkgName);
         if (apkDownload != null && apkDownload.shouldRemoveFromInstallList()) {
-            apkDownload.installResult(isInstallSuccess, state != InstallState.INSUFFICIENT_STORAGE);
+            apkDownload.installResult(isInstallSuccess, state.getMessage());
             if (mOnAppManagerListener != null && !isInstallSuccess) {
+                showFailedToast(state.getMessage());
                 mOnAppManagerListener.onAppFailed(false, apkDownload);
             }
             mRxApkBus.post(apkDownload);

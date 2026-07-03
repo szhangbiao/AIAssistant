@@ -294,15 +294,13 @@ public class ApkDownload implements Cloneable {
         this.retryCount = 0;
     }
 
-    public void installResult(boolean isSuccess, boolean shouldRetryInstall) {
+    public void installResult(boolean isSuccess, String failedReason) {
         this.status = isSuccess ? ApkStatus.INSTALL_SUCCESS : ApkStatus.INSTALL_FAIL;
-        if (retryCount > 0 || (!isSuccess && !shouldRetryInstall)) {
+        if (!isSuccess) {
             this.retryCount = FLAG_APK_FAIL;
-        } else if (retryCount == 0 && !isSuccess) {
-            this.retryCount += 1;
         }
         // 目前是存储空间不足不重试安装
-        this.failedReason = !shouldRetryInstall ? "设备存储空间不足，安装失败" : "";
+        this.failedReason = failedReason;
     }
 
     public void installRandom() {
@@ -342,11 +340,11 @@ public class ApkDownload implements Cloneable {
     }
 
     public boolean isInstallFail() {
-        return status == ApkStatus.INSTALL_FAIL && retryCount == FLAG_APK_FAIL;
+        return status == ApkStatus.INSTALL_FAIL;
     }
 
     public boolean isDownloadFail() {
-        return (status == ApkStatus.DOWNLOAD_FAIL || status == ApkStatus.DOWNLOAD_PAUSE_WITH_ERROR) && retryCount == FLAG_APK_FAIL;
+        return status == ApkStatus.DOWNLOAD_FAIL || status == ApkStatus.DOWNLOAD_PAUSE_WITH_ERROR;
     }
 
     public boolean isDownloadError() {

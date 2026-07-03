@@ -20,7 +20,9 @@ import cn.booslink.llm.common.di.CommonEntryPoint;
 import cn.booslink.llm.common.loader.IPAGLoader;
 import cn.booslink.llm.common.model.ApkDownload;
 import cn.booslink.llm.common.model.WeatherUI;
+import cn.booslink.llm.common.speech.ISpeechAgent;
 import cn.booslink.llm.common.utils.ContextUtils;
+import dagger.Lazy;
 import dagger.hilt.android.EntryPointAccessors;
 import timber.log.Timber;
 
@@ -35,6 +37,8 @@ public class AIInteractionLayout extends LinearLayout {
     private ApkDownloadLayout apkDownloadLayout;
     private ApkDownloadLayout apkDismissLayout;
     private WeatherListLayout weatherListLayout;
+
+    private Lazy<ISpeechAgent> mSpeechAgentLazy;
 
     private PAGView pagLoading;
     private WakeUpLayout llWakeup;
@@ -53,6 +57,7 @@ public class AIInteractionLayout extends LinearLayout {
         inflateLayout(context);
         initWidgets();
         showTextLoading(true);
+        initializeDependencies(context);
         setPadding(0, 0, 0, ContextUtils.dp2px(context, 24));
         setOrientation(VERTICAL);
     }
@@ -98,6 +103,8 @@ public class AIInteractionLayout extends LinearLayout {
     }
 
     public void showDismissProcess(ApkDownload apkDownload) {
+        ISpeechAgent speechAgent = mSpeechAgentLazy.get();
+        if (speechAgent == null || !speechAgent.isAIUIWorking()) return;
         apkDismissLayout.setVisibility(View.VISIBLE);
         apkDismissLayout.resetViews();
         apkDismissLayout.updateDownloadView(apkDownload);
@@ -121,6 +128,13 @@ public class AIInteractionLayout extends LinearLayout {
             llWakeup.setVisibility(GONE);
         }
         loadingView.setVisibility(isShow ? VISIBLE : GONE);
+    }
+
+    public void initializeDependencies(Context context) {
+        if (mSpeechAgentLazy == null) {
+            CommonEntryPoint entryPoint = EntryPointAccessors.fromApplication(context.getApplicationContext(), CommonEntryPoint.class);
+            mSpeechAgentLazy = entryPoint.lazySpeechAgent();
+        }
     }
 
     private boolean isLoadingAnimSet = false;
