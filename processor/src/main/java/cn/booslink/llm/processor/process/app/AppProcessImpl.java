@@ -260,6 +260,8 @@ public class AppProcessImpl implements IAppProcess {
                 public void onAppFailed(boolean isDownloadFailed, ApkDownload download) {
                     super.onAppFailed(isDownloadFailed, download);
                     Timber.tag(TAG).d("populateAppDownload onAppFailed");
+                    ISpeechAgent speechAgent = mSpeechAgentLazy.get();
+                    if (speechAgent == null || !speechAgent.isAIUIWorking()) return;
                     mSpeechInteraction.customAnswer(download.getFailedReason());
                     mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.FAILED));
                 }
@@ -303,6 +305,8 @@ public class AppProcessImpl implements IAppProcess {
             public void onAppFailed(boolean isDownloadFailed, ApkDownload download) {
                 super.onAppFailed(isDownloadFailed, download);
                 Timber.tag(TAG).d("populateAppInstall onAppFailed");
+                ISpeechAgent speechAgent = mSpeechAgentLazy.get();
+                if (speechAgent == null || !speechAgent.isAIUIWorking()) return;
                 mSpeechInteraction.customAnswer(download.getFailedReason());
                 mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.FAILED));
             }
@@ -342,6 +346,8 @@ public class AppProcessImpl implements IAppProcess {
             public void onAppFailed(boolean isDownloadFailed, ApkDownload download) {
                 super.onAppFailed(isDownloadFailed, download);
                 Timber.tag(TAG).d("populateAppLaunchWithPkgInfo onAppFailed");
+                ISpeechAgent speechAgent = mSpeechAgentLazy.get();
+                if (speechAgent == null || !speechAgent.isAIUIWorking()) return;
                 mSpeechInteraction.customAnswer(download.getFailedReason());
                 mSpeechInteraction.updateQuery(VoiceQuery.Companion.stateOnly(QueryState.FAILED));
             }

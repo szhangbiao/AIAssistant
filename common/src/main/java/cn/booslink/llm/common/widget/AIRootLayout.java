@@ -221,9 +221,11 @@ public class AIRootLayout extends ConstraintLayout {
 
     private void changeUIWithApkDownload(ApkDownload apkDownload) {
         Timber.tag(TAG).d("changeUIWithApkDownload, download status = %s", apkDownload.getStatus());
+        clInteraction.showDownloadProcess(apkDownload);
+        ISpeechAgent speechAgent = mSpeechAgentLazy.get();
+        if (speechAgent == null || !speechAgent.isAIUIWorking()) return;
         flLeave.setVisibility(View.GONE);
         clInteraction.setVisibility(View.VISIBLE);
-        clInteraction.showDownloadProcess(apkDownload);
     }
 
     private void changeUIWithUIResponse(UIResponse response) {
