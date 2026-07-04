@@ -343,10 +343,6 @@ public class ApkDownload implements Cloneable {
         return status == ApkStatus.INSTALL_FAIL;
     }
 
-    public boolean isDownloadFail() {
-        return status == ApkStatus.DOWNLOAD_FAIL || status == ApkStatus.DOWNLOAD_PAUSE_WITH_ERROR;
-    }
-
     public boolean isDownloadError() {
         return status == ApkStatus.DOWNLOAD_FAIL || status == ApkStatus.DOWNLOAD_PAUSE_WITH_ERROR;
     }
@@ -357,5 +353,9 @@ public class ApkDownload implements Cloneable {
 
     public boolean isDownloadComplete() {
         return progress == 100;
+    }
+
+    public boolean shouldNotDebounce() {
+        return isDownloadError() || isInstallFail() || isInstallFinish();
     }
 }

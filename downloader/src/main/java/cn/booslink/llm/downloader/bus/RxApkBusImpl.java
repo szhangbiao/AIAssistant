@@ -8,9 +8,12 @@ import javax.inject.Inject;
 import cn.booslink.llm.common.model.ApkDownload;
 import cn.booslink.llm.common.ui.ISpeechInteraction;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.subjects.PublishSubject;
 import timber.log.Timber;
+
+import java.util.Objects;
 
 public class RxApkBusImpl implements IRxApkBus {
 
@@ -52,8 +55,18 @@ public class RxApkBusImpl implements IRxApkBus {
 
     private void setupDownloadSubjectSubscribe() {
         Disposable disposable = mDownloadSubject
-                .debounce(500, TimeUnit.MILLISECONDS)  // 时间节流
+                .debounce(download -> {
+                    // 一些特殊事件不应该被节流，应该立即发送
+                    if (download.shouldNotDebounce()) {
+                        return Observable.empty();
+                    }
+                    return Observable.timer(500, TimeUnit.MILLISECONDS);
+                })
                 .distinctUntilChanged((previousDownload, afterDownload) -> {
+                    // 不是同一个应用，视为不相同，允许通过
+                    if (previousDownload.getApkId() != afterDownload.getApkId() || !Objects.equals(previousDownload.getPkgName(), afterDownload.getPkgName())) {
+                        return false;
+                    }
                     // 状态变化立即通过
                     if (previousDownload.getStatus() != afterDownload.getStatus()) {
                         return false; // 不相同，允许通过
@@ -72,7 +85,6 @@ public class RxApkBusImpl implements IRxApkBus {
 
     private void handleErrorAndReSetupSubject(Throwable throwable) {
         Timber.tag(TAG).e(throwable, "download update failed");
-
         // 先清理旧的订阅
         Disposable disposable = mDisposableMap.get(TAG_UPDATE_DOWNLOAD);
         if (disposable != null && !disposable.isDisposed()) {

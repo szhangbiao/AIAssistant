@@ -92,7 +92,7 @@ public class AIInteractionLayout extends LinearLayout {
     }
 
     public void showDownloadProcess(ApkDownload apkDownload) {
-        boolean shouldHideDownloadLayout = apkDownload.isEmpty() || apkDownload.isDownloadError() || apkDownload.isDownloadFail() || apkDownload.isInstallFail() || apkDownload.isInstallFinish();
+        boolean shouldHideDownloadLayout = apkDownload.isEmpty() || apkDownload.isDownloadError() || apkDownload.isInstallFail() || apkDownload.isInstallFinish();
         //showLoading(false);
         Timber.tag(TAG).d("showDownloadProcess, name = %s, layout visible = %b", apkDownload.getName(), !shouldHideDownloadLayout);
         apkDownloadLayout.setVisibility(shouldHideDownloadLayout ? GONE : VISIBLE);

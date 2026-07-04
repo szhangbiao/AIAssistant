@@ -10,6 +10,7 @@ import com.bumptech.glide.GlideBuilder;
 import com.bumptech.glide.load.DecodeFormat;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.engine.cache.ExternalPreferredCacheDiskCacheFactory;
+import com.bumptech.glide.load.resource.bitmap.CenterCrop;
 import com.bumptech.glide.load.resource.bitmap.DownsampleStrategy;
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.bumptech.glide.request.RequestOptions;
@@ -37,7 +38,8 @@ public class GlideOptionsConfig {
         builder.setLogLevel(Log.ERROR);
 
         int radius = ContextUtils.dp2px(context, DEFAULT_RADIUS);
-        RequestOptions defaultOptions = defaultOptions().transform(new RoundedCorners(radius));
+        RequestOptions defaultOptions = defaultOptions()
+                .transforms(new CenterCrop(), new RoundedCorners(radius));
         builder.setDefaultRequestOptions(defaultOptions);
     }
 
@@ -51,8 +53,7 @@ public class GlideOptionsConfig {
             return new RequestOptions().format(DecodeFormat.PREFER_RGB_565)
                     .dontAnimate() // 禁用动画
                     .downsample(DownsampleStrategy.AT_LEAST) // 降低图片采样率
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .dontTransform(); // 避免不必要的图像转换和预加载
+                    .diskCacheStrategy(DiskCacheStrategy.ALL);
         }
     }
 
@@ -70,8 +71,7 @@ public class GlideOptionsConfig {
                     .disallowHardwareConfig() // 确保启用硬件加速
                     .skipMemoryCache(true)
                     .downsample(DownsampleStrategy.AT_LEAST)
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .dontTransform(); // 避免不必要的图像转换和预加载
+                    .diskCacheStrategy(DiskCacheStrategy.ALL);
         }
     }
 
@@ -89,8 +89,7 @@ public class GlideOptionsConfig {
                     .disallowHardwareConfig() // 确保启用硬件加速
                     .skipMemoryCache(true)
                     .downsample(DownsampleStrategy.AT_LEAST)
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .dontTransform(); // 避免不必要的图像转换和预加载
+                    .diskCacheStrategy(DiskCacheStrategy.ALL);
         }
     }
 }

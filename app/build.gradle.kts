@@ -25,8 +25,8 @@ android {
         applicationId = "cn.booslink.llm"
         minSdk = 19
         targetSdk = 36
-        versionCode = 4
-        versionName = "1.0.1"
+        versionCode = 3
+        versionName = "1.0.0"
 
         multiDexEnabled = true
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
