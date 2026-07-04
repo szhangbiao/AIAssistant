@@ -434,7 +434,7 @@ public class SpeechInteractionImpl implements ISpeechInteraction {
         mNplResponseLiveData.postValue("");
         mUIResponseLiveData.postValue(UIResponse.Companion.empty());
         ApkDownload apkDownload = mApkDownloadLiveData.getValue();
-        if (apkDownload == null || apkDownload.isEmpty() || apkDownload.isDownloadError() || apkDownload.isInstallFail() || apkDownload.isInstallFinish()) {
+        if (apkDownload == null || apkDownload.isEmpty() || apkDownload.shouldNotDebounce()) {
             mApkDownloadLiveData.postValue(ApkDownload.empty());
             AIRootLayout rootLayout = mRootLayoutRef.get();
             if (rootLayout != null) {

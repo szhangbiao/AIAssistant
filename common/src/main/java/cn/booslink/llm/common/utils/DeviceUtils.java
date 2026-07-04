@@ -24,7 +24,7 @@ public class DeviceUtils {
         } else if (ratio >= 0.6f) {
             return 16;
         } else {
-            return 8;
+            return 4;
         }
     }
 }
