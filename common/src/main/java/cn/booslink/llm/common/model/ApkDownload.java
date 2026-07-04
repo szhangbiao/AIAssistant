@@ -311,30 +311,6 @@ public class ApkDownload implements Cloneable {
         return apkId == -1 && TextUtils.isEmpty(apkPath);
     }
 
-    public boolean isDBEmpty() {
-        return apkId == -1 || apkId == 0;
-    }
-
-    public void updateByApkInfo(ApkInfo apkInfo) {
-        this.name = apkInfo.getName();
-        this.apkPath = apkInfo.getPath();
-        this.status = ApkStatus.INSTALL_PADDING;
-        this.retryCount = 0;
-        this.progress = 100;
-    }
-
-    public void updateDownloadInfo(ApkDownload otherDownload) {
-        this.status = otherDownload.getStatus();
-        this.retryCount = otherDownload.getRetryCount();
-        this.progress = otherDownload.getProgress();
-        this.speed = otherDownload.getSpeed();
-        this.failedReason = otherDownload.getFailedReason();
-    }
-
-    public boolean isDownloadInstalling() {
-        return status == ApkStatus.INSTALL_GOING || (status == ApkStatus.INSTALL_FAIL && retryCount > 0);
-    }
-
     public boolean shouldRemoveFromInstallList() {
         return status.getStatus() >= ApkStatus.INSTALL_PADDING.getStatus();
     }
@@ -353,9 +329,5 @@ public class ApkDownload implements Cloneable {
 
     public boolean isDownloadComplete() {
         return progress == 100;
-    }
-
-    public boolean shouldNotDebounce() {
-        return isDownloadError() || isInstallFail() || isInstallFinish();
     }
 }

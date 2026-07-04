@@ -55,18 +55,8 @@ public class RxApkBusImpl implements IRxApkBus {
 
     private void setupDownloadSubjectSubscribe() {
         Disposable disposable = mDownloadSubject
-                .debounce(download -> {
-                    // 一些特殊事件不应该被节流，应该立即发送
-                    if (download.shouldNotDebounce()) {
-                        return Observable.empty();
-                    }
-                    return Observable.timer(500, TimeUnit.MILLISECONDS);
-                })
+                .debounce(500, TimeUnit.MILLISECONDS)
                 .distinctUntilChanged((previousDownload, afterDownload) -> {
-                    // 不是同一个应用，视为不相同，允许通过
-                    if (previousDownload.getApkId() != afterDownload.getApkId() || !Objects.equals(previousDownload.getPkgName(), afterDownload.getPkgName())) {
-                        return false;
-                    }
                     // 状态变化立即通过
                     if (previousDownload.getStatus() != afterDownload.getStatus()) {
                         return false; // 不相同，允许通过
